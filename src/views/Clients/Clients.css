@@ -1,0 +1,38 @@
+.clientProfile {
+  border: 1px solid #0002;
+  border-radius: 0.3rem;
+  padding: 1rem 1.5rem;
+  position: relative;
+  box-shadow: 0.1rem 0.1rem 0.4rem #0004;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+.clientProfile__form .MuiFormControl-root {
+  margin-bottom: 2rem;
+}
+.clientTables{
+  position: fixed;
+  z-index: 100000;
+  bottom: 4px;
+  right: 29px;
+
+}
+.clientTables .btn {
+  float: right;
+  margin-left: 1rem;
+}
+.clientTables .btn[class*="outlinedSizeLarge"]{
+  background-color:#fff;
+}
+.clientProfile > img {
+  border-radius: 0.3rem;
+}
+.clientTables .MuiTableCell-head {
+  padding-top: 0 !important;
+}
+.clientTables > .MuiPaper-root {
+  margin: 1rem 0 1.5rem 0;
+}
+.clientTables .MuiTable-root[class*="MUIDataTableFooter-root"] {
+  position: static;
+}

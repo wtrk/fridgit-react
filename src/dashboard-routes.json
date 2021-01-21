@@ -1,0 +1,227 @@
+[
+  {
+    "path": "/dashboard",
+    "name": "Operation",
+    "rtlname": "لوحة القيادة",
+    "icon": "Dashboard",
+    "layout": "/admin",
+    "type": "Main",
+    "parent": "null",
+    "haschild": true
+  },
+  {
+    "path": "/LiveOperation",
+    "name": "Live",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "DynamicFeedIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Operation",
+    "haschild": false
+  },
+  {
+    "path": "/table",
+    "name": "Finance",
+    "rtlname": "قائمة الجدول",
+    "icon": "AttachMoneyIcon",
+    "layout": "/admin",
+    "type": "Main",
+    "parent": "null",
+    "haschild": true
+  },
+  {
+    "path": "/finance_jobs",
+    "name": "Finance Jobs",
+    "rtlname": "قائمة الجدول",
+    "icon": "LocalAtmOutlined",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Finance",
+    "haschild": false
+  },
+  
+  {
+    "path": "/finance_reports",
+    "name": "Financial Report",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "AssessmentIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Finance",
+    "haschild": false
+  },
+  {
+    "path": "/user",
+    "name": "Invoice",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "ReceiptIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Finance",
+    "haschild": false
+  },
+
+  {
+    "path": "/typography",
+    "name": "Master Data",
+    "rtlname": "طباعة",
+    "icon": "LibraryBooks",
+    "layout": "/admin",
+    "type": "Main",
+    "parent": "null",
+    "haschild": true
+  },
+
+  {
+    "path": "/Clients_List",
+    "name": "Clients",
+    "rtlname": "",
+    "icon": "Person",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/Clients",
+    "name": "Clients Details",
+    "rtlname": "",
+    "icon": "Person",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "null",
+    "haschild": false
+  },
+  {
+    "path": "/Typography",
+    "name": "Cabinets",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "KitchenIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/Stores",
+    "name": "Stores",
+    "rtlname": "",
+    "icon": "KitchenIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/users",
+    "name": "Users",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "Person",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/Userrole",
+    "name": "User Roles",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "GroupAddIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/supplier",
+    "name": "Supplier",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "AccountBoxIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/warehouse",
+    "name": "Warehouse",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "GroupWorkIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/country",
+    "name": "Country",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "PublicIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+
+  {
+    "path": "/City",
+    "name": "City",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "LocationCityIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/Neighbourhood",
+    "name": "Neighbourhood",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "AccountBalanceIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/Allocation",
+    "name": "Allocation Rules",
+    "rtlname": "ملف تعريفي للمستخدم",
+    "icon": "AppsIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/Tier",
+    "name": "Tier",
+    "rtlname": "",
+    "icon": "AppsIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
+    "path": "/ServiceType",
+    "name": "ServiceType",
+    "rtlname": "",
+    "icon": "AppsIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+
+  {
+    "path": "/Price_rules",
+    "name": "Price Rules",
+    "rtlname": "إخطارات",
+    "icon": "Notifications",
+    "layout": "/admin",
+    "type": "Main",
+    "parent": "null",
+    "haschild": false
+  }
+]

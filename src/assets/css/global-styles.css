@@ -1,0 +1,110 @@
+h1,
+h2,
+h3,
+h4,
+h5 {
+  padding: 0;
+  margin: 0;
+}
+h3 {
+  padding-bottom: 1rem;
+  font-weight: 400;
+  font-size: 2rem;
+  margin: 2rem 0;
+  border-bottom: 1px solid #3f51b5;
+  color: #3f51b5;
+}
+h3.pageTitle{
+  color:#fff;
+  margin:0;
+  padding:0 0 0 2rem;
+}
+img {
+  max-width: 100%;
+}
+
+.overlay-form > div {
+  display: flex;
+  flex-wrap: wrap;
+}
+.overlay-form__input--top {
+  flex-basis: 46%;
+  margin: 2% !important;
+}
+.overlay-form__input {
+  flex-basis: 28%;
+  margin: 2% !important;
+}
+.MuiTableCell-root {
+  padding: 0 !important;
+}
+.MuiTableRow-root:nth-child(odd) {
+  background-color: #ebebeb;
+}
+.table-link,
+a {
+  color: #89229b;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.table-link:hover,
+a:hover {
+  color: #89229b88;
+}
+
+.MuiAutocomplete-root {
+  width: 50%;
+}
+
+.MuiAutocomplete-inputRoot[class*="MuiFilledInput-root"] {
+  padding: 5px !important;
+  border: 0 !important;
+  overflow: hidden;
+  background: none;
+}
+.dataTableContainer > div:nth-child(3) {
+  height: 100% !important;
+  width: 100% !important;
+  overflow: scroll;
+}
+.datatables-noprint {
+  padding: 2rem 0;
+}
+.d-flex {
+  display: flex;
+  align-items: center;
+}
+.avatar_circle {
+  background: #673ab7;
+  color: #fff;
+  border-radius: 100%;
+  width: 2rem;
+  height: 2rem;
+  text-align: center;
+  line-height: 2rem;
+  margin-right: 0.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.infoTabContainer img {
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.6);
+}
+.btnIcon {
+  cursor: pointer;
+  width: 30px;
+  fill: #fff;
+}
+
+.MuiContainer-root{
+  padding-top:1rem;
+}
+.avatarCont{
+  display:flex;
+  align-items:center;
+  margin-left: auto;
+}
+.avatarRounded{
+  width: 50px;
+  border-radius: 50px;
+}
