@@ -294,7 +294,7 @@ const validateInputHandler = (e) => {
               color="primary"
               size="large"
               className="btn btn--save"
-              onClick={() => props.handleClose}
+              onClick={props.handleClose}
               startIcon={<Close />}
             >
               Close

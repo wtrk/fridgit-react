@@ -54,7 +54,7 @@ const AddFormDialog = (props) => {
           responseType: "json",
         }
       ).then((response) => {
-        setFormValues(response.data[0].data[0]);
+        setFormValues(response.data);
       });
     };
     fetchData();

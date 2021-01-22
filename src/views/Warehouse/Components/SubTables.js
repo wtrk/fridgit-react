@@ -50,7 +50,7 @@ const SubTables = (props) => {
     const [openAlertError, setOpenAlertError] = useState(false);
     const [modal_Title, setmodal_Title] = useState("Add"); //modal title
     const [citiesList, setCitiesList] = useState([]); //table items
-    const [cityDefault, setCityDefault] = useState({}); //table items
+    const [cityValue, setCityValue] = useState({}); //table items
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
@@ -91,7 +91,7 @@ const SubTables = (props) => {
             setFormValues(response.data);
             return response.data
           }).then((response)=>{
-            setCityDefault(cities.filter(e=> e._id==response.city_id)[0])
+            setCityValue(cities.filter(e=> e._id==response.city_id)[0])
             
           });
         }
@@ -139,6 +139,7 @@ const handleChangeForm = (e) => {
   setFormValues({ ...formValues, [name]: value });
 };
 const handleChangeCity = (e, newValue) =>{
+  setCityValue(newValue)
   if(newValue) setFormValues({ ...formValues, city_id: newValue._id });
 }
 const handleOnSubmit = async () => {
@@ -245,7 +246,7 @@ const validateInputHandler = (e) => {
             <Autocomplete
               id="CityInput"
               options={citiesList || {}}
-              value={cityDefault || {}}
+              value={cityValue || {}}
               getOptionLabel={(option) => {
                 return Object.keys(option).length!==0 ? option.name : "";
               }}
@@ -383,7 +384,7 @@ const validateInputHandler = (e) => {
               color="primary"
               size="large"
               className="btn btn--save"
-              onClick={() => props.handleClose}
+              onClick={props.handleClose}
               startIcon={<Close />}
             >
               Close

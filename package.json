@@ -16,7 +16,9 @@
     "axios": "^0.21.1",
     "chartist": "0.10.1",
     "classnames": "2.2.6",
+    "compression": "^1.7.4",
     "date-fns": "^2.16.1",
+    "express": "^4.17.1",
     "hamburger-react": "^2.4.0",
     "history": "4.10.1",
     "material-ui": "^0.20.2",
@@ -82,9 +84,9 @@
   },
   "eslintConfig": {
     "rules": {
-        "no-unused-vars": "off" 
+      "no-unused-vars": "off"
     }
-},
+  },
   "browserslist": {
     "production": [
       ">0.2%",

@@ -37,7 +37,7 @@ const AddFormDialog = (props) => {
   const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
   const classes = useStyles(); //custom css
-  const fullnameRef = useRef()
+  const nameRef = useRef()
   const profileRef = useRef()
   const addressRef = useRef()
   const mobileRef = useRef()
@@ -46,7 +46,7 @@ const AddFormDialog = (props) => {
   const usernameRef = useRef()
   const submitRef = useRef()
   const [formValues, setFormValues] = useState({
-    fullname: "",
+    name: "",
     profile_id: "",
     address: "",
     mobile: "",
@@ -61,7 +61,7 @@ const AddFormDialog = (props) => {
     can_approve_damaged:""
   });
   const [formErrors, setFormErrors] = useState({
-    fullname: {error:false,msg:""},
+    name: {error:false,msg:""},
     profile_id: {error:false,msg:""},
     address: {error:false,msg:""},
     mobile: {error:false,msg:""},
@@ -70,18 +70,18 @@ const AddFormDialog = (props) => {
     password: {error:false,msg:""},
   });
   useEffect(()=>{
-    fullnameRef.current.focus()
+    nameRef.current.focus()
     
     if (props.userId) {
     const fetchData = async () => {
-      fullnameRef.current.focus();
+      nameRef.current.focus();
       const users = await axios(
         `${process.env.REACT_APP_BASE_URL}/users/${props.userId}`,
         {
           responseType: "json",
         }
       ).then((response) => {
-        setFormValues(response.data[0].data[0]);
+        setFormValues(response.data);
       });
     };
     fetchData();
@@ -91,14 +91,14 @@ const AddFormDialog = (props) => {
       const { keyCode, target } = e
       if(keyCode===13){
         switch (target.name){
-          case "fullname": profileRef.current.focus();break;
+          case "name": profileRef.current.focus();break;
           case "profile_id": addressRef.current.focus();break;
           case "address": mobileRef.current.focus();break;
           case "mobile": emailRef.current.focus();break;
           case "email": usernameRef.current.focus();break;
           case "username": passwordRef.current.focus();break;
           case "password": submitRef.current.focus();break;
-          default: fullnameRef.current.focus();
+          default: nameRef.current.focus();
         }
       }
   }
@@ -137,7 +137,7 @@ const AddFormDialog = (props) => {
                .then(function (response) {
                  setOpenAlertSuccess(true);
                  setFormValues({
-                   fullname: "",
+                   name: "",
                    profile_id: "",
                    address: "",
                    mobile: "",
@@ -186,19 +186,19 @@ const AddFormDialog = (props) => {
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <TextField
-              id="fullnameInput"
-              label="Fullname"
-              name="fullname"
+              id="nameInput"
+              label="Name"
+              name="name"
               onChange={handleChangeForm}
               fullWidth
-              value={formValues.fullname || ""}
-              inputRef={fullnameRef}
+              value={formValues.name || ""}
+              inputRef={nameRef}
               onKeyDown={keyPressHandler}
               onBlur={validateInputHandler}
               helperText={
-                formErrors.fullname.error ? formErrors.fullname.msg : null
+                formErrors.name.error ? formErrors.name.msg : null
               }
-              error={formErrors.fullname.error}
+              error={formErrors.name.error}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -216,7 +216,7 @@ const AddFormDialog = (props) => {
                 onBlur={validateInputHandler}
               >
                 {props.userProfileList.map((e) => (
-                  <MenuItem value={e.id} key={e.id}>{e.name}</MenuItem>
+                  <MenuItem value={e._id} key={e._id}>{e.name}</MenuItem>
                 ))}
               </Select>
               {formErrors.profile_id.error ? <FormHelperText>{formErrors.profile_id.msg}</FormHelperText> : null}

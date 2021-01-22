@@ -58,31 +58,32 @@ export default function FullWidthTabs() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const userType = await axios(`${process.env.REACT_APP_BASE_URL}/userType`, {
-        responseType: "json",
-      }).then((response) => {
-        setUserTypeList(response.data[0].data)
-        return response.data[0].data
-      });
+
       const userProfile = await axios(`${process.env.REACT_APP_BASE_URL}/userProfile`, {
         responseType: "json",
       }).then((response) => {
-        setUserProfileList(response.data[0].data)
-        return response.data[0].data
+        setUserProfileList(response.data)
+        return response.data
       });
-      const users = await axios(`${process.env.REACT_APP_BASE_URL}/users/`, {
+      const users = await axios(`${process.env.REACT_APP_BASE_URL}/users`, {
         responseType: "json",
       }).then((response) => {
         setItems(
-          response.data[0].data.map((e) => {
-            const userProfileItem= userProfile.filter(userProfileData=> e.profile_id===userProfileData.id)[0]
+          response.data.map((e) => {
+            const userProfileItem= userProfile.filter(userProfileData=> e.profile_id===userProfileData._id)[0]
             return ({
-              id: e.id,
-              name: e.fullname,
-              profile: userProfileItem.name,
+              id: e._id,
+              name: e.username,
+              profile: userProfileItem ? userProfileItem.name : "",
             });
           })
         );
+      });
+      const userType = await axios(`${process.env.REACT_APP_BASE_URL}/userType`, {
+        responseType: "json",
+      }).then((response) => {
+        setUserTypeList(response.data)
+        return response.data
       });
     };
     fetchData();

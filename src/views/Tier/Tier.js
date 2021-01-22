@@ -51,7 +51,7 @@ const Tier = () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/tiers`, {
         responseType: "json",
       }).then((response) => {
-        setItems(response.data[0].data)
+        setItems(response.data)
       });
     };
     fetchData();
@@ -144,6 +144,7 @@ const Tier = () => {
         renderTags={(value, getTagProps) =>
           value.map((option, index) => (
             <Chip
+              key={index}
               variant="outlined"
               label={option}
               {...getTagProps({ index })}

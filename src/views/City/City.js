@@ -51,7 +51,7 @@ const City = () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
         responseType: "json",
       }).then((response) => {
-        setItems(response.data[0].data)
+        setItems(response.data)
       });
     };
     fetchData();
@@ -67,7 +67,7 @@ const City = () => {
 
   const columns = [
     {
-      name: "id",
+      name: "_id",
       options: {
         display: false,
       }

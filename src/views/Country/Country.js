@@ -51,7 +51,7 @@ const Country = () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/Countries`, {
         responseType: "json",
       }).then((response) => {
-        setItems(response.data[0].data)
+        setItems(response.data)
       });
     };
     fetchData();
@@ -67,7 +67,7 @@ const Country = () => {
 
   const columns = [
     {
-      name: "id",
+      name: "_id",
       options: {
         display: false,
       }
@@ -113,7 +113,7 @@ const Country = () => {
       );
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
-      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex].id); // array of all ids to to be deleted
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/countries/${idsToDelete}`, {
           responseType: "json",
         }).then((response) => {

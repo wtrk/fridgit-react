@@ -55,7 +55,7 @@ const ServiceType = () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/serviceTypes`, {
         responseType: "json",
       }).then((response) => {
-        setItems(response.data[0].data)
+        setItems(response.data)
       });
     };
     fetchData();
@@ -63,7 +63,7 @@ const ServiceType = () => {
   
   const columns = [
     {
-      name: "id",
+      name: "_id",
       options: {
         display: false,
       }
@@ -104,7 +104,7 @@ const ServiceType = () => {
       }} handleFilter={handleFilter} />;
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
-      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex].id); // array of all ids to to be deleted
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/serviceTypes/${idsToDelete}`, {
           responseType: "json",
         }).then((response) => {

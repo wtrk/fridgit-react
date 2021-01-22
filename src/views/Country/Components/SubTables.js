@@ -59,7 +59,7 @@ const SubTables = (props) => {
             responseType: "json",
           }
         ).then((response) => {
-          setFormValues(response.data[0].data[0]);
+          setFormValues(response.data);
         });
       };
       fetchData();
@@ -215,7 +215,7 @@ const validateInputHandler = (e) => {
               color="primary"
               size="large"
               className="btn btn--save"
-              onClick={() => props.handleClose}
+              onClick={props.handleClose}
               startIcon={<Close />}
             >
               Close
