@@ -83,7 +83,6 @@ const AddFormDialog = (props) => {
     for (const [key, value] of Object.entries(formErrors)) {
         if(value.error===true) return setOpenAlertError(true);
     }
-    
     if (props.userId) {
         await axios({
           method: "put",
@@ -91,28 +90,28 @@ const AddFormDialog = (props) => {
           data: [formValues],
         })
           .then(function (response) {
-            setOpenAlertSuccess(true);
+            return setOpenAlertSuccess(true);
           })
           .catch((error) => {
             console.log(error);
           });
     } else {
-             await axios({
-               method: "post",
-               url: `${process.env.REACT_APP_BASE_URL}/serviceTypes/`,
-               data: [formValues],
-             })
-               .then(function (response) {
-                 setOpenAlertSuccess(true);
-                 setFormValues({
-                   code: "",
-                   name: ""
-                 });
-               })
-               .catch((error) => {
-                 console.log(error);
-               });
-           }
+        await axios({
+          method: "post",
+          url: `${process.env.REACT_APP_BASE_URL}/serviceTypes/`,
+          data: [formValues],
+        })
+          .then(function (response) {
+            setFormValues({
+              code: "",
+              name: ""
+            });
+            return setOpenAlertSuccess(true);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
   
   }
   const validateInputHandler = (e) => {
