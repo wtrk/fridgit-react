@@ -58,7 +58,7 @@ export default function FullWidthTabs() {
       const userProfile = await axios(`${process.env.REACT_APP_BASE_URL}/userProfile`, {
         responseType: "json",
       }).then((response) => {
-        setItems(response.data[0].data)
+        setItems(response.data)
       });
     };
     fetchData();

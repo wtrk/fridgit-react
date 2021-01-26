@@ -62,10 +62,15 @@ a:hover {
   overflow: hidden;
   background: none;
 }
-.dataTableContainer > div:nth-child(3) {
+.dataTableContainer > div:nth-child(3) { /**Content**/
   height: 100% !important;
   width: 100% !important;
   overflow: scroll;
+}
+.dataTableContainer > table:nth-child(4) { /**Footer**/
+  position: fixed;
+  left: 0;
+  bottom: 0;
 }
 .datatables-noprint {
   padding: 2rem 0;

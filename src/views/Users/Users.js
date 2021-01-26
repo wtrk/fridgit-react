@@ -10,6 +10,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
 
+import Moment from "react-moment";
 import Dialog from "@material-ui/core/Dialog";
 import Slide from "@material-ui/core/Slide";
 import TextField from "@material-ui/core/TextField";
@@ -53,6 +54,7 @@ TabPanel.propTypes = {
 
 export default function FullWidthTabs() {
   const [items, setItems] = useState([]); //table items
+  const [itemsBackup, setItemsBackup] = useState([]); //table items
   const [userProfileList, setUserProfileList] = useState([]); //table items
   const [userTypeList, setUserTypeList] = useState([]); //table items
 
@@ -75,6 +77,9 @@ export default function FullWidthTabs() {
               id: e._id,
               name: e.username,
               profile: userProfileItem ? userProfileItem.name : "",
+              mobile: e.mobile,
+              email:e.email,
+              joinedDate:e.createdAt
             });
           })
         );
@@ -124,6 +129,25 @@ export default function FullWidthTabs() {
       name: "profile",
       label: "Profile",
     },
+    {
+      name: "mobile",
+      label: "Mobile",
+    },
+    {
+      name: "email",
+      label: "Email",
+    },
+    {
+      name: "joinedDate",
+      label: "Joined date",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return (
+            <Moment format="DD/MM/YYYY">{value}</Moment>
+          );
+        },
+      },
+    },
   ];
 
   const options = {
@@ -157,13 +181,26 @@ export default function FullWidthTabs() {
   const handleClose = () => {
     setOpen(false);
   };
+  //Search component ---------------START--------------
+  const [searchValue, setSearchValue] = useState({});
+  const handleChangeSearch = (e, newValue) => {
+    if(itemsBackup.length===0) setItemsBackup(items)
+    setSearchValue(newValue)
+    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+  }
+  //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
+      {console.log(itemsBackup)}
       <Autocomplete
-        multiple
+        //multiple
         id="tags-filled"
-        options={top100Films.map((option) => option.title)}
-        defaultValue={[]}
+        options={items || {}}
+        value={searchValue || {}}
+        getOptionLabel={(option) => {
+          return Object.keys(option).length!==0 ? option.name : "";
+        }}
+        onChange={handleChangeSearch}
         freeSolo
         renderTags={(value, getTagProps) =>
           value.map((option, index) => (
@@ -179,7 +216,7 @@ export default function FullWidthTabs() {
             {...params}
             variant="filled"
             label=""
-            placeholder="Search Data"
+            placeholder="Search by Name"
           />
         )}
       />
