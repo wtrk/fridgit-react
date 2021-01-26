@@ -49,24 +49,24 @@ const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [modal_Title, setmodal_Title] = useState("Add"); //modal title
-    const [citiesList, setCitiesList] = useState([]); //table items
-    const [cityValue, setCityValue] = useState({}); //table items
+    const [tiersList, setTiersList] = useState([]); //table items
+    const [tierValue, setTierValue] = useState({}); //table items
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
-    const cityRef = useRef()
+    const tierRef = useRef()
     const neighbourhoodRef = useRef()
     const submitRef = useRef()
     const [formValues, setFormValues] = useState({
       code: "",
       name: "",
-      city_id: "",
+      tier_id: "",
       neighbourhood_id: ""
     });
     const [formErrors, setFormErrors] = useState({
       code: {error:false,msg:""},
       name: {error:false,msg:""},
-      city_id: {error:false,msg:""},
+      tier_id: {error:false,msg:""},
       neighbourhood_id: {error:false,msg:""}
     });
     
@@ -74,10 +74,10 @@ const SubTables = (props) => {
     codeRef.current.focus()
       const fetchData = async () => {
       
-        const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
+        const tiers = await axios(`${process.env.REACT_APP_BASE_URL}/tiers`, {
           responseType: "json",
         }).then((response) => {
-          setCitiesList(response.data)
+          setTiersList(response.data)
           return response.data
         });
 
@@ -91,7 +91,7 @@ const SubTables = (props) => {
             setFormValues(response.data);
             return response.data
           }).then((response)=>{
-            setCityValue(cities.filter(e=> e._id==response.city_id)[0])
+            setTierValue(tiers.filter(e=> e._id==response.tier_id)[0])
             
           });
         }
@@ -127,8 +127,8 @@ const SubTables = (props) => {
     if(keyCode===13){
       switch (target.name){
         case "code": nameRef.current.focus();break;
-        case "name": cityRef.current.focus();break;
-        case "city_id": neighbourhoodRef.current.focus();break;
+        case "name": tierRef.current.focus();break;
+        case "tier_id": neighbourhoodRef.current.focus();break;
         case "neighbourhood_id": submitRef.current.focus();break;
         default: codeRef.current.focus();
       }
@@ -138,9 +138,9 @@ const handleChangeForm = (e) => {
   const { name, value } = e.target;
   setFormValues({ ...formValues, [name]: value });
 };
-const handleChangeCity = (e, newValue) =>{
-  setCityValue(newValue)
-  if(newValue) setFormValues({ ...formValues, city_id: newValue._id });
+const handleChangeTier = (e, newValue) =>{
+  setTierValue(newValue)
+  if(newValue) setFormValues({ ...formValues, tier_id: newValue._id });
 }
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
@@ -170,7 +170,7 @@ const handleOnSubmit = async () => {
       setFormValues({
         code: "",
         name: "",
-        city_id:"",
+        tier_id:"",
         neighbourhood_id:""
       });
     })
@@ -244,127 +244,29 @@ const validateInputHandler = (e) => {
           </Grid>
           <Grid item xs={12} sm={6}>
             <Autocomplete
-              id="CityInput"
-              options={citiesList || {}}
-              value={cityValue || {}}
+              id="TierInput"
+              options={tiersList || {}}
+              value={tierValue || {}}
               getOptionLabel={(option) => {
                 return Object.keys(option).length!==0 ? option.name : "";
               }}
               fullWidth
-              onChange={handleChangeCity}
+              onChange={handleChangeTier}
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Cities"
-                  inputRef={cityRef}
+                  label="Tiers"
+                  inputRef={tierRef}
                   onKeyDown={keyPressHandler}
                   onBlur={validateInputHandler}
                   helperText={
-                    formErrors.city_id.error ? formErrors.city_id.msg : null
+                    formErrors.tier_id.error ? formErrors.tier_id.msg : null
                   }
-                  error={formErrors.city_id.error}
+                  error={formErrors.tier_id.error}
                 />
               )}
             />
-            {/* <FormControl className={classes.formControl} error={formErrors.city_id.error}>
-              <InputLabel id="CityLabel">City</InputLabel>
-              <Select
-                labelId="CityLabel"
-                id="CityInput"
-               
-                value={formValues.city_id ?? ''}
-                name="city_id"
-                onChange={handleChangeForm}
-                inputRef={cityRef}
-                onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-              >
-                {citiesList.map((e) => (
-                  <MenuItem value={e.id} key={e.id}>{e.name}</MenuItem>
-                ))}
-              </Select>
-              {formErrors.city_id.error ? <FormHelperText>{formErrors.city_id.msg}</FormHelperText> : null}
-            </FormControl> */}
           </Grid>
-
-          {/* <Grid item xs={12} sm={6}>
-            <FormControl className={classes.formControl} error={formErrors.neighbourhood_id.error}>
-              <InputLabel id="NeighbourhoodLabel">Neighbourhood</InputLabel>
-              <Select
-                labelId="NeighbourhoodLabel"
-                id="NeighbourhoodInput"
-               
-                value={formValues.neighbourhood_id}
-                name="neighbourhood_id"
-                onChange={handleChangeForm}
-                inputRef={neighbourhoodRef}
-                onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-              >
-                {citiesList.map((e) => (
-                  <MenuItem value={e.id} key={e.id}>{e.name}</MenuItem>
-                ))}
-              </Select>
-              {formErrors.neighbourhood_id.error ? <FormHelperText>{formErrors.neighbourhood_id.msg}</FormHelperText> : null}
-            </FormControl>
-          </Grid> */}
-
-          {/*             
-
-
-          <Grid item xs={12}>
-            <MUIDataTable
-              title="Alias"
-              data={alias}
-              columns={[
-                {
-                  name: "name",
-                  label: "Name",
-                  options: {
-                    filter: false,
-                    customBodyRender: (value, tableMeta, updateValue) => {
-                      if (value == "") {
-                        return (
-                          <div>
-                            <FormControl className={classes.formControl}>
-                              <NativeSelect
-                                className={classes.selectEmpty}
-                                value={aliasSelect}
-                                name="aliasSelect"
-                                onChange={handleChangeAliasSelect}
-                                inputProps={{
-                                  "aria-label": "aliasSelect",
-                                }}
-                              >
-                                <option value="" disabled>
-                                  Select a name
-                                </option>
-                                <option value={1}>Alias 1</option>
-                                <option value={2}>Alias 2</option>
-                                <option value={3}>Alias 3</option>
-                                <option value={4}>Alias 4</option>
-                              </NativeSelect>
-                            </FormControl>
-                          </div>
-                        );
-                      } else {
-                        return <div>{value}</div>;
-                      }
-                    },
-                  },
-                },
-              ]}
-              options={{
-                filter: false,
-
-                selectToolbarPlacement: "replace",
-                customToolbar: () => {
-                  return <CustomToolbar listener={add1RowInAlias} />;
-                },
-                customFooter: () => null,
-              }}
-            />
-          </Grid> */}
 
           <Grid item xs={12} className="clientTables">
             <Button

@@ -62,9 +62,6 @@ const City = () => {
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
 
-
-
-
   const columns = [
     {
       name: "_id",
@@ -95,14 +92,6 @@ const City = () => {
     {
       name: "name",
       label: "Name",
-    },
-    {
-      name: "kaza",
-      label: "Kaza",
-    },
-    {
-      name: "mouhafaza",
-      label: "Mouhafaza",
     }
   ];
 

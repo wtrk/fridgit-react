@@ -52,20 +52,14 @@ const SubTables = (props) => {
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
-    const kazaRef = useRef()
-    const mouhafazaRef = useRef()
     const submitRef = useRef()
     const [formValues, setFormValues] = useState({
       code: "",
-      name: "",
-      kaza: "",
-      mouhafaza: ""
+      name: ""
     });
     const [formErrors, setFormErrors] = useState({
       code: {error:false,msg:""},
-      name: {error:false,msg:""},
-      kaza: {error:false,msg:""},
-      mouhafaza: {error:false,msg:""}
+      name: {error:false,msg:""}
     });
     
   useEffect(()=>{
@@ -113,9 +107,7 @@ const SubTables = (props) => {
     if(keyCode===13){
       switch (target.name){
         case "code": nameRef.current.focus();break;
-        case "name": kazaRef.current.focus();break;
-        case "kaza": mouhafazaRef.current.focus();break;
-        case "mouhafaza": submitRef.current.focus();break;
+        case "name": submitRef.current.focus();break;
         default: codeRef.current.focus();
       }
     }
@@ -151,9 +143,7 @@ const handleOnSubmit = async () => {
                setOpenAlertSuccess(true);
                setFormValues({
                  code: "",
-                 name: "",
-                 kaza: "",
-                 mouhafaza: "",
+                 name: ""
                });
              })
              .catch((error) => {
@@ -232,43 +222,6 @@ const validateInputHandler = (e) => {
               error={formErrors.name.error}
             />
           </Grid>
-          <Grid item xs={12} sm={5}>
-            <TextField
-              id="kazaInput"
-              label="Kaza"
-              name="kaza"
-              onChange={handleChangeForm}
-              fullWidth
-              value={formValues.kaza || ""}
-              inputRef={kazaRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={
-                formErrors.kaza.error ? formErrors.kaza.msg : null
-              }
-              error={formErrors.kaza.error}
-            />
-          </Grid>
-          <Grid item xs={12} sm={2}></Grid>
-          <Grid item xs={12} sm={5}>
-            <TextField
-              id="mouhafazaInput"
-              label="Mouhafaza"
-              name="mouhafaza"
-              onChange={handleChangeForm}
-              fullWidth
-              value={formValues.mouhafaza || ""}
-              inputRef={mouhafazaRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={
-                formErrors.mouhafaza.error ? formErrors.mouhafaza.msg : null
-              }
-              error={formErrors.mouhafaza.error}
-            />
-          </Grid>
-          
-          
           <Grid item xs={12}>
             <MUIDataTable
               title="Alias"

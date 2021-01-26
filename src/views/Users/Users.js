@@ -197,9 +197,7 @@ export default function FullWidthTabs() {
         id="tags-filled"
         options={items || {}}
         value={searchValue || {}}
-        getOptionLabel={(option) => {
-          return Object.keys(option).length!==0 ? option.name : "";
-        }}
+        getOptionLabel={(option) => option.name || ""}
         onChange={handleChangeSearch}
         freeSolo
         renderTags={(value, getTagProps) =>

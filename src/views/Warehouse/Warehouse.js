@@ -43,7 +43,6 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const Warehouse = () => {
-  const [citiesList, setCitiesList] = useState([]); //table items
   const classes = useStyles(); //custom css
 
   const [items, setItems] = useState([]); //table items
@@ -183,7 +182,6 @@ const Warehouse = () => {
           <SubTables
             title={formTitle}
             handleClose={handleCloseAddForm}
-            citiesList={citiesList}
             warehouseId={warehouseId}
           />
         </Dialog>
