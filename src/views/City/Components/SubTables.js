@@ -49,6 +49,7 @@ const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [modal_Title, setmodal_Title] = useState("Add"); //modal title
+    const [alias, setAlias] = useState([]);
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
@@ -73,6 +74,7 @@ const SubTables = (props) => {
           }
         ).then((response) => {
           setFormValues(response.data);
+          setAlias(response.data.alias);
         });
       };
       fetchData();
@@ -93,15 +95,21 @@ const SubTables = (props) => {
   const add1RowInAlias = () => {
     setAlias([...alias, { name: "" }]);
   };
-  const [alias, setAlias] = useState([
-    { name: "Example 1" },
-    { name: "Example 2" },
-  ]);
   const [aliasSelect, setAliasSelect] = React.useState("");
-  const handleChangeAliasSelect = (event) => {
-    setAliasSelect(event.target.value);
+
+  const handleChangeAliasInput = (e) => {
+    setAliasSelect(e.target.value);
   };
-  
+  const keyPressAliasHandler = (e) => {
+    const { keyCode, target } = e
+    if(keyCode===13){
+      setAliasSelect("")
+      setAlias([...alias.filter(e=>e.name!==""), { name: target.value }]);
+    }
+  }
+  useEffect(()=>{
+    setFormValues({ ...formValues, alias:alias })
+  },[alias])
   const keyPressHandler = (e) => {
     const { keyCode, target } = e
     if(keyCode===13){
@@ -111,7 +119,7 @@ const SubTables = (props) => {
         default: codeRef.current.focus();
       }
     }
-}
+  }
 const handleChangeForm = (e) => {
   const { name, value } = e.target;
   setFormValues({ ...formValues, [name]: value });
@@ -149,7 +157,7 @@ const handleOnSubmit = async () => {
              .catch((error) => {
                console.log(error);
              });
-         }
+  }
 
 }
 const validateInputHandler = (e) => {
@@ -161,7 +169,6 @@ const validateInputHandler = (e) => {
       setFormErrors({ ...formErrors, [name]: {error: invalidEmail, msg: "Enter a valid email address"} });
   }
 }
-
 
   return (
     <Fragment>
@@ -225,7 +232,7 @@ const validateInputHandler = (e) => {
           <Grid item xs={12}>
             <MUIDataTable
               title="Alias"
-              data={alias}
+              data={alias || []}
               columns={[
                 {
                   name: "name",
@@ -236,25 +243,15 @@ const validateInputHandler = (e) => {
                       if (value == "") {
                         return (
                           <div>
-                            <FormControl className={classes.formControl}>
-                              <NativeSelect
-                                className={classes.selectEmpty}
-                                value={aliasSelect}
-                                name="aliasSelect"
-                                onChange={handleChangeAliasSelect}
-                                inputProps={{
-                                  "aria-label": "aliasSelect",
-                                }}
-                              >
-                                <option value="" disabled>
-                                  Select a name
-                                </option>
-                                <option value={1}>Alias 1</option>
-                                <option value={2}>Alias 2</option>
-                                <option value={3}>Alias 3</option>
-                                <option value={4}>Alias 4</option>
-                              </NativeSelect>
-                            </FormControl>
+                            <TextField
+                              id="aliasInput"
+                              label="Add new city alias"
+                              onChange={handleChangeAliasInput}
+                              onKeyDown={keyPressAliasHandler}
+                              fullWidth
+                              value={aliasSelect}
+                              name="aliasSelect"
+                            />
                           </div>
                         );
                       } else {
