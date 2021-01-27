@@ -1,92 +1,33 @@
 import React, {useState,useEffect} from "react";
 import { NavLink } from "react-router-dom";
-import Container from "@material-ui/core/Container";
 import Autocomplete from "@material-ui/lab/Autocomplete";
-import TextField from "@material-ui/core/TextField";
-import Chip from "@material-ui/core/Chip";
+import { Container, Slide, Chip, TextField,Dialog } from "@material-ui/core";
 import MUIDataTable from "mui-datatables";
 import { MuiThemeProvider} from "@material-ui/core/styles";
 import datatableTheme from "assets/css/datatable-theme.js";
+import ClientDetails from "./Components/ClientDetails.js";
 import axios from 'axios';
 import "./Clients.css";
 
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
 const ClientsList = () => {
   const [items, setItems] = useState([]); //table items
+  const [openDetails, setOpenDetails] = useState(false);
+  const [clientDetailsTitle, setClientDetailsTitle] = useState("");
+  const [clientDetails, setClientDetails] = useState([]);
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
         responseType: "json",
       }).then((response) => {
-        console.log("response.data",response.data)
         setItems(response.data)
       });
     };
     fetchData();
   }, []);
-
-
-  // const data = [
-  //   [
-  //     "Unilever Levant S.A.R.L.",
-  //     "Dolphin Bldg. Fattal Holding, Jisr El Wati, Sin El FIl, Beirut, Lebanon",
-  //     "+961-3-105 784",
-  //     "baker.sibai@unilever.com",
-  //   ],
-  //   [
-  //     "Fattal Food & Beverages - Neo Comet",
-  //     "4th Floor, KFF Food & Beverage Bldg, Dany Chamoun Street-Jisr El Wati, Sin El Fil, PO Box 110-773 Riad El Solh, Beirut/Lebanon",
-  //     "+961-1-512000",
-  //     "yara.abdelAhad@fattal.com.lb",
-  //   ],
-  //   [
-  //     "Unilever Levant S.A.R.L.",
-  //     "Dolphin Bldg. Fattal Holding, Jisr El Wati, Sin El FIl, Beirut, Lebanon",
-  //     "+961-3-105 784",
-  //     "baker.sibai@unilever.com",
-  //   ],
-  //   [
-  //     "Fattal Food & Beverages - Neo Comet",
-  //     "4th Floor, KFF Food & Beverage Bldg, Dany Chamoun Street-Jisr El Wati, Sin El Fil, PO Box 110-773 Riad El Solh, Beirut/Lebanon",
-  //     "+961-1-512000",
-  //     "yara.abdelAhad@fattal.com.lb",
-  //   ],
-  //   [
-  //     "Unilever Levant S.A.R.L.",
-  //     "Dolphin Bldg. Fattal Holding, Jisr El Wati, Sin El FIl, Beirut, Lebanon",
-  //     "+961-3-105 784",
-  //     "baker.sibai@unilever.com",
-  //   ],
-  //   [
-  //     "Fattal Food & Beverages - Neo Comet",
-  //     "4th Floor, KFF Food & Beverage Bldg, Dany Chamoun Street-Jisr El Wati, Sin El Fil, PO Box 110-773 Riad El Solh, Beirut/Lebanon",
-  //     "+961-1-512000",
-  //     "yara.abdelAhad@fattal.com.lb",
-  //   ],
-  //   [
-  //     "Unilever Levant S.A.R.L.",
-  //     "Dolphin Bldg. Fattal Holding, Jisr El Wati, Sin El FIl, Beirut, Lebanon",
-  //     "+961-3-105 784",
-  //     "baker.sibai@unilever.com",
-  //   ],
-  //   [
-  //     "Fattal Food & Beverages - Neo Comet",
-  //     "4th Floor, KFF Food & Beverage Bldg, Dany Chamoun Street-Jisr El Wati, Sin El Fil, PO Box 110-773 Riad El Solh, Beirut/Lebanon",
-  //     "+961-1-512000",
-  //     "yara.abdelAhad@fattal.com.lb",
-  //   ],
-  //   [
-  //     "Unilever Levant S.A.R.L.",
-  //     "Dolphin Bldg. Fattal Holding, Jisr El Wati, Sin El FIl, Beirut, Lebanon",
-  //     "+961-3-105 784",
-  //     "baker.sibai@unilever.com",
-  //   ],
-  //   [
-  //     "Fattal Food & Beverages - Neo Comet",
-  //     "4th Floor, KFF Food & Beverage Bldg, Dany Chamoun Street-Jisr El Wati, Sin El Fil, PO Box 110-773 Riad El Solh, Beirut/Lebanon",
-  //     "+961-1-512000",
-  //     "yara.abdelAhad@fattal.com.lb",
-  //   ],
-  // ];
 
   const options = {
     filter: true,
@@ -95,15 +36,27 @@ const ClientsList = () => {
   };
   const columns = [
     {
+      name: "_id",
+      options: {
+        display: false,
+      }
+    },
+    {
       name: "company",
       options: {
-        filter: true,
         customBodyRender: (value, tableMeta, updateValue) => {
-          return <NavLink to="./Clients">{value}</NavLink>;
+          return <a onClick={() => {
+              handleOpenDetails("Client Details",tableMeta.rowData[0]);
+            }}
+          >
+            {value}
+          </a>
         },
       },
     },
-    { name: "address" },
+    {
+      name: "address"
+    },
     { name: "phone" },
     {
       name: "email",
@@ -116,6 +69,15 @@ const ClientsList = () => {
     },
   ];
   const top100Films = [];
+  const handleCloseDetails = () =>{
+    setOpenDetails(false)
+  }
+  const handleOpenDetails = (title, clientId) => {
+    const ttt= items.filter(e=> e._id===clientId)
+    setOpenDetails(true);
+    setClientDetails(items.filter(e=> e._id===clientId));
+    setClientDetailsTitle(title);
+  }
   return (
     <Container maxWidth="xl">
       <Autocomplete
@@ -143,14 +105,34 @@ const ClientsList = () => {
         )}
       />
       <MuiThemeProvider theme={datatableTheme}>
-      <MUIDataTable
-        title=""
-        data={items}
-        columns={columns}
-        options={options}
-        className="dataTableContainer"
-      />
+        <MUIDataTable
+          title=""
+          data={items}
+          columns={columns}
+          options={options}
+          className="dataTableContainer"
+        />
       </MuiThemeProvider>
+      <div>
+        <Dialog
+          fullScreen
+          open={openDetails}
+          onClose={handleCloseDetails}
+          TransitionComponent={Transition}
+        >
+          <ClientDetails
+            handleClose={handleCloseDetails}
+            title={clientDetailsTitle}
+            data={clientDetails[0]}
+            
+          />
+          {/* <SubTables
+            title={formTitle}
+            handleClose={handleCloseAddForm}
+            countryId={countryId}
+          /> */}
+        </Dialog>
+      </div>
     </Container>
   );
 };
