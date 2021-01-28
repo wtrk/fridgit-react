@@ -54,7 +54,6 @@ import Price_rules from "views/Price_rules/Price_rules.js";
 import Userrole from "views/Userrole/Userrole.js";
 import Users from "views/Users/Users.js";
 import ClientsList from "views/Clients/Clients_list.js";
-import Clients from "views/Clients/Clients.js";
 import Allocation from "views/Allocation/Allocation.js";
 import Tier from "views/Tier/Tier.js";
 import ServiceType from "views/ServiceType/ServiceType.js";
@@ -114,10 +113,6 @@ const switchRoutes = (
           case "Clients":
             e.icon = Person;
             e.component = ClientsList;
-            break;
-          case "Clients Details":
-            e.icon = Person;
-            e.component = Clients;
             break;
           case "Cabinets":
             e.icon = Kitchen;

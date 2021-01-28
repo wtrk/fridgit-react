@@ -83,16 +83,6 @@
     "haschild": false
   },
   {
-    "path": "/Clients",
-    "name": "Clients Details",
-    "rtlname": "",
-    "icon": "Person",
-    "layout": "/admin",
-    "type": "sub",
-    "parent": "null",
-    "haschild": false
-  },
-  {
     "path": "/Typography",
     "name": "Cabinets",
     "rtlname": "ملف تعريفي للمستخدم",

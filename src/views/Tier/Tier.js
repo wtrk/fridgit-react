@@ -44,7 +44,11 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const Tier = () => {
   const classes = useStyles(); //custom css
-
+  const [openAddForm, setOpenAddForm] = useState(false); //for modal
+  const [tierId, setTierID] = useState(); //modal title
+  const [RowID, setRowID] = useState(0); //current row
+  const [formTitle, setFormTitle] = useState("Add"); //modal title
+  const [filterDialog,setFilterDialog] = useState(false)
   const [items, setItems] = useState([]); //table items
   useEffect(() => {
     const fetchData = async () => {
@@ -55,12 +59,7 @@ const Tier = () => {
       });
     };
     fetchData();
-  }, []);
-  const [openAddForm, setOpenAddForm] = useState(false); //for modal
-  const [tierId, setTierID] = useState(); //modal title
-  const [RowID, setRowID] = useState(0); //current row
-  const [formTitle, setFormTitle] = useState("Add"); //modal title
-  const [filterDialog,setFilterDialog] = useState(false)
+  }, [openAddForm]);
 
 
 

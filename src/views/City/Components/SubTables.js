@@ -137,6 +137,7 @@ const handleOnSubmit = async () => {
       })
         .then(function (response) {
           setOpenAlertSuccess(true);
+          props.handleClose()
         })
         .catch((error) => {
           console.log(error);
@@ -153,6 +154,7 @@ const handleOnSubmit = async () => {
                  code: "",
                  name: ""
                });
+               props.handleClose()
              })
              .catch((error) => {
                console.log(error);

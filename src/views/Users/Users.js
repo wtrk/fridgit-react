@@ -56,7 +56,10 @@ export default function FullWidthTabs() {
   const [items, setItems] = useState([]); //table items
   const [itemsBackup, setItemsBackup] = useState([]); //table items
   const [userProfileList, setUserProfileList] = useState([]); //table items
-  const [userTypeList, setUserTypeList] = useState([]); //table items
+  const [userTypeList, setUserTypeList] = useState([]);
+  const [formTitle, setFormTitle] = useState("Add title");
+  const [open, setOpen] = useState(false); //for modal
+  const [userId, setUserID] = useState(); //modal title
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,11 +95,8 @@ export default function FullWidthTabs() {
       });
     };
     fetchData();
-  }, []);
+  }, [open]);
   
-  const [formTitle, setFormTitle] = useState("Add title");
-  const [open, setOpen] = useState(false); //for modal
-  const [userId, setUserID] = useState(); //modal title
 
   const columns = [
     {

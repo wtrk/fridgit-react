@@ -27,7 +27,7 @@ const ClientsList = () => {
       });
     };
     fetchData();
-  }, []);
+  }, [openDetails]);
 
   const options = {
     filter: true,

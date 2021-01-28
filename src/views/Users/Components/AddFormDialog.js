@@ -124,6 +124,7 @@ const AddFormDialog = (props) => {
         })
           .then(function (response) {
             setOpenAlertSuccess(true);
+            props.handleClose()
           })
           .catch((error) => {
             console.log(error);
@@ -145,6 +146,7 @@ const AddFormDialog = (props) => {
                    username: "",
                    password: "",
                  });
+                 props.handleClose()
                })
                .catch((error) => {
                  console.log(error);

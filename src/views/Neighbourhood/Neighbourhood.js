@@ -16,8 +16,6 @@ import datatableTheme from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import axios from 'axios';
 
-
-
 // Top 100 films as rated by IMDb neighbourhoods. http://www.imdb.com/chart/top
 const top100Films = [];
 
@@ -44,7 +42,11 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const Neighbourhood = () => {
   const classes = useStyles(); //custom css
-
+  const [openAddForm, setOpenAddForm] = useState(false); //for modal
+  const [neighbourhoodId, setNeighbourhoodID] = useState(); //modal title
+  const [RowID, setRowID] = useState(0); //current row
+  const [formTitle, setFormTitle] = useState("Add"); //modal title
+  const [filterDialog,setFilterDialog] = useState(false)
   const [items, setItems] = useState([]); //table items
   useEffect(() => {
     const fetchData = async () => {
@@ -55,12 +57,7 @@ const Neighbourhood = () => {
       });
     };
     fetchData();
-  }, []);
-  const [openAddForm, setOpenAddForm] = useState(false); //for modal
-  const [neighbourhoodId, setNeighbourhoodID] = useState(); //modal title
-  const [RowID, setRowID] = useState(0); //current row
-  const [formTitle, setFormTitle] = useState("Add"); //modal title
-  const [filterDialog,setFilterDialog] = useState(false)
+  }, [openAddForm]);
 
 
 
