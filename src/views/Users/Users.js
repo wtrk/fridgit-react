@@ -54,7 +54,7 @@ TabPanel.propTypes = {
 
 export default function FullWidthTabs() {
   const [items, setItems] = useState([]); //table items
-  const [itemsBackup, setItemsBackup] = useState([]); //table items
+  const [itemsBackup, setItemsBackup] = useState([]);
   const [userProfileList, setUserProfileList] = useState([]); //table items
   const [userTypeList, setUserTypeList] = useState([]);
   const [formTitle, setFormTitle] = useState("Add title");
@@ -191,9 +191,7 @@ export default function FullWidthTabs() {
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      {console.log(itemsBackup)}
       <Autocomplete
-        //multiple
         id="tags-filled"
         options={items || {}}
         value={searchValue || {}}

@@ -44,7 +44,6 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const Warehouse = () => {
   const classes = useStyles(); //custom css
-
   
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [warehouseId, setWarehouseID] = useState(); //modal title
@@ -62,9 +61,6 @@ const Warehouse = () => {
     };
     fetchData();
   }, [openAddForm]);
-
-
-
 
   const columns = [
     {
@@ -131,12 +127,49 @@ const Warehouse = () => {
     setWarehouseID(warehouseId);
     setFormTitle(title);
   };
-
-
   const handleCloseAddForm = () => setOpenAddForm(false)
+
+
+  //Search component ---------------START--------------
+  const [itemsBackup, setItemsBackup] = useState([]);
+  const [searchValue, setSearchValue] = useState({});
+  const handleChangeSearch = (e, newValue) => {
+    if(itemsBackup.length===0) setItemsBackup(items)
+    setSearchValue(newValue)
+    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+  }
+  //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
+    <Autocomplete
+      id="tags-filled"
+      options={items || {}}
+      value={searchValue || {}}
+      getOptionLabel={(option) => option.name || ""}
+      onChange={handleChangeSearch}
+      freeSolo
+      renderTags={(value, getTagProps) =>
+        value.map((option, index) => (
+          <Chip
+            variant="outlined"
+            label={option}
+            {...getTagProps({ index })}
+          />
+        ))
+      }
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="filled"
+          label=""
+          placeholder="Search by Name"
+        />
+      )}
+    />
+
+
+
+      {/* <Autocomplete
         multiple
         id="tags-filled"
         options={top100Films.map((option) => option.title)}
@@ -159,7 +192,7 @@ const Warehouse = () => {
             placeholder="Search Data"
           />
         )}
-      />
+      /> */}
 
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable

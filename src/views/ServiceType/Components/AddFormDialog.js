@@ -90,7 +90,9 @@ const AddFormDialog = (props) => {
           data: [formValues],
         })
           .then(function (response) {
+            props.handleClose()
             return setOpenAlertSuccess(true);
+            
           })
           .catch((error) => {
             console.log(error);
@@ -106,6 +108,7 @@ const AddFormDialog = (props) => {
               code: "",
               name: ""
             });
+            props.handleClose()
             return setOpenAlertSuccess(true);
           })
           .catch((error) => {
