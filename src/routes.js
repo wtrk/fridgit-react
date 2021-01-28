@@ -173,7 +173,7 @@ const switchRoutes = (
             break;
         }
         return (
-          <Route path={e.layout + e.path} component={e.component} key={i} />
+          <Route path={e.layout + e.path} component={e.component} key={i}  />
         );
       }
       return null;

@@ -16,6 +16,7 @@ import {
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
+import CustomInput from "components/CustomInput/CustomInput.js";
 import { makeStyles } from "@material-ui/core/styles";
 import CustomToolbar from "CustomToolbar";
 import Alert from '@material-ui/lab/Alert';
@@ -48,6 +49,7 @@ const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [modal_Title, setmodal_Title] = useState("Add"); //modal title
+    const [city, setCity] = useState([]);
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
@@ -71,7 +73,8 @@ const SubTables = (props) => {
             responseType: "json",
           }
         ).then((response) => {
-          setFormValues(response.data[0].data[0]);
+          setFormValues(response.data);
+          setCity(response.data.city);
         });
       };
       fetchData();
@@ -89,18 +92,24 @@ const SubTables = (props) => {
     setTierSelect(event.target.value);
   };
 
-  const add1RowInAlias = () => {
-    setAlias([...alias, { name: "" }]);
+  const add1RowInCity = () => {
+    setCity([...city, { name: "" }]);
   };
-  const [alias, setAlias] = useState([
-    { name: "Example 1" },
-    { name: "Example 2" },
-  ]);
-  const [aliasSelect, setAliasSelect] = React.useState("");
-  const handleChangeAliasSelect = (event) => {
-    setAliasSelect(event.target.value);
+  const [citySelect, setCitySelect] = React.useState("");
+
+  const handleChangeCityInput = (e) => {
+    setCitySelect(e.target.value);
   };
-  
+  const keyPressCityHandler = (e) => {
+    const { keyCode, target } = e
+    if(keyCode===13){
+      setCitySelect("")
+      setCity([...city.filter(e=>e.name!==""), { name: target.value }]);
+    }
+  }
+  useEffect(()=>{
+    setFormValues({ ...formValues, city:city })
+  },[city])
   const keyPressHandler = (e) => {
     const { keyCode, target } = e
     if(keyCode===13){
@@ -110,7 +119,7 @@ const SubTables = (props) => {
         default: codeRef.current.focus();
       }
     }
-}
+  }
 const handleChangeForm = (e) => {
   const { name, value } = e.target;
   setFormValues({ ...formValues, [name]: value });
@@ -150,7 +159,7 @@ const handleOnSubmit = async () => {
              .catch((error) => {
                console.log(error);
              });
-         }
+  }
 
 }
 const validateInputHandler = (e) => {
@@ -162,7 +171,6 @@ const validateInputHandler = (e) => {
       setFormErrors({ ...formErrors, [name]: {error: invalidEmail, msg: "Enter a valid email address"} });
   }
 }
-
 
   return (
     <Fragment>
@@ -223,11 +231,10 @@ const validateInputHandler = (e) => {
               error={formErrors.name.error}
             />
           </Grid>
-          
-          <Grid item xs={12}>
+          <Grid item xs={12} style={{"display":"none"}}>
             <MUIDataTable
-              title="Alias"
-              data={alias}
+              title="City"
+              data={city}
               columns={[
                 {
                   name: "name",
@@ -238,25 +245,15 @@ const validateInputHandler = (e) => {
                       if (value == "") {
                         return (
                           <div>
-                            <FormControl className={classes.formControl}>
-                              <NativeSelect
-                                className={classes.selectEmpty}
-                                value={aliasSelect}
-                                name="aliasSelect"
-                                onChange={handleChangeAliasSelect}
-                                inputProps={{
-                                  "aria-label": "aliasSelect",
-                                }}
-                              >
-                                <option value="" disabled>
-                                  Select a name
-                                </option>
-                                <option value={1}>Alias 1</option>
-                                <option value={2}>Alias 2</option>
-                                <option value={3}>Alias 3</option>
-                                <option value={4}>Alias 4</option>
-                              </NativeSelect>
-                            </FormControl>
+                            <TextField
+                              id="cityInput"
+                              label="Add new tier city"
+                              onChange={handleChangeCityInput}
+                              onKeyDown={keyPressCityHandler}
+                              fullWidth
+                              value={citySelect || ""}
+                              name="citySelect"
+                            />
                           </div>
                         );
                       } else {
@@ -268,12 +265,9 @@ const validateInputHandler = (e) => {
               ]}
               options={{
                 filter: false,
-
-                selectToolbarPlacement: "replace",
                 customToolbar: () => {
-                  return <CustomToolbar listener={add1RowInAlias} />;
-                },
-                customFooter: () => null,
+                  return <CustomToolbar listener={add1RowInCity} />;
+                }
               }}
             />
           </Grid>

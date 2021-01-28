@@ -42,7 +42,7 @@ img {
   background-color: #ebebeb;
 }
 .table-link,
-a {
+a, a:not([href]){
   color: #89229b;
   transition: all 0.2s;
   cursor: pointer;

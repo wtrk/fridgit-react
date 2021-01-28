@@ -56,7 +56,7 @@ export default function SidebarList(props) {
         {props.routes.map((e, i) => {
           return e.type === "Main" ? (
             e.haschild === true ? (
-              <ListItem button onClick={() => handleOpenChild(e.name)}>
+              <ListItem button onClick={() => handleOpenChild(e.name)}  key={e.key}>
                 <ListItemIcon>
                   <e.icon />
                 </ListItemIcon>
@@ -67,8 +67,9 @@ export default function SidebarList(props) {
                 />
               </ListItem>
             ) : (
-              <NavLink to={e.layout + e.path} className={classes.item} key={i}>
+              <NavLink to={e.layout + e.path} className={classes.item} key={e.key}>
                 <ListItem
+                  
                   button
                   onClick={props.toggleDrawer(e.name, false)}
                   className={currentPath === e.path ? classes.selectedMain : ""}
@@ -81,10 +82,11 @@ export default function SidebarList(props) {
               </NavLink>
             )
           ) : (
-            <NavLink to={e.layout + e.path} className={classes.item} key={i}>
+            <NavLink to={e.layout + e.path} className={classes.item} key={e.key}>
               <Collapse in={openSidebar[e.parent]} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
                   <ListItem
+                  
                     button
                     onClick={props.toggleDrawer(e.name, false)}
                     className={
@@ -107,7 +109,8 @@ export default function SidebarList(props) {
         aria-label="secondary mailbox folders"
         className="signout-cont__btn"
       >
-        <ListItem button component="a" href="#simple-list">
+        <ListItem button component="a" href="#simple-list"
+                  key="122311132">
           <FontAwesomeIcon icon={faSignOutAlt} className="menu-icon" />
           <ListItemText primary="Signout" />
         </ListItem>

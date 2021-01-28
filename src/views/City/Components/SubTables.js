@@ -234,7 +234,7 @@ const validateInputHandler = (e) => {
           <Grid item xs={12}>
             <MUIDataTable
               title="Alias"
-              data={alias || []}
+              data={alias}
               columns={[
                 {
                   name: "name",
@@ -251,7 +251,7 @@ const validateInputHandler = (e) => {
                               onChange={handleChangeAliasInput}
                               onKeyDown={keyPressAliasHandler}
                               fullWidth
-                              value={aliasSelect}
+                              value={aliasSelect || ""}
                               name="aliasSelect"
                             />
                           </div>
@@ -265,12 +265,9 @@ const validateInputHandler = (e) => {
               ]}
               options={{
                 filter: false,
-
-                selectToolbarPlacement: "replace",
                 customToolbar: () => {
                   return <CustomToolbar listener={add1RowInAlias} />;
-                },
-                customFooter: () => null,
+                }
               }}
             />
           </Grid>

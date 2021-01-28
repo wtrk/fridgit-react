@@ -45,21 +45,15 @@ const ClientsList = () => {
       name: "company",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
-          return <a onClick={() => {
-              handleOpenDetails("Client Details",tableMeta.rowData[0]);
-            }}
-          >
+          return <a onClick={() => handleOpenDetails("Client Details",tableMeta.rowData[0])}>
             {value}
           </a>
         },
       },
     },
-    {
-      name: "address"
-    },
-    { name: "phone" },
-    {
-      name: "email",
+    { name: "address"},
+    { name: "phone"},
+    { name: "email",
       options: {
         filter: true,
         customBodyRender: (value, tableMeta, updateValue) => {
@@ -73,7 +67,6 @@ const ClientsList = () => {
     setOpenDetails(false)
   }
   const handleOpenDetails = (title, clientId) => {
-    const ttt= items.filter(e=> e._id===clientId)
     setOpenDetails(true);
     setClientDetails(items.filter(e=> e._id===clientId));
     setClientDetailsTitle(title);

@@ -45,7 +45,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const Tier = () => {
   const classes = useStyles(); //custom css
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
-  const [tierId, setTierID] = useState(); //modal title
+  const [tierId, setTierId] = useState(); //modal title
   const [RowID, setRowID] = useState(0); //current row
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
@@ -66,7 +66,7 @@ const Tier = () => {
 
   const columns = [
     {
-      name: "id",
+      name: "_id",
       options: {
         display: false,
       }
@@ -112,7 +112,7 @@ const Tier = () => {
       );
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
-      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex].id); // array of all ids to to be deleted
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/tiers/${idsToDelete}`, {
           responseType: "json",
         }).then((response) => {
@@ -126,7 +126,7 @@ const Tier = () => {
 
   const handleAdd = (title, tierId) => {
     setOpenAddForm(true);
-    setTierID(tierId);
+    setTierId(tierId);
     setFormTitle(title);
   };
   const handleCloseAddForm = () => setOpenAddForm(false)
