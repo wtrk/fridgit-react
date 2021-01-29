@@ -6,6 +6,7 @@ import {
   Slide,
   TextField,
   Chip,
+  CircularProgress,
 } from "@material-ui/core";
 import { makeStyles, MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
@@ -44,7 +45,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const Warehouse = () => {
   const classes = useStyles(); //custom css
-  
+  const [isLoading, setIsloading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [warehouseId, setWarehouseID] = useState(); //modal title
   const [RowID, setRowID] = useState(0); //current row
@@ -57,6 +58,7 @@ const Warehouse = () => {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
+        return setIsloading(false)
       });
     };
     fetchData();
@@ -116,7 +118,12 @@ const Warehouse = () => {
         }).then((response) => {
           console.log("deleted")
         });
-    }
+    },
+    textLabels: {
+        body: {
+            noMatch: isLoading ? <CircularProgress disableShrink /> : 'Sorry, there is no matching data to display'
+        },
+    },
   };
   const handleFilter = () => {
     setFilterDialog(true)
