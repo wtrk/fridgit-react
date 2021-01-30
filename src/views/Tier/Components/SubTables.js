@@ -1,22 +1,15 @@
 import React, { Fragment, useState, useRef, useEffect} from "react";
 import {
-  NativeSelect,
   TextField,
   AppBar,
   Typography,
   Button,
   Grid,
   Toolbar,
-  Collapse,
-  FormControlLabel,
-  Checkbox,
-  InputLabel,
-  FormControl,
-  Select,
+  Collapse
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
-import CustomInput from "components/CustomInput/CustomInput.js";
 import { makeStyles } from "@material-ui/core/styles";
 import CustomToolbar from "CustomToolbar";
 import Alert from '@material-ui/lab/Alert';
@@ -48,8 +41,7 @@ const options = {
 const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
-    const [modal_Title, setmodal_Title] = useState("Add"); //modal title
-    const [city, setCity] = useState([]);
+    const [tierCity, setTierCity] = useState([]);
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
@@ -74,42 +66,32 @@ const SubTables = (props) => {
           }
         ).then((response) => {
           setFormValues(response.data);
-          setCity(response.data.city);
+          setTierCity(response.data.cities);
         });
       };
       fetchData();
     }
   },[])
-  const add1RowInTier = () => {
-    setTier([...tier, { name: "" }]);
-  };
-  const [tier, setTier] = useState([
-    { name: "Jounieh" },
-    { name: "Abha" },
-  ]);
-  const [tierSelect, setTierSelect] = React.useState("");
-  const handleChangeTierSelect = (event) => {
-    setTierSelect(event.target.value);
-  };
 
-  const add1RowInCity = () => {
-    setCity([...city, { name: "" }]);
-  };
-  const [citySelect, setCitySelect] = React.useState("");
 
-  const handleChangeCityInput = (e) => {
-    setCitySelect(e.target.value);
+  const add1RowInTierCity = () => {
+    setTierCity([...tierCity, { name: "" }]);
   };
-  const keyPressCityHandler = (e) => {
+  const [tierCitySelect, setTierCitySelect] = React.useState("");
+
+  const handleChangeTierCityInput = (e) => {
+    setTierCitySelect(e.target.value);
+  };
+  const keyPressTierCityHandler = (e) => {
     const { keyCode, target } = e
     if(keyCode===13){
-      setCitySelect("")
-      setCity([...city.filter(e=>e.name!==""), { name: target.value }]);
+      setTierCitySelect("")
+      setTierCity([...tierCity.filter(e=>e.name!==""), { name: target.value }]);
     }
   }
   useEffect(()=>{
-    setFormValues({ ...formValues, city:city })
-  },[city])
+    setFormValues({ ...formValues, tierCity:tierCity })
+  },[tierCity])
   const keyPressHandler = (e) => {
     const { keyCode, target } = e
     if(keyCode===13){
@@ -231,10 +213,10 @@ const validateInputHandler = (e) => {
               error={formErrors.name.error}
             />
           </Grid>
-          <Grid item xs={12} style={{"display":"none"}}>
+          <Grid item xs={12} >
             <MUIDataTable
-              title="City"
-              data={city}
+              title="TierCity"
+              data={tierCity}
               columns={[
                 {
                   name: "name",
@@ -246,13 +228,13 @@ const validateInputHandler = (e) => {
                         return (
                           <div>
                             <TextField
-                              id="cityInput"
+                              id="tierCityInput"
                               label="Add new tier city"
-                              onChange={handleChangeCityInput}
-                              onKeyDown={keyPressCityHandler}
+                              onChange={handleChangeTierCityInput}
+                              onKeyDown={keyPressTierCityHandler}
                               fullWidth
-                              value={citySelect || ""}
-                              name="citySelect"
+                              value={tierCitySelect || ""}
+                              name="tierCitySelect"
                             />
                           </div>
                         );
@@ -266,7 +248,7 @@ const validateInputHandler = (e) => {
               options={{
                 filter: false,
                 customToolbar: () => {
-                  return <CustomToolbar listener={add1RowInCity} />;
+                  return <CustomToolbar listener={add1RowInTierCity} />;
                 }
               }}
             />

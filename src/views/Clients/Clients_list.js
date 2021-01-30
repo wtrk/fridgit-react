@@ -1,7 +1,13 @@
 import React, {useState,useEffect} from "react";
-import { NavLink } from "react-router-dom";
 import Autocomplete from "@material-ui/lab/Autocomplete";
-import { Container, Slide, Chip, TextField,Dialog } from "@material-ui/core";
+import {
+  Container,
+  Slide,
+  Chip,
+  TextField,
+  Dialog,
+  CircularProgress,
+} from "@material-ui/core";
 import MUIDataTable from "mui-datatables";
 import { MuiThemeProvider} from "@material-ui/core/styles";
 import datatableTheme from "assets/css/datatable-theme.js";
@@ -14,6 +20,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const ClientsList = () => {
+  const [isLoading, setIsloading] = useState(true);
   const [items, setItems] = useState([]); //table items
   const [openDetails, setOpenDetails] = useState(false);
   const [clientDetailsTitle, setClientDetailsTitle] = useState("");
@@ -33,6 +40,11 @@ const ClientsList = () => {
     filter: true,
     filterType: "dropdown",
     responsive: "standard",
+    textLabels: {
+        body: {
+            noMatch: isLoading ? <CircularProgress disableShrink /> : 'Sorry, there is no matching data to display'
+        },
+    },
   };
   const columns = [
     {
