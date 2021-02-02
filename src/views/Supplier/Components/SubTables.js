@@ -49,8 +49,8 @@ const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [modal_Title, setmodal_Title] = useState("Add"); //modal title
-    const [usersList, setUsersList] = useState([]); //table items
-    const [userValue, setUserValue] = useState({}); //table items
+    const [usersList, setUsersList] = useState([]); //Drivers list from db
+    const [userValue, setUserValue] = useState({}); //Chosen Driver
     const classes = useStyles(); //custom css
     const nameRef = useRef()
     const addressRef = useRef()
@@ -91,7 +91,6 @@ const SubTables = (props) => {
             return response.data
           }).then((response)=>{
             setUserValue(users.filter(e=> e._id==response.user_id)[0])
-            
           });
         }
       };

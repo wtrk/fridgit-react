@@ -152,7 +152,7 @@ const ClientsList = () => {
     filter: false,
     onRowsDelete: null,
     rowsPerPage: 20,
-    rowsPerPageOptions: [20, 100, 50],
+    rowsPerPageOptions: [20, 50, 100],
     selectToolbarPlacement: "replace",
     customToolbarSelect: (selectedRows, displayData, setSelectedRows) => (
       <div>

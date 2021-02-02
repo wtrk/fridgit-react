@@ -12,12 +12,15 @@ import {
   InputLabel,
   FormControl,
   Select,
-  MenuItem,RadioGroup,Radio,FormHelperText
+  MenuItem,
+  RadioGroup,
+  Radio,
+  FormHelperText,
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close, Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
-import Alert from '@material-ui/lab/Alert';
+import {Autocomplete, Alert} from '@material-ui/lab';
 const useStyles = makeStyles((theme) => ({
   appBar: {
     position: "relative",
@@ -37,6 +40,10 @@ const AddFormDialog = (props) => {
   const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
   const [userType, setUserType] = useState([]);
+  const [clientsList, setClientsList] = useState([]); //Clients list from db
+  const [clientValue, setClientValue] = useState({}); //Chosen Client
+  const [clientDisabled, setClientDisabled] = useState(true);
+
   const classes = useStyles(); //custom css
   const nameRef = useRef()
   const profileRef = useRef()
@@ -45,6 +52,7 @@ const AddFormDialog = (props) => {
   const emailRef = useRef()
   const passwordRef = useRef()
   const usernameRef = useRef()
+  const clientRef = useRef()
   const submitRef = useRef()
   const [formValues, setFormValues] = useState({
     name: "",
@@ -59,7 +67,8 @@ const AddFormDialog = (props) => {
     can_change:"",
     can_approve:"",
     can_approve_maintenance:"",
-    can_approve_damaged:""
+    can_approve_damaged:"",
+    client_id:""
   });
   const [formErrors, setFormErrors] = useState({
     name: {error:false,msg:""},
@@ -69,20 +78,18 @@ const AddFormDialog = (props) => {
     email: {error:false,msg:""},
     username: {error:false,msg:""},
     password: {error:false,msg:""},
+    client_id: {error:false,msg:""}
   });
   useEffect(()=>{
     nameRef.current.focus()
-    
-    if (props.userId) {
+
     const fetchData = async () => {
       nameRef.current.focus();
-      const users = await axios(
-        `${process.env.REACT_APP_BASE_URL}/users/${props.userId}`,
-        {
-          responseType: "json",
-        }
-      ).then((response) => {
-        setFormValues(response.data);
+      const clients = await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
+        responseType: "json",
+      }).then((response) => {
+        setClientsList(response.data);
+        return response.data;
       });
       const userType = await axios(
         `${process.env.REACT_APP_BASE_URL}/userType`,
@@ -92,10 +99,39 @@ const AddFormDialog = (props) => {
       ).then((response) => {
         setUserType(response.data);
       });
+      
+      
+    if (props.userId) {
+        const users = await axios(
+          `${process.env.REACT_APP_BASE_URL}/users/${props.userId}`,
+          {
+            responseType: "json",
+          }
+        ).then((response) => {
+          setFormValues(response.data);
+          return response.data
+        }).then((response) => {
+          if (props.userId) {
+          setClientValue(
+            clients.filter((e) => e._id == response.client_id)[0]
+          );
+          }
+        })
+      }
     };
     fetchData();
-}
   },[])
+  //When userType is client enable client field... else disble it
+  useEffect(()=>{
+    if(formValues.usertype_id==="6010209ab93b480ee05bff81"){
+      setClientDisabled(false)
+    }else{
+      setClientDisabled(true)
+      setClientValue({});
+      setFormValues({ ...formValues, client_id: "" });
+    }
+  },[formValues.usertype_id])
+
   const keyPressHandler = (e) => {
       const { keyCode, target } = e
       if(keyCode===13){
@@ -110,6 +146,10 @@ const AddFormDialog = (props) => {
           default: nameRef.current.focus();
         }
       }
+  }
+  const handleChangeClient = (e, newValue) =>{
+    setClientValue(newValue)
+    if(newValue) setFormValues({ ...formValues, client_id: newValue._id });
   }
   const handleChangeForm = (e) => {
     const { name, value } = e.target;
@@ -126,42 +166,42 @@ const AddFormDialog = (props) => {
     }
     
     if (props.userId) {
+      await axios({
+        method: "put",
+        url: `${process.env.REACT_APP_BASE_URL}/users/${props.userId}`,
+        data: [formValues],
+      })
+        .then(function (response) {
+          setOpenAlertSuccess(true);
+          props.handleClose()
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
         await axios({
-          method: "put",
-          url: `${process.env.REACT_APP_BASE_URL}/users/${props.userId}`,
+          method: "post",
+          url: `${process.env.REACT_APP_BASE_URL}/users/`,
           data: [formValues],
         })
           .then(function (response) {
             setOpenAlertSuccess(true);
+            setFormValues({
+              name: "",
+              profile_id: "",
+              address: "",
+              mobile: "",
+              email: "",
+              username: "",
+              password: "",
+              client_id: "",
+            });
             props.handleClose()
           })
           .catch((error) => {
             console.log(error);
           });
-    } else {
-             await axios({
-               method: "post",
-               url: `${process.env.REACT_APP_BASE_URL}/users/`,
-               data: [formValues],
-             })
-               .then(function (response) {
-                 setOpenAlertSuccess(true);
-                 setFormValues({
-                   name: "",
-                   profile_id: "",
-                   address: "",
-                   mobile: "",
-                   email: "",
-                   username: "",
-                   password: "",
-                 });
-                 props.handleClose()
-               })
-               .catch((error) => {
-                 console.log(error);
-               });
-           }
-  
+      }
   }
   const validateInputHandler = (e) => {
     const { name, value } = e.target;
@@ -341,7 +381,7 @@ const AddFormDialog = (props) => {
               row
               aria-label="usertype"
               name="usertype_id"
-              value={formValues.usertype || ""}
+              value={formValues.usertype_id || ""}
               onChange={handleChangeForm}
             >
               {userType.map((e) => 
@@ -406,6 +446,33 @@ const AddFormDialog = (props) => {
                 />
               }
               label="Can Approve Damaged Fridges"
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <Autocomplete
+              disabled={clientDisabled}
+              id="ClientInput"
+              options={clientsList || {}}
+              value={clientValue || {}}
+              getOptionLabel={(option) => {
+                return Object.keys(option).length!==0 ? option.company : "";
+              }}
+              fullWidth
+              onChange={handleChangeClient}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Client"
+                  inputRef={clientRef}
+                  onKeyDown={keyPressHandler}
+                  onBlur={validateInputHandler}
+                  helperText={
+                    formErrors.client_id.error ? formErrors.client_id.msg : null
+                  }
+                  error={formErrors.client_id.error}
+                />
+              )}
             />
           </Grid>
 

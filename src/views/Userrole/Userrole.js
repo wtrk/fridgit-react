@@ -1,64 +1,60 @@
 import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
+import CustomToolbar from "../../CustomToolbar";
 import {
-  Switch,
-  Box,
-  Typography,
+  Container,
   Dialog,
   Slide,
-  Container,
+  TextField,
   Chip,
-  TextField,CircularProgress,
+  CircularProgress,
 } from "@material-ui/core";
-import MUIDataTable from "mui-datatables";
-import { MuiThemeProvider } from "@material-ui/core/styles";
-import { datatableTheme } from "assets/css/datatable-theme.js";
+import { makeStyles, MuiThemeProvider } from "@material-ui/core/styles";
+import {Autocomplete} from "@material-ui/lab";
 
-import { Link } from "react-router-dom";
-import Autocomplete from "@material-ui/lab/Autocomplete";
+import FilterComponent from "components/CustomComponents/FilterComponent.js";
+import MUIDataTable from "mui-datatables";
+import {datatableTheme} from "assets/css/datatable-theme.js";
+import SubTables from "./Components/SubTables.js";
+import Privilege from "./Components/Privilege.js";
 import axios from 'axios';
 
-import AddFormDialog from "components/CustomComponents/AddFormDialog.js";
-
-// Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
+// Top 100 films as rated by IMDb userProfile. http://www.imdb.com/chart/top
 const top100Films = [];
 
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
 
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`full-width-tabpanel-${index}`}
-      aria-labelledby={`full-width-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box p={3}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
-    </div>
-  );
-}
+const useStyles = makeStyles((theme) => ({
+  appBar: {
+    position: "relative",
+  },
+  title: {
+    marginLeft: theme.spacing(2),
+    flex: 1,
+  },
+  root: {
+    backgroundColor: theme.palette.background.paper,
+  },
+  formControl: {
+    minWidth: "100%",
+  },
+}));
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-TabPanel.propTypes = {
-  children: PropTypes.node,
-  index: PropTypes.any.isRequired,
-  value: PropTypes.any.isRequired,
-};
-
-export default function FullWidthTabs() {
+const UserProfile = () => {
+  const classes = useStyles(); //custom css
   const [isLoading, setIsloading] = useState(true);
   const [items, setItems] = useState([]); //table items
+  const [openAddForm, setOpenAddForm] = useState(false); //for modal
+  const [openPrivilege, setOpenPrivilege] = useState(false); //for privilege
+  const [userProfileId, setUserProfileId] = useState(); //modal title
+  const [RowID, setRowID] = useState(0); //current row
+  const [formTitle, setFormTitle] = useState("Add"); //modal title
+  const [filterDialog,setFilterDialog] = useState(false)
   useEffect(() => {
     const fetchData = async () => {
-      const userProfile = await axios(`${process.env.REACT_APP_BASE_URL}/userProfile`, {
+      await axios(`${process.env.REACT_APP_BASE_URL}/userProfile`, {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
@@ -66,22 +62,25 @@ export default function FullWidthTabs() {
       });
     };
     fetchData();
-  }, []);
-  const [openDialog2, setOpenDialog2] = useState(false); //for modal
-  const [modal_Title, setmodal_Title] = useState("Add"); //modal title
+  }, [openAddForm]);
 
   const columns = [
+    {
+      name: "_id",
+      options: {
+        display: false,
+      }
+    },
     {
       name: "name",
       label: "Name",
       options: {
-        filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
             <div>
               <a
                 onClick={() => {
-                  handleClickOpen("Edit");
+                  handleAdd("Edit User Profile - "+tableMeta.rowData[1],tableMeta.rowData[0]);
                 }}
               >
                 {value}
@@ -92,119 +91,107 @@ export default function FullWidthTabs() {
       },
     },
     {
-      name: "id",
+      name: "_id",
       label: "Privilege",
       options: {
-        filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
             <div>
-              <Link to={"/admin/Privilege/"+value}>Privilege</Link>
+              <a
+                onClick={() => {
+                  handlePrivilege("Edit Privilege - "+tableMeta.rowData[1],tableMeta.rowData[0]);
+                }}
+              >Privilege</a>
             </div>
           );
         },
       },
-    },
-    {
-      name: "can_view",
-      label: "Can View",
-      options: {
-        filter: false,
-        customBodyRender: (value, tableMeta, updateValue) => {
-          return (
-              <Switch
-                checked={value === 1 ? true : false}
-                color="primary"
-                name="checkedB"
-                inputProps={{ "aria-label": "primary checkbox" }}
-              />
-          );
-        },
-      },
-    },
-    {
-      name: "can_edit",
-      label: "Can Edit",
-      options: {
-        filter: false,
-        customBodyRender: (value, tableMeta, updateValue) => {
-          return (
-              <Switch
-                checked={value === 1 ? true : false}
-                color="primary"
-                name="checkedB"
-                inputProps={{ "aria-label": "primary checkbox" }}
-              />
-          );
-        },
-      },
-    },
-    {
-      name: "can_delete",
-      label: "Can Delete",
-      options: {
-        filter: false,
-        customBodyRender: (value, tableMeta, updateValue) => {
-          return (
-              <Switch
-                checked={value === 1 ? true : false}
-                color="primary"
-                name="checkedB"
-                inputProps={{ "aria-label": "primary checkbox" }}
-              />
-          );
-        },
-      },
-    },
+    }
   ];
+
   const options = {
     filter: false,
     onRowsDelete: null,
     rowsPerPage: 20,
-    rowsPerPageOptions: [20, 100, 50],
+    rowsPerPageOptions: [20, 50, 100],
     selectToolbarPlacement: "replace",
+    customToolbar: () => {
+      return (
+        <CustomToolbar
+          listener={() => {
+            handleAdd("Add New UserProfile");
+          }}
+          handleFilter={handleFilter}
+        />
+      );
+    },
+    onRowsDelete: (rowsDeleted, dataRows) => {
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
+        axios.delete(`${process.env.REACT_APP_BASE_URL}/userProfile/${idsToDelete}`, {
+          responseType: "json",
+        }).then((response) => {
+          console.log("deleted")
+        });
+    },
     textLabels: {
         body: {
             noMatch: !isLoading && 'Sorry, there is no matching data to display'
         },
     },
   };
-
-  const handleClickOpen = (modal_Title) => {
-    setOpenDialog2(true);
-    setmodal_Title(modal_Title);
+  const handleFilter = () => {
+    setFilterDialog(true)
   };
 
-  const handleCloseDialog2 = () => {
-    setOpenDialog2(false);
+  const handleAdd = (title, userProfileId) => {
+    setOpenAddForm(true);
+    setUserProfileId(userProfileId);
+    setFormTitle(title);
   };
+  const handleCloseAddForm = () => setOpenAddForm(false)
 
+  const handlePrivilege = (title, userProfileId) => {
+    setOpenPrivilege(true);
+    setUserProfileId(userProfileId);
+    setFormTitle(title);
+  };
+  const handleClosePrivilege = () => setOpenPrivilege(false)
+
+  //Search component ---------------START--------------
+  const [itemsBackup, setItemsBackup] = useState([]);
+  const [searchValue, setSearchValue] = useState({});
+  const handleChangeSearch = (e, newValue) => {
+    if(itemsBackup.length===0) setItemsBackup(items)
+    setSearchValue(newValue)
+    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+  }
+  //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
-        multiple
-        id="tags-filled"
-        options={top100Films.map((option) => option.title)}
-        defaultValue={[]}
-        freeSolo
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="filled"
-            label=""
-            placeholder="Search Data"
+    <Autocomplete
+      id="tags-filled"
+      options={items || {}}
+      value={searchValue || {}}
+      getOptionLabel={(option) => option.name || ""}
+      onChange={handleChangeSearch}
+      renderTags={(value, getTagProps) =>
+        value.map((option, index) => (
+          <Chip
+            variant="outlined"
+            label={option}
+            {...getTagProps({ index })}
           />
-        )}
-      />
+        ))
+      }
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="filled"
+          label=""
+          placeholder="Search by Name"
+        />
+      )}
+    />
 
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
@@ -218,20 +205,40 @@ export default function FullWidthTabs() {
       <div>
         <Dialog
           fullScreen
-          open={openDialog2}
-          onClose={handleCloseDialog2}
+          open={openAddForm}
+          onClose={handleCloseAddForm}
           TransitionComponent={Transition}
         >
-          <AddFormDialog
-            title={modal_Title + " User Roles"}
-            handleClose={handleCloseDialog2}
-            inputs={[
-              { labelText: "Description", type: "text" },
-              { labelText: "Privilege", type: "text" },
-            ]}
+          <SubTables
+            title={formTitle}
+            handleClose={handleCloseAddForm}
+            userProfileId={userProfileId}
           />
+        </Dialog>
+        <Dialog
+          fullScreen
+          open={openPrivilege}
+          onClose={handleClosePrivilege}
+          TransitionComponent={Transition}
+        >
+          <Privilege
+            title={formTitle}
+            handleClose={handleClosePrivilege}
+            userProfileId={userProfileId}
+          />
+        </Dialog>
+        {/*********************** FILTER start ****************************/}
+        <Dialog
+          onClose={() => setFilterDialog(false)}
+          maxWidth={"xl"}
+          fullWidth={true}
+          aria-labelledby="customized-dialog-title"
+          open={filterDialog}
+        >
+          <FilterComponent setOpenDialog={setFilterDialog} />
         </Dialog>
       </div>
     </Container>
   );
 }
+export default UserProfile

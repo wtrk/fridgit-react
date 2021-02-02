@@ -141,7 +141,7 @@ const [openOperationDialog,setOpenOperationDialog] = useState(false);
     filter: false,
     onRowsDelete: null,
     rowsPerPage: 20,
-    rowsPerPageOptions: [20, 100, 50],
+    rowsPerPageOptions: [20, 50, 100],
     selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
