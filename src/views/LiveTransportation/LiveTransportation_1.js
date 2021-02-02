@@ -6,7 +6,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import TextField from "@material-ui/core/TextField";
 import MUIDataTable from "mui-datatables";
 import { MuiThemeProvider, withStyles } from "@material-ui/core/styles";
-import datatableTheme from "assets/css/datatable-theme.js";
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
 import dataJson from "./data.json";
@@ -401,7 +401,6 @@ const ClientsList = () => {
             data={itemsFiltered ? itemsFiltered : items}
             columns={columns}
             options={options}
-            className="dataTableContainer"
           />
         </MuiThemeProvider>
       </Container>

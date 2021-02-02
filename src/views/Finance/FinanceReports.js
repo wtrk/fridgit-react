@@ -12,7 +12,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import TextField from "@material-ui/core/TextField";
 import MUIDataTable from "mui-datatables";
 import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import datatableTheme from "assets/css/datatable-theme.js";
+import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
 import AppBar from "@material-ui/core/AppBar";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
@@ -358,7 +358,7 @@ const ClientsList = () => {
           ))}
         </Tabs>
       </AppBar>
-      <Container maxWidth="xl" style={{paddingTop:"5rem"}}>
+      <Container maxWidth="xl" style={{paddingTop:"4rem"}}>
         <Autocomplete
           multiple
           id="tags-filled"
@@ -383,13 +383,12 @@ const ClientsList = () => {
             />
           )}
         />
-        <MuiThemeProvider theme={datatableTheme}>
+        <MuiThemeProvider theme={datatableThemeInTabsPage}>
         <MUIDataTable
           title=""
           data={itemsFiltered ? itemsFiltered : items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
         </MuiThemeProvider>
       </Container>

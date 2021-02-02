@@ -75,6 +75,7 @@ const SubTables = (props) => {
 
 
   const add1RowInTierCity = () => {
+    setTierCitySelect("")
     setTierCity([...tierCity, { name: "" }]);
   };
   const [tierCitySelect, setTierCitySelect] = React.useState("");
@@ -82,11 +83,32 @@ const SubTables = (props) => {
   const handleChangeTierCityInput = (e) => {
     setTierCitySelect(e.target.value);
   };
-  const keyPressTierCityHandler = (e) => {
+  const keyPressTierCityHandler = async (e) => {
     const { keyCode, target } = e
     if(keyCode===13){
-      setTierCitySelect("")
-      setTierCity([...tierCity.filter(e=>e.name!==""), { name: target.value }]);
+      console.log(target.value)
+      if (props.tierId) {
+        await axios({
+          method: "put",
+          url: `${process.env.REACT_APP_BASE_URL}/tierCity/${props.tierId}`,
+          data: { name: target.value },
+        })
+          .then(function (response) {
+            setTierCity([
+              ...tierCity.filter((e) => e.name !== ""),
+              { name: target.value },
+            ]);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }else{
+        setTierCitySelect("")
+        setTierCity([
+          ...tierCity.filter((e) => e.name !== ""),
+          { name: target.value },
+        ]);
+      }
     }
   }
   useEffect(()=>{
@@ -112,35 +134,47 @@ const handleOnSubmit = async () => {
   }
   
   if (props.tierId) {
+    delete formValues.cities
+    delete formValues.tierCity
       await axios({
         method: "put",
         url: `${process.env.REACT_APP_BASE_URL}/tiers/${props.tierId}`,
         data: [formValues],
       })
+      .then(function (response) {
+        setOpenAlertSuccess(true);
+        props.handleClose()
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  } else {
+      await axios({
+        method: "post",
+        url: `${process.env.REACT_APP_BASE_URL}/tiers/`,
+        data: [formValues],
+      })
+      .then(async function (response) {
+        await axios({
+          method: "put",
+          url: `${process.env.REACT_APP_BASE_URL}/tierCity/${response.data.id}`,
+          data: formValues.tierCity[0],
+        })
         .then(function (response) {
           setOpenAlertSuccess(true);
+          setFormValues({
+            code: "",
+            name: ""
+          });
           props.handleClose()
         })
         .catch((error) => {
           console.log(error);
         });
-  } else {
-           await axios({
-             method: "post",
-             url: `${process.env.REACT_APP_BASE_URL}/tiers/`,
-             data: [formValues],
-           })
-             .then(function (response) {
-               setOpenAlertSuccess(true);
-               setFormValues({
-                 code: "",
-                 name: ""
-               });
-               props.handleClose()
-             })
-             .catch((error) => {
-               console.log(error);
-             });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
 
 }

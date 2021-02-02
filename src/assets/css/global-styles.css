@@ -51,7 +51,6 @@ a, a:not([href]){
 a:hover {
   color: #89229b88;
 }
-
 .MuiAutocomplete-root {
   width: 50%;
 }
@@ -62,34 +61,12 @@ a:hover {
   overflow: hidden;
   background: none;
 }
-.dataTableContainer > div:nth-child(3) { /**Content**/
-  height: 100% !important;
-  width: 100% !important;
-  overflow: scroll;
-}
-.dataTableContainer > table:nth-child(4) { /**Footer**/
-  position: fixed;
-  left: 0;
-  bottom: 0;
-}
 .datatables-noprint {
   padding: 2rem 0;
 }
 .d-flex {
   display: flex;
   align-items: center;
-}
-.avatar_circle {
-  background: #673ab7;
-  color: #fff;
-  border-radius: 100%;
-  width: 2rem;
-  height: 2rem;
-  text-align: center;
-  line-height: 2rem;
-  margin-right: 0.5rem;
-  font-weight: bold;
-  text-transform: uppercase;
 }
 .infoTabContainer img {
   border-radius: 0.5rem;
@@ -112,4 +89,16 @@ a:hover {
 .avatarRounded{
   width: 50px;
   border-radius: 50px;
+}
+.avatar_circle {
+  background: #673ab7;
+  color: #fff;
+  border-radius: 100%;
+  width: 2rem;
+  height: 2rem;
+  text-align: center;
+  line-height: 2rem;
+  margin-right: 0.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
 }

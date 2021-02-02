@@ -9,7 +9,7 @@ import {
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import CustomToolbar from "../../CustomToolbar";
 import MUIDataTable from "mui-datatables";
-import datatableTheme from "assets/css/datatable-theme.js";
+import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
 
 import "react-dropzone-uploader/dist/styles.css";
 import Autocomplete from "@material-ui/lab/Autocomplete";
@@ -140,6 +140,8 @@ const [openOperationDialog,setOpenOperationDialog] = useState(false);
   const options = {
     filter: false,
     onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
     selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
@@ -168,7 +170,7 @@ const [openOperationDialog,setOpenOperationDialog] = useState(false);
         tabIndex={tabIndex}
         setTabIndex={setTabIndex}
       />
-      <Container maxWidth="xl" style={{ paddingTop: "5rem" }}>
+      <Container maxWidth="xl" style={{paddingTop:"4rem"}}>
         <Autocomplete
           multiple
           id="tags-filled"
@@ -195,13 +197,12 @@ const [openOperationDialog,setOpenOperationDialog] = useState(false);
             />
           )}
         />
-        <MuiThemeProvider theme={datatableTheme}>
+        <MuiThemeProvider theme={datatableThemeInTabsPage}>
           <MUIDataTable
             title=""
             data={itemsFiltered ? itemsFiltered : items}
             columns={columns}
             options={options}
-            className="dataTableContainer"
           />
         </MuiThemeProvider>
       </Container>

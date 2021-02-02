@@ -23,7 +23,7 @@ import Tab from "@material-ui/core/Tab";
 import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
 import MUIDataTable from "mui-datatables";
-import datatableTheme from "assets/css/datatable-theme.js";
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import { MuiThemeProvider, withStyles } from "@material-ui/core/styles";
 import Grid from "@material-ui/core/Grid";
 import CustomInput from "components/CustomInput/CustomInput.js";
@@ -380,7 +380,6 @@ export default function FullWidthTabs() {
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
 

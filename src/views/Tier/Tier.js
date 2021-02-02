@@ -13,11 +13,9 @@ import {Autocomplete} from "@material-ui/lab";
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
-import datatableTheme from "assets/css/datatable-theme.js";
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import axios from 'axios';
-
-
 
 // Top 100 films as rated by IMDb tiers. http://www.imdb.com/chart/top
 const top100Films = [];
@@ -103,6 +101,8 @@ const Tier = () => {
   const options = {
     filter: false,
     onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
     selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
@@ -124,7 +124,7 @@ const Tier = () => {
     },
     textLabels: {
         body: {
-            noMatch: isLoading ? <CircularProgress disableShrink /> : 'Sorry, there is no matching data to display'
+            noMatch: !isLoading && 'Sorry, there is no matching data to display'
         },
     },
   };
@@ -156,7 +156,6 @@ const Tier = () => {
       value={searchValue || {}}
       getOptionLabel={(option) => option.name || ""}
       onChange={handleChangeSearch}
-      freeSolo
       renderTags={(value, getTagProps) =>
         value.map((option, index) => (
           <Chip
@@ -178,11 +177,10 @@ const Tier = () => {
 
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
-          title=""
+          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
 

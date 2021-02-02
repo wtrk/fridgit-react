@@ -1,41 +1,57 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
+import SwipeableViews from "react-swipeable-views";
 import CustomToolbar from "../../CustomToolbar";
-import { makeStyles, MuiThemeProvider } from "@material-ui/core/styles";
-import {
-  Autocomplete,
-  Timeline,
-  TimelineItem,
-  TimelineSeparator,
-  TimelineConnector,
-  TimelineContent,
-  TimelineDot,
-  TimelineOppositeContent,
-} from "@material-ui/lab";
-import {
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  AppBar,
-  Typography,
-  Box,
-  DialogContent,
-  Grid,
-  DialogActions,
-  IconButton,
-  TextField,
-  Chip,
-  Button,
-  Dialog,
-  Toolbar,
-  Slide,Avatar
-} from "@material-ui/core";
+import Checkbox from "@material-ui/core/Checkbox";
+import { makeStyles, useTheme } from "@material-ui/core/styles";
+import Select from "@material-ui/core/Select";
+import MenuItem from "@material-ui/core/MenuItem";
+import InputLabel from "@material-ui/core/InputLabel";
+import Check from "@material-ui/icons/Check";
+import Timeline from "@material-ui/lab/Timeline";
+import TimelineItem from "@material-ui/lab/TimelineItem";
+import TimelineSeparator from "@material-ui/lab/TimelineSeparator";
+import TimelineConnector from "@material-ui/lab/TimelineConnector";
+import TimelineContent from "@material-ui/lab/TimelineContent";
+import TimelineDot from "@material-ui/lab/TimelineDot";
+import FormControl from "@material-ui/core/FormControl";
+import TimelineOppositeContent from "@material-ui/lab/TimelineOppositeContent";
+import FormHelperText from "@material-ui/core/FormHelperText";
+import AppBar from "@material-ui/core/AppBar";
+import Tabs from "@material-ui/core/Tabs";
+import Tab from "@material-ui/core/Tab";
+import Typography from "@material-ui/core/Typography";
+import Box from "@material-ui/core/Box";
 import MUIDataTable from "mui-datatables";
-import datatableTheme from "assets/css/datatable-theme.js";
+import { MuiThemeProvider, withStyles } from "@material-ui/core/styles";
+import {datatableTheme} from "assets/css/datatable-theme.js";
+import Grid from "@material-ui/core/Grid";
 import CustomInput from "components/CustomInput/CustomInput.js";
-import {Close} from "@material-ui/icons";
-import axios from 'axios';
+import Button from "@material-ui/core/Button";
+import Dialog from "@material-ui/core/Dialog";
+import Toolbar from "@material-ui/core/Toolbar";
+import CloseIcon from "@material-ui/icons/Close";
+import Slide from "@material-ui/core/Slide";
+
+import MuiDialogTitle from "@material-ui/core/DialogTitle";
+import MuiDialogContent from "@material-ui/core/DialogContent";
+import MuiDialogActions from "@material-ui/core/DialogActions";
+
+import { Create, Delete, Add } from "@material-ui/icons";
+import IconButton from "@material-ui/core/IconButton";
+import Autocomplete from "@material-ui/lab/Autocomplete";
+import TextField from "@material-ui/core/TextField";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import Chip from "@material-ui/core/Chip";
+
+import Avatar from "@material-ui/core/Avatar";
+import { deepOrange, deepPurple } from "@material-ui/core/colors";
+
+import styles from "assets/jss/material-dashboard-react/components/tasksStyle.js";
+
+
+const useStyles_theme = makeStyles(styles);
 
 // Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
 const top100Films = [];
@@ -81,6 +97,14 @@ const useStyles = makeStyles((theme) => ({
       margin: theme.spacing(1),
     },
   },
+  orange: {
+    color: theme.palette.getContrastText(deepOrange[500]),
+    backgroundColor: deepOrange[500],
+  },
+  purple: {
+    color: theme.palette.getContrastText(deepPurple[500]),
+    backgroundColor: deepPurple[500],
+  },
 
   root_modal: {
     margin: 0,
@@ -104,26 +128,55 @@ TabPanel.propTypes = {
   value: PropTypes.any.isRequired,
 };
 
+function a11yProps(index) {
+  return {
+    id: `full-width-tab-${index}`,
+    "aria-controls": `full-width-tabpanel-${index}`,
+  };
+}
+
 export default function FullWidthTabs() {
   const classes = useStyles(); //custom css
+  const classes_theme = useStyles_theme(); //theme css
+
+  const theme = useTheme();
 
   const [value, setValue] = useState(0);
-  const [items, setItems] = useState([]); //table items
-  useEffect(() => {
-    const fetchData = async () => {
-        await axios(`${process.env.REACT_APP_BASE_URL}/warehouse`, {
-        responseType: "json",
-      }).then((response) => {
-        setItems(response.data[0].data)
-      });
-    };
-    fetchData();
-  }, []);
+  const [items, setItems] = useState([{code:"dddd",name:"dddd"}]); //table items
+  const [clients, setclients] = useState([]); //Clients Dropdown
+  const [fridgestype, setfridgestype] = useState([]); //fridgestype Dropdown
   const [open, setOpen] = useState(false); //for modal
   const [open2, setOpen2] = useState(false); //for modal2
   const [RowID, setRowID] = useState(0); //current row
   const [modal_Title, setmodal_Title] = useState("Add"); //modal title
+  const MySwal = withReactContent(Swal); //swal
 
+
+  const DialogContent = withStyles((theme) => ({
+    root_modal: {
+      padding: theme.spacing(2),
+    },
+  }))(MuiDialogContent);
+
+  const DialogActions = withStyles((theme) => ({
+    root_modal: {
+      margin: 0,
+      padding: theme.spacing(1),
+    },
+  }))(MuiDialogActions);
+
+  const DialogTitle = withStyles(styles)((props) => {
+    const { children, classes, onClose, ...other } = props;
+    return (
+      <MuiDialogTitle
+        disableTypography
+        className={classes.root_modal}
+        {...other}
+      >
+        <Typography variant="h6">{children}</Typography>
+      </MuiDialogTitle>
+    );
+  });
 
   const columns = [
     {
@@ -134,7 +187,11 @@ export default function FullWidthTabs() {
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
             <div>
-              <a onClick={() => {handleClickOpen({value}, "Edit")}}>
+              <a
+                onClick={() => {
+                  handleClickOpen("1", "Edit");
+                }}
+              >
                 {value}
               </a>
             </div>
@@ -157,10 +214,61 @@ export default function FullWidthTabs() {
     },
   };
 
+  function deleterow(row) {
+    MySwal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(
+          `${process.env.REACT_APP_BASE_URL}ws_tfridges.php?action=2`,
+          requestOptions
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            const data1 = items.filter((user) => user.serial !== row["row"]);
+
+            setItems(data1);
+          })
+          .catch((error) => {
+            alert("error");
+            console("There was an error!", error);
+          });
+
+        Swal.fire("Deleted!", "Your file has been deleted.", "success");
+      }
+    });
+
+    const requestOptions = {
+      method: "POST",
+      body: JSON.stringify(row),
+    };
+  }
+
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
+
+  const handleChangeIndex = (index) => {
+    setValue(index);
+  };
+
   const handleClickOpen = (rowID, modal_Title) => {
     setOpen(true);
     setRowID(rowID);
     setmodal_Title(modal_Title);
+
+    // alert(123);
+  };
+
+  const handleClickOpen2 = () => {
+    setOpen2(true);
   };
 
   const handleClose = () => {
@@ -204,7 +312,6 @@ export default function FullWidthTabs() {
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
 
@@ -223,10 +330,10 @@ export default function FullWidthTabs() {
                 onClick={handleClose}
                 aria-label="close"
               >
-                <Close />
+                <CloseIcon />
               </IconButton>
               <Typography variant="h6" className={classes.title}>
-                {modal_Title + " Warehouse"}
+                {modal_Title + " Supplier"}
               </Typography>
               <Button autoFocus color="inherit" onClick={handleClose}>
                 save
@@ -260,38 +367,34 @@ export default function FullWidthTabs() {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <FormControl className={classes.formControl}>
-                  <InputLabel id="demo-simple-select-autowidth-label">
-                    City
-                  </InputLabel>
-                  <Select
-                    style={{ width: "100%" }}
-                    labelId="demo-simple-select-autowidth-label"
-                    id="demo-simple-select-autowidth"
-                    autoWidth
-                  >
-                    <MenuItem value="City1">City1</MenuItem>
-                    <MenuItem value="City2">City2</MenuItem>
-                  </Select>
-                </FormControl>
+              <Grid item xs={12} sm={12}>
+                <MUIDataTable
+                  title="Drivers"
+                  data={[{ name: "st1" }, { name: "st" }]}
+                  //{this.state.user}
+                  columns={[
+                    {
+                      name: "name",
+                      label: "Name",
+                    },
+                  ]}
+                  options={options}
+                />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <FormControl className={classes.formControl}>
-                  <InputLabel id="demo-simple-select-autowidth-label">
-                    Neighbourhood
-                  </InputLabel>
-                  <Select
-                    style={{ width: "100%" }}
-                    labelId="demo-simple-select-autowidth-label"
-                    id="demo-simple-select-autowidth"
-                    autoWidth
-                  >
-                    <MenuItem value="Neighbourhood1">Neighbourhood1</MenuItem>
-                    <MenuItem value="Neighberhood2">Neighberhood2</MenuItem>
-                  </Select>
-                </FormControl>
+              <Grid item xs={12} sm={12}>
+                <MUIDataTable
+                  title="Technician"
+                  data={[{ name: "st1" }, { name: "st" }]}
+                  //{this.state.user}
+                  columns={[
+                    {
+                      name: "name",
+                      label: "Name",
+                    },
+                  ]}
+                  options={options}
+                />
               </Grid>
             </Grid>
           </div>
@@ -304,6 +407,26 @@ export default function FullWidthTabs() {
           aria-labelledby="customized-dialog-title"
           open={open2}
         >
+          {/* <DialogTitle style={{background:"red",color:"white"}} id="customized-dialog-title" onClose={handleClose2}>
+          
+ 
+           <div>
+           
+          </div>
+         
+        <div  >
+      <Button color="primary">History</Button>
+      <Button color="primary">Customer</Button>
+      <Button
+        //onClick={alert()}//("1","Edit")}
+        color="primary"
+        className={classes.button}
+      >
+        Edit
+      </Button>
+    
+    </div>
+        </DialogTitle> */}
           <DialogContent
             dividers
             style={{ background: "#FFCC00", color: "white" }}
@@ -348,6 +471,20 @@ export default function FullWidthTabs() {
             </div>
           </DialogContent>
           <DialogContent dividers>
+            {/* <Typography gutterBottom>
+            Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis
+            in, egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.
+          </Typography>
+          <Typography gutterBottom>
+            Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis
+            lacus vel augue laoreet rutrum faucibus dolor auctor.
+          </Typography>
+          <Typography gutterBottom>
+            Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel
+            scelerisque nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus
+            auctor fringilla.
+          </Typography> */}
+
             <React.Fragment>
               <Timeline align="alternate">
                 <TimelineItem>

@@ -5,14 +5,16 @@ import {
   Dialog,
   Slide,
   TextField,
-  Chip,CircularProgress
+  Chip,
+  CircularProgress,
+  Typography,
 } from "@material-ui/core";
 import { makeStyles, MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
-import datatableTheme from "assets/css/datatable-theme.js";
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import axios from 'axios';
 
@@ -101,6 +103,8 @@ const City = () => {
     filter: false,
     onRowsDelete: null,
     selectToolbarPlacement: "replace",
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
     customToolbar: () => {
       return (
         <CustomToolbar
@@ -121,7 +125,7 @@ const City = () => {
     },
     textLabels: {
         body: {
-            noMatch: isLoading ? <CircularProgress disableShrink /> : 'Sorry, there is no matching data to display'
+            noMatch: !isLoading && 'Sorry, there is no matching data to display'
         },
     },
   };
@@ -155,7 +159,6 @@ const City = () => {
       value={searchValue || {}}
       getOptionLabel={(option) => option.name || ""}
       onChange={handleChangeSearch}
-      freeSolo
       renderTags={(value, getTagProps) =>
         value.map((option, index) => (
           <Chip
@@ -177,11 +180,10 @@ const City = () => {
 
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
-          title=""
+          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
 

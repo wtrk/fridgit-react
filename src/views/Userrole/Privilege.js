@@ -5,7 +5,7 @@ import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
 import MUIDataTable from "mui-datatables";
 import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import datatableTheme from "assets/css/datatable-theme.js";
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import Dialog from "@material-ui/core/Dialog";
 import Slide from "@material-ui/core/Slide";
 import Container from "@material-ui/core/Container";
@@ -196,7 +196,6 @@ export default function FullWidthTabs() {
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
 

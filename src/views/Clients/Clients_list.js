@@ -10,7 +10,7 @@ import {
 } from "@material-ui/core";
 import MUIDataTable from "mui-datatables";
 import { MuiThemeProvider} from "@material-ui/core/styles";
-import datatableTheme from "assets/css/datatable-theme.js";
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import ClientDetails from "./Components/ClientDetails.js";
 import axios from 'axios';
 import "./Clients.css";
@@ -31,18 +31,21 @@ const ClientsList = () => {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
+        return setIsloading(false)
       });
     };
     fetchData();
   }, [openDetails]);
 
   const options = {
-    filter: true,
-    filterType: "dropdown",
-    responsive: "standard",
+    filter: false,
+    onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
+    selectToolbarPlacement: "replace",
     textLabels: {
         body: {
-            noMatch: isLoading ? <CircularProgress disableShrink /> : 'Sorry, there is no matching data to display'
+            noMatch: !isLoading && 'Sorry, there is no matching data to display'
         },
     },
   };
@@ -101,7 +104,6 @@ const ClientsList = () => {
       value={searchValue || {}}
       getOptionLabel={(option) => option.company || ""}
       onChange={handleChangeSearch}
-      freeSolo
       renderTags={(value, getTagProps) =>
         value.map((option, index) => (
           <Chip
@@ -122,11 +124,10 @@ const ClientsList = () => {
     />
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
-          title=""
+          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
       <div>

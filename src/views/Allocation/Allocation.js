@@ -9,13 +9,14 @@ import {
   Slide,
   TextField,
   Chip,
+  CircularProgress,
 } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
-import datatableTheme from "assets/css/datatable-theme.js";
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import dataJson from "./data.json";
 
@@ -56,7 +57,7 @@ TabPanel.propTypes = {
 };
 
 export default function FullWidthTabs() {
-
+  const [isLoading, setIsloading] = useState(true);
   const [items, setItems] = useState(dataJson); //table items
   const [open, setOpen] = useState(false); //for modal
   const [RowID, setRowID] = useState(0); //current row
@@ -96,11 +97,18 @@ export default function FullWidthTabs() {
   const options = {
     filter: false,
     onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
     selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
         <CustomToolbar listener={handleClickOpen} handleFilter={handleFilter} />
       );
+    },
+    textLabels: {
+        body: {
+            noMatch: !isLoading && 'Sorry, there is no matching data to display'
+        },
     },
   };
   const handleFilter = () => {
@@ -142,11 +150,10 @@ export default function FullWidthTabs() {
 
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
-          title=""
+          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
 

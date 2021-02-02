@@ -1,4 +1,4 @@
-import React, { Fragment,useRef,useEffect,useState } from "react";
+import React, { useRef,useEffect,useState } from "react";
 import {
   TextField,
   AppBar,
@@ -36,6 +36,7 @@ const useStyles = makeStyles((theme) => ({
 const AddFormDialog = (props) => {
   const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
+  const [userType, setUserType] = useState([]);
   const classes = useStyles(); //custom css
   const nameRef = useRef()
   const profileRef = useRef()
@@ -54,7 +55,7 @@ const AddFormDialog = (props) => {
     username: "",
     password: "",
     receive_email: "",
-    usertype:"",
+    usertype_id:"",
     can_change:"",
     can_approve:"",
     can_approve_maintenance:"",
@@ -82,6 +83,14 @@ const AddFormDialog = (props) => {
         }
       ).then((response) => {
         setFormValues(response.data);
+      });
+      const userType = await axios(
+        `${process.env.REACT_APP_BASE_URL}/userType`,
+        {
+          responseType: "json",
+        }
+      ).then((response) => {
+        setUserType(response.data);
       });
     };
     fetchData();
@@ -164,7 +173,7 @@ const AddFormDialog = (props) => {
     }
   }
   return (
-    <Fragment>
+    <>
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />
@@ -197,19 +206,19 @@ const AddFormDialog = (props) => {
               inputRef={nameRef}
               onKeyDown={keyPressHandler}
               onBlur={validateInputHandler}
-              helperText={
-                formErrors.name.error ? formErrors.name.msg : null
-              }
+              helperText={formErrors.name.error ? formErrors.name.msg : null}
               error={formErrors.name.error}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <FormControl className={classes.formControl} error={formErrors.profile_id.error}>
+            <FormControl
+              className={classes.formControl}
+              error={formErrors.profile_id.error}
+            >
               <InputLabel id="ProfileLabel">Profile</InputLabel>
               <Select
                 labelId="ProfileLabel"
                 id="ProfileInput"
-               
                 value={formValues.profile_id}
                 name="profile_id"
                 onChange={handleChangeForm}
@@ -218,10 +227,14 @@ const AddFormDialog = (props) => {
                 onBlur={validateInputHandler}
               >
                 {props.userProfileList.map((e) => (
-                  <MenuItem value={e._id} key={e._id}>{e.name}</MenuItem>
+                  <MenuItem value={e._id} key={e._id}>
+                    {e.name}
+                  </MenuItem>
                 ))}
               </Select>
-              {formErrors.profile_id.error ? <FormHelperText>{formErrors.profile_id.msg}</FormHelperText> : null}
+              {formErrors.profile_id.error ? (
+                <FormHelperText>{formErrors.profile_id.msg}</FormHelperText>
+              ) : null}
             </FormControl>
           </Grid>
 
@@ -313,8 +326,8 @@ const AddFormDialog = (props) => {
             <FormControlLabel
               control={
                 <Checkbox
-                checked={formValues.receive_email ? true : false}
-                onChange={handleChangeCheckbox}
+                  checked={formValues.receive_email ? true : false}
+                  onChange={handleChangeCheckbox}
                   name="receive_email"
                   color="primary"
                 />
@@ -323,33 +336,26 @@ const AddFormDialog = (props) => {
             />
           </Grid>
           <Grid item xs={12}>
-              <div>User type: </div>
-                <RadioGroup
-                  row
-                  aria-label="usertype"
-                  name="usertype"
-                  value={formValues.usertype || ""}
-                  onChange={handleChangeForm}
-                  
-                >
-                  <FormControlLabel
-                    value="1"
-                    control={<Radio color="primary"/>}
-                    label="Admin"
-                  />
-                  <FormControlLabel
-                    value="2"
-                    control={<Radio color="primary" />}
-                    label="Client"
-                  />
-                  <FormControlLabel
-                    value="3"
-                    control={<Radio color="primary"/>}
-                    label="Technician/Driver"
-                  />
-                </RadioGroup>
+            <div>User type: </div>
+            <RadioGroup
+              row
+              aria-label="usertype"
+              name="usertype_id"
+              value={formValues.usertype || ""}
+              onChange={handleChangeForm}
+            >
+              {userType.map((e) => 
+                <FormControlLabel
+                  key={e._id}
+                  value={e._id}
+                  control={<Radio color="primary" />}
+                  label={e.name}
+                  checked= {e._id===formValues.usertype_id ? true : false}
+                />
+              )}
+            </RadioGroup>
           </Grid>
-          
+
           <Grid item xs={12} sm={3}>
             <FormControlLabel
               control={
@@ -429,7 +435,7 @@ const AddFormDialog = (props) => {
           </Grid>
         </Grid>
       </div>
-    </Fragment>
+    </>
   );
 };
 

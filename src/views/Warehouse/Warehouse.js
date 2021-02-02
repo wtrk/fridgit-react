@@ -8,50 +8,29 @@ import {
   Chip,
   CircularProgress,
 } from "@material-ui/core";
-import { makeStyles, MuiThemeProvider } from "@material-ui/core/styles";
+import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
-import datatableTheme from "assets/css/datatable-theme.js";
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import axios from 'axios';
-
-
-
-// Top 100 films as rated by IMDb warehouses. http://www.imdb.com/chart/top
-const top100Films = [];
-
-
-const useStyles = makeStyles((theme) => ({
-  appBar: {
-    position: "relative",
-  },
-  title: {
-    marginLeft: theme.spacing(2),
-    flex: 1,
-  },
-  root: {
-    backgroundColor: theme.palette.background.paper,
-  },
-  formControl: {
-    minWidth: "100%",
-  },
-}));
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const Warehouse = () => {
-  const classes = useStyles(); //custom css
   const [isLoading, setIsloading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [warehouseId, setWarehouseID] = useState(); //modal title
-  const [RowID, setRowID] = useState(0); //current row
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
   const [items, setItems] = useState([]); //table items
+  const [itemsBackup, setItemsBackup] = useState([]);
+  const [searchValue, setSearchValue] = useState({});
+
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/warehouses`, {
@@ -100,6 +79,8 @@ const Warehouse = () => {
   const options = {
     filter: false,
     onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
     selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
@@ -121,7 +102,7 @@ const Warehouse = () => {
     },
     textLabels: {
         body: {
-            noMatch: isLoading ? <CircularProgress disableShrink /> : 'Sorry, there is no matching data to display'
+            noMatch: !isLoading && 'Sorry, there is no matching data to display'
         },
     },
   };
@@ -138,8 +119,6 @@ const Warehouse = () => {
 
 
   //Search component ---------------START--------------
-  const [itemsBackup, setItemsBackup] = useState([]);
-  const [searchValue, setSearchValue] = useState({});
   const handleChangeSearch = (e, newValue) => {
     if(itemsBackup.length===0) setItemsBackup(items)
     setSearchValue(newValue)
@@ -154,7 +133,6 @@ const Warehouse = () => {
       value={searchValue || {}}
       getOptionLabel={(option) => option.name || ""}
       onChange={handleChangeSearch}
-      freeSolo
       renderTags={(value, getTagProps) =>
         value.map((option, index) => (
           <Chip
@@ -174,40 +152,12 @@ const Warehouse = () => {
       )}
     />
 
-
-
-      {/* <Autocomplete
-        multiple
-        id="tags-filled"
-        options={top100Films.map((option) => option.title)}
-        defaultValue={[]}
-        freeSolo
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="filled"
-            label=""
-            placeholder="Search Data"
-          />
-        )}
-      /> */}
-
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
-          title=""
+          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
 

@@ -3,19 +3,20 @@ import PropTypes from "prop-types";
 import CustomToolbar from "../../CustomToolbar";
 import MUIDataTable from "mui-datatables";
 import { MuiThemeProvider} from "@material-ui/core/styles";
-import datatableTheme from "assets/css/datatable-theme.js";
-
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 
-import Typography from "@material-ui/core/Typography";
-import Box from "@material-ui/core/Box";
+import {
+  Typography,
+  CircularProgress,
+  Dialog,
+  Slide,
+  TextField,
+  Chip,
+  Container,Box
+} from "@material-ui/core";
 
 import Moment from "react-moment";
-import Dialog from "@material-ui/core/Dialog";
-import Slide from "@material-ui/core/Slide";
-import TextField from "@material-ui/core/TextField";
-import Chip from "@material-ui/core/Chip";
-import Container from "@material-ui/core/Container";
 import axios from 'axios';
 import AddFormDialog from "./Components/AddFormDialog.js";
 
@@ -53,6 +54,7 @@ TabPanel.propTypes = {
 };
 
 export default function FullWidthTabs() {
+  const [isLoading, setIsloading] = useState(true);
   const [items, setItems] = useState([]); //table items
   const [itemsBackup, setItemsBackup] = useState([]);
   const [userProfileList, setUserProfileList] = useState([]); //table items
@@ -86,6 +88,7 @@ export default function FullWidthTabs() {
             });
           })
         );
+        return setIsloading(false)
       });
       const userType = await axios(`${process.env.REACT_APP_BASE_URL}/userType`, {
         responseType: "json",
@@ -151,7 +154,10 @@ export default function FullWidthTabs() {
   ];
 
   const options = {
-    filterType: "dropdown",
+    filter: false,
+    onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
     selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
@@ -169,7 +175,12 @@ export default function FullWidthTabs() {
         }).then((response) => {
           console.log("deleted")
         });
-    }
+    },
+    textLabels: {
+        body: {
+            noMatch: !isLoading && 'Sorry, there is no matching data to display'
+        },
+    },
   };
 
   const handleAdd = (title, userId) => {
@@ -197,7 +208,6 @@ export default function FullWidthTabs() {
         value={searchValue || {}}
         getOptionLabel={(option) => option.name || ""}
         onChange={handleChangeSearch}
-        freeSolo
         renderTags={(value, getTagProps) =>
           value.map((option, index) => (
             <Chip
@@ -219,11 +229,10 @@ export default function FullWidthTabs() {
 
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
-          title=""
+          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
 

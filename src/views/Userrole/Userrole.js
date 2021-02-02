@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import CustomToolbar from "../../CustomToolbar";
-import Typography from "@material-ui/core/Typography";
-import {Switch,Box} from "@material-ui/core";
+import {
+  Switch,
+  Box,
+  Typography,
+  Dialog,
+  Slide,
+  Container,
+  Chip,
+  TextField,CircularProgress,
+} from "@material-ui/core";
 import MUIDataTable from "mui-datatables";
-import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import datatableTheme from "assets/css/datatable-theme.js";
-import Dialog from "@material-ui/core/Dialog";
-import Slide from "@material-ui/core/Slide";
-import Container from "@material-ui/core/Container";
+import { MuiThemeProvider } from "@material-ui/core/styles";
+import { datatableTheme } from "assets/css/datatable-theme.js";
 
 import { Link } from "react-router-dom";
 import Autocomplete from "@material-ui/lab/Autocomplete";
-import TextField from "@material-ui/core/TextField";
-import Chip from "@material-ui/core/Chip";
 import axios from 'axios';
 
 import AddFormDialog from "components/CustomComponents/AddFormDialog.js";
@@ -52,6 +54,7 @@ TabPanel.propTypes = {
 };
 
 export default function FullWidthTabs() {
+  const [isLoading, setIsloading] = useState(true);
   const [items, setItems] = useState([]); //table items
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +62,7 @@ export default function FullWidthTabs() {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
+        return setIsloading(false)
       });
     };
     fetchData();
@@ -154,11 +158,15 @@ export default function FullWidthTabs() {
     },
   ];
   const options = {
-    filterType: "dropdown",
+    filter: false,
     onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
     selectToolbarPlacement: "replace",
-    customToolbar: () => {
-      return <CustomToolbar />;
+    textLabels: {
+        body: {
+            noMatch: !isLoading && 'Sorry, there is no matching data to display'
+        },
     },
   };
 
@@ -200,11 +208,10 @@ export default function FullWidthTabs() {
 
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
-          title=""
+          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
 

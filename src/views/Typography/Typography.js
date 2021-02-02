@@ -1,31 +1,35 @@
-import React, { Fragment, useState } from "react";
-import Timeline from "@material-ui/lab/Timeline";
-import TimelineItem from "@material-ui/lab/TimelineItem";
-import TimelineSeparator from "@material-ui/lab/TimelineSeparator";
-import TimelineConnector from "@material-ui/lab/TimelineConnector";
-import TimelineContent from "@material-ui/lab/TimelineContent";
-import TimelineDot from "@material-ui/lab/TimelineDot";
-import TimelineOppositeContent from "@material-ui/lab/TimelineOppositeContent";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import MUIDataTable from "mui-datatables";
-import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import datatableTheme from "assets/css/datatable-theme.js";
+import React, { useState } from "react";
+import {
+  Timeline,
+  TimelineItem,
+  TimelineSeparator,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDot,
+  TimelineOppositeContent,
+  Autocomplete,
+} from "@material-ui/lab";
 
-import Container from "@material-ui/core/Container";
 import { makeStyles } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import TextField from "@material-ui/core/TextField";
-import Button from "@material-ui/core/Button";
-import Grid from "@material-ui/core/Grid";
-import { withStyles } from "@material-ui/core/styles";
-import Dialog from "@material-ui/core/Dialog";
-import MuiDialogContent from "@material-ui/core/DialogContent";
-import MuiDialogActions from "@material-ui/core/DialogActions";
-import Chip from "@material-ui/core/Chip";
-import Slide from "@material-ui/core/Slide";
-import Avatar from "@material-ui/core/Avatar";
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  Chip,
+  Slide,
+  Avatar,
+} from "@material-ui/core";
+
+
+import MUIDataTable from "mui-datatables";
+import { MuiThemeProvider } from "@material-ui/core/styles";
+import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
 import { Close ,Check} from "@material-ui/icons";
-import CustomToolbarSelect from "../../CustomToolbarSelect";
 import CustomToolbar from "../../CustomToolbar";
 import Swal from "sweetalert2";
 import dataJson from "./data.json";
@@ -78,19 +82,14 @@ const Cabinets = () => {
   /************ -Datatable START- **************/
   const [items, setItems] = useState(dataJson); //table items
   const options = {
-    filterType: "dropdown",
+    filter: false,
     onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
     selectToolbarPlacement: "replace",
-    customToolbarSelect: (selectedRows, displayData, setSelectedRows) => {
-      selected_rows = selectedRows;
-      setSelectedRows_function = setSelectedRows;
-
-      return <CustomToolbarSelect delete_listener={delete_listener} />;
-    },
     customToolbar: () => {
       return <CustomToolbar listener={handleAdd} />;
     },
-    //this.deleteRows
   };
   const columns = [
     {
@@ -401,18 +400,6 @@ const Cabinets = () => {
     setOpenDialog2(true);
     setmodal_Title("Add");
   };
-  const DialogContent = withStyles((theme) => ({
-    root_modal: {
-      padding: theme.spacing(2),
-    },
-  }))(MuiDialogContent);
-
-  const DialogActions = withStyles((theme) => ({
-    root_modal: {
-      margin: 0,
-      padding: theme.spacing(1),
-    },
-  }))(MuiDialogActions);
 
   const handleClickOpenDialog2 = (rowID, modal_Title) => {
     setOpenDialog2(true);
@@ -427,7 +414,7 @@ const Cabinets = () => {
         tabIndex={tabIndex}
         setTabIndex={setTabIndex}
       />
-      <Container maxWidth="xl" style={{paddingTop:"5rem"}}>
+      <Container maxWidth="xl" style={{paddingTop:"4rem"}}>
         <Autocomplete
           multiple
           id="tags-filled"
@@ -452,13 +439,12 @@ const Cabinets = () => {
             />
           )}
         />
-        <MuiThemeProvider theme={datatableTheme}>
+        <MuiThemeProvider theme={datatableThemeInTabsPage}>
         <MUIDataTable
           title=""
           data={itemsFiltered ? itemsFiltered : items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
         </MuiThemeProvider>
       </Container>

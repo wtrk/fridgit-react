@@ -2,20 +2,15 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import CustomToolbar from "../../CustomToolbar";
 import MUIDataTable from "mui-datatables";
-import datatableTheme from "assets/css/datatable-theme.js";
-import { Close, Save } from "@material-ui/icons";
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import Autocomplete from "@material-ui/lab/Autocomplete";
-import { MuiThemeProvider, makeStyles } from "@material-ui/core/styles";
+import { MuiThemeProvider } from "@material-ui/core/styles";
 import {
   Container,
-  AppBar,
   Typography,
   Box,
-  Button,
   Dialog,
-  Toolbar,
   Slide,
-  IconButton,
   TextField,
   Chip,
 } from "@material-ui/core";
@@ -48,22 +43,6 @@ function TabPanel(props) {
   );
 }
 
-const useStyles = makeStyles((theme) => ({
-  appBar: {
-    position: "relative",
-  },
-  title: {
-    marginLeft: theme.spacing(2),
-    flex: 1,
-  },
-  root: {
-    backgroundColor: theme.palette.background.paper,
-  },
-  formControl: {
-    minWidth: "100%",
-  },
-}));
-
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -75,26 +54,11 @@ TabPanel.propTypes = {
 };
 
 export default function FullWidthTabs() {
-  const classes = useStyles(); //custom css
 
-  const [open, setOpen] = useState(false); //for modal
   const [openSubTable, setOpenSubTable] = useState(false); //for modal
   const [RowID, setRowID] = useState(0); //current row
-  const [modal_Title, setmodal_Title] = useState("Add"); //modal title
   const [subTablesTitle, setSubTablesTitle] = useState("Add"); //modal title
-
-
-  const handleClickOpen = (rowID, modal_Title) => {
-    setOpen(true);
-    setRowID(rowID);
-    setmodal_Title(modal_Title);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleCloseSubTable = () => setOpenSubTable(false);
+  const [filterDialog,setFilterDialog] = useState(false)
 
   const columns = [
     {
@@ -124,9 +88,12 @@ export default function FullWidthTabs() {
       },
     }
   ];
-  const [filterDialog,setFilterDialog] = useState(false)
   const options = {
-    filter:false,
+    filter: false,
+    onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
+    selectToolbarPlacement: "replace",
     customToolbar: () => {
       return <CustomToolbar listener={handleClickOpenSubTable} handleFilter={handleFilter} />;
     },
@@ -172,7 +139,6 @@ export default function FullWidthTabs() {
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
       <div>

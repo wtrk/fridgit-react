@@ -1,34 +1,38 @@
 import React, { Fragment, useState } from "react";
-import Container from "@material-ui/core/Container";
-import { makeStyles } from "@material-ui/core/styles";
-import Timeline from "@material-ui/lab/Timeline";
-import TimelineItem from "@material-ui/lab/TimelineItem";
-import TimelineSeparator from "@material-ui/lab/TimelineSeparator";
-import TimelineConnector from "@material-ui/lab/TimelineConnector";
-import TimelineContent from "@material-ui/lab/TimelineContent";
-import TimelineDot from "@material-ui/lab/TimelineDot";
-import TimelineOppositeContent from "@material-ui/lab/TimelineOppositeContent";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import TextField from "@material-ui/core/TextField";
+import {
+  Timeline,
+  TimelineItem,
+  TimelineSeparator,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDot,
+  TimelineOppositeContent,
+  Autocomplete,
+} from "@material-ui/lab";
+
+import {
+  TextField,
+  Container,
+  AppBar,
+  Tabs,
+  Tab,
+  Typography,
+  Button,
+  Grid,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  Chip,
+  Slide,
+  Avatar,
+} from "@material-ui/core";
+
 import MUIDataTable from "mui-datatables";
-import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import datatableTheme from "assets/css/datatable-theme.js";
-import AppBar from "@material-ui/core/AppBar";
-import Tabs from "@material-ui/core/Tabs";
-import Tab from "@material-ui/core/Tab";
-import Typography from "@material-ui/core/Typography";
-import Button from "@material-ui/core/Button";
-import Grid from "@material-ui/core/Grid";
+import { MuiThemeProvider, makeStyles } from "@material-ui/core/styles";
+import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
 import dataJson from "./data.json";
-import { withStyles } from "@material-ui/core/styles";
-import Dialog from "@material-ui/core/Dialog";
-import MuiDialogContent from "@material-ui/core/DialogContent";
-import MuiDialogActions from "@material-ui/core/DialogActions";
-import Chip from "@material-ui/core/Chip";
-import Slide from "@material-ui/core/Slide";
 import { Close, SwapHoriz, LastPage } from "@material-ui/icons";
 import CustomToolbar from "../../CustomToolbar";
-import Avatar from "@material-ui/core/Avatar";
 import fridgeDummy from "../../assets/img/fridge-1.jpg";
 import clientDummy from "../../assets/img/clientDummy.png";
 import "./FinanceJobs.css";
@@ -145,8 +149,10 @@ const ClientsList = () => {
   ];
 
   const options = {
-    filterType: "dropdown",
+    filter: false,
     onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
     selectToolbarPlacement: "replace",
     customToolbarSelect: (selectedRows, displayData, setSelectedRows) => (
       <div>
@@ -906,18 +912,6 @@ const ClientsList = () => {
   const handleCloseDialog2 = () => {
     setOpenDialog2(false);
   };
-  const DialogContent = withStyles((theme) => ({
-    root_modal: {
-      padding: theme.spacing(2),
-    },
-  }))(MuiDialogContent);
-
-  const DialogActions = withStyles((theme) => ({
-    root_modal: {
-      margin: 0,
-      padding: theme.spacing(1),
-    },
-  }))(MuiDialogActions);
 
   const handleClickOpenDialog2 = (rowID, modal_Title) => {
     setOpenDialog2(true);
@@ -951,7 +945,7 @@ const ClientsList = () => {
           ))}
         </Tabs>
       </AppBar>
-      <Container maxWidth="xl" style={{paddingTop:"6rem"}}>
+      <Container maxWidth="xl" style={{paddingTop:"4rem"}}>
         <Autocomplete
           multiple
           id="tags-filled"
@@ -976,13 +970,12 @@ const ClientsList = () => {
             />
           )}
         />
-        <MuiThemeProvider theme={datatableTheme}>
+        <MuiThemeProvider theme={datatableThemeInTabsPage}>
         <MUIDataTable
           title=""
           data={itemsFiltered ? itemsFiltered : items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
         </MuiThemeProvider>
       </Container>

@@ -1,63 +1,92 @@
-import React, { useState } from "react";
-import Container from "@material-ui/core/Container";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import TextField from "@material-ui/core/TextField";
-import MUIDataTable from "mui-datatables";
-import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import datatableTheme from "assets/css/datatable-theme.js";
-import dataJson from "./data.json";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
-import Chip from "@material-ui/core/Chip";
-import CustomToolbarSelect from "../../CustomToolbarSelect";
+import React, { useState, useEffect } from "react";
 import CustomToolbar from "../../CustomToolbar";
-import Dialog from "@material-ui/core/Dialog";
-import AddFormDialog from "components/CustomComponents/AddFormDialog.js";
-import Slide from "@material-ui/core/Slide";
+import {
+  Container,
+  Dialog,
+  Slide,
+  TextField,
+  Chip,
+  CircularProgress,
+} from "@material-ui/core";
+import { MuiThemeProvider } from "@material-ui/core/styles";
+import {Autocomplete} from "@material-ui/lab";
+
+import FilterComponent from "components/CustomComponents/FilterComponent.js";
+import MUIDataTable from "mui-datatables";
+import {datatableTheme} from "assets/css/datatable-theme.js";
+import SubTables from "./Components/SubTables.js";
+import axios from 'axios';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const Stores = () => {
-  const [openDialog, setOpenDialog] = useState(false); //for modal2
+const Store = () => {
+  const [isLoading, setIsloading] = useState(true);  
+  const [openAddForm, setOpenAddForm] = useState(false); //for modal
+  const [storesId, setStoreID] = useState(); //modal title
+  const [formTitle, setFormTitle] = useState("Add"); //modal title
+  const [filterDialog,setFilterDialog] = useState(false)
+  const [items, setItems] = useState([]); //table items
+  const [itemsBackup, setItemsBackup] = useState([]);
+  const [searchValue, setSearchValue] = useState({});
+  const [citiesList, setCitiesList] = useState([]);
 
-  var selected_rows = null;
-  var setSelectedRows_function = null;
-  const MySwal = withReactContent(Swal); //swal
+  useEffect(() => {
+    const fetchData = async () => {
+      const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
+        responseType: "json",
+      }).then((response) => {
+        setCitiesList(response.data)
+        return response.data
+      });
+      await axios(`${process.env.REACT_APP_BASE_URL}/stores`, {
+        responseType: "json",
+      }).then((response) => {
+        setItems(response.data)
+        return setIsloading(false)
+      });
+    };
+    fetchData();
+  }, [openAddForm]);
 
-  /************ -Datatable START- **************/
-  const [items, setItems] = useState(dataJson); //table items
-  const options = {
-    filterType: "dropdown",
-    onRowsDelete: null,
-    selectToolbarPlacement: "replace",
-    customToolbarSelect: (selectedRows, displayData, setSelectedRows) => {
-      selected_rows = selectedRows;
-      setSelectedRows_function = setSelectedRows;
-
-      return <CustomToolbarSelect delete_listener={delete_listener} />;
-    },
-    customToolbar: () => {
-      return <CustomToolbar listener={handleAdd} />;
-    },
-    //this.deleteRows
-  };
   const columns = [
     {
-      name: "Code",
-      label: "Code",
+      name: "_id",
+      options: {
+        display: false,
+      }
     },
     {
-      name: "Name",
+      name: "code",
+      label: "Code",
+      options: {
+        filter: false,
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return (
+            <div>
+              <a
+                onClick={() => {
+                  handleAdd("Edit Store - "+tableMeta.rowData[2],tableMeta.rowData[0]);
+                }}
+              >
+                {value}
+              </a>
+            </div>
+          );
+        },
+      },
+    },
+    {
+      name: "name",
       label: "Name",
     },
     {
-      name: "Branch",
+      name: "branch",
       label: "Branch",
     },
     {
-      name: "Branch Number",
+      name: "branch_number",
       label: "Branch Number",
     },
     {
@@ -66,11 +95,11 @@ const Stores = () => {
       options: {
         customBodyRender: (value, tableMeta, updateValue) => (
           <div style={{ width: 200 }}>
-            <strong>City</strong>: {value ? value.City : "-"}
+            <strong>City</strong>: {value ? citiesList.filter(e=> e._id==value.city_id)[0].name : "-"}
             <br />
-            <strong>Area</strong>: {value ? value.Area : "-"}
+            <strong>Area</strong>: {value ? value.area : "-"}
             <br />
-            <strong>Mobile</strong>: {value ? value.Mobile : "-"}
+            <strong>Mobile</strong>: {value ? value.mobile : "-"}
             <br />
           </div>
         ),
@@ -85,135 +114,118 @@ const Stores = () => {
       label: "Status",
     },
   ];
-  /************ -Datatable END- **************/
-  const top100Films = [];
 
-  function deleterows(row) {
-    const requestOptions = {
-      method: "POST",
-      body: JSON.stringify(row),
-    };
-
-    MySwal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(
-          `${process.env.REACT_APP_BASE_URL}ws_tfridges.php?action=2`,
-          requestOptions
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            var data1 = items;
-
-            setSelectedRows_function([]);
-            row.map((row) => {
-              data1 = data1.filter((user) => user.serial !== row.serial);
-            });
-
-            console.log(data1);
-
-            setItems(data1);
-          })
-          .catch((error) => {
-            alert("error");
-            console.log("There was an error!", error);
-          });
-
-        Swal.fire("Deleted!", "Your file has been deleted.", "success");
-      }
-    });
-  }
-
-  const delete_listener = () => {
-    let myItems = [];
-
-    selected_rows.data.map((anObjectMapped, index) => {
-      myItems.push({ serial: items[anObjectMapped.dataIndex].serial });
-    });
-
-    console.log(myItems);
-
-    deleterows(myItems);
-  };
-
-  const handleAdd = () => {
-    setOpenDialog(true);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-  };
-  return (
-    <div>
-      <Container maxWidth="xl">
-        <Autocomplete
-          multiple
-          id="tags-filled"
-          options={top100Films.map((option) => option.title)}
-          defaultValue={[]}
-          freeSolo
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                variant="outlined"
-                label={option}
-                {...getTagProps({ index })}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="filled"
-              label=""
-              placeholder="Search in Code/Name/Branch number/Finance"
-            />
-          )}
+  const options = {
+    filter: false,
+    onRowsDelete: null,
+    rowsPerPage: 20,
+    rowsPerPageOptions: [20, 100, 50],
+    selectToolbarPlacement: "replace",
+    customToolbar: () => {
+      return (
+        <CustomToolbar
+          listener={() => {
+            handleAdd("Add New Store");
+          }}
+          handleFilter={handleFilter}
         />
-        <MuiThemeProvider theme={datatableTheme}>
+      );
+    },
+    onRowsDelete: (rowsDeleted, dataRows) => {
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
+        axios.delete(`${process.env.REACT_APP_BASE_URL}/stores/${idsToDelete}`, {
+          responseType: "json",
+        }).then((response) => {
+          console.log("deleted")
+        });
+    },
+    textLabels: {
+        body: {
+            noMatch: !isLoading && 'Sorry, there is no matching data to display'
+        },
+    },
+  };
+  const handleFilter = () => {
+    setFilterDialog(true)
+  };
+
+  const handleAdd = (title, storesId) => {
+    setOpenAddForm(true);
+    setStoreID(storesId);
+    setFormTitle(title);
+  };
+  const handleCloseAddForm = () => setOpenAddForm(false)
+
+
+  //Search component ---------------START--------------
+  const handleChangeSearch = (e, newValue) => {
+    if(itemsBackup.length===0) setItemsBackup(items)
+    setSearchValue(newValue)
+    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+  }
+  //Search component ---------------END--------------
+  return (
+    <Container maxWidth="xl">
+    <Autocomplete
+      id="tags-filled"
+      options={items || {}}
+      value={searchValue || {}}
+      getOptionLabel={(option) => option.name || ""}
+      onChange={handleChangeSearch}
+      renderTags={(value, getTagProps) =>
+        value.map((option, index) => (
+          <Chip
+            variant="outlined"
+            label={option}
+            {...getTagProps({ index })}
+          />
+        ))
+      }
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="filled"
+          label=""
+          placeholder="Search by Name"
+        />
+      )}
+    />
+
+      <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
-          title=""
+          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
-        </MuiThemeProvider>
-      </Container>
+      </MuiThemeProvider>
 
       <div>
         <Dialog
           fullScreen
-          open={openDialog}
-          onClose={handleCloseDialog}
+          open={openAddForm}
+          onClose={handleCloseAddForm}
           TransitionComponent={Transition}
         >
-          <AddFormDialog
-            title="Add Stores"
-            handleClose={handleCloseDialog}
-            inputs={[
-              { labelText: "Image", type: "file" },
-              { labelText: "Code", type: "text" },
-              { labelText: "Name", type: "text" },
-              { labelText: "Branch Name", type: "text" },
-              { labelText: "Branch Number", type: "text" },
-              { labelText: "Address", type: "text" },
-              { labelText: "Phone", type: "text" },
-              { labelText: "City", type: "text" },
-              { labelText: "Neighbourbood", type: "text" },
-            ]}
+          <SubTables
+            title={formTitle}
+            handleClose={handleCloseAddForm}
+            storeId={storesId}
+            citiesList={citiesList}
           />
         </Dialog>
+        {/*********************** FILTER start ****************************/}
+        <Dialog
+          onClose={() => setFilterDialog(false)}
+          maxWidth={"xl"}
+          fullWidth={true}
+          aria-labelledby="customized-dialog-title"
+          open={filterDialog}
+        >
+          <FilterComponent setOpenDialog={setFilterDialog} />
+        </Dialog>
       </div>
-    </div>
+    </Container>
   );
-};
-
-export default Stores;
+}
+export default Store

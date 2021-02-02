@@ -667,7 +667,6 @@ export default function FullWidthTabs() {
           data={items}
           columns={columns}
           options={options}
-          className="dataTableContainer"
         />
       </MuiThemeProvider>
 
