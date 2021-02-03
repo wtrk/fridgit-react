@@ -1,732 +1,303 @@
-import React, { Fragment, useState } from "react";
-import CustomToolbar from "CustomToolbar";
-import MUIDataTable from "mui-datatables";
-import { Close, Save } from "@material-ui/icons";
-import { makeStyles } from "@material-ui/core/styles";
+import React, { Fragment, useState, useRef, useEffect} from "react";
 import {
+  TextField,
   AppBar,
   Typography,
-  Grid,
   Button,
+  Grid,
   Toolbar,
-  IconButton,
-  FormControl,
-  NativeSelect,
-  TextField,
-  Container
+  Collapse
 } from "@material-ui/core";
-import "../Price_rules.css";
+import axios from 'axios';
+import { Close,Save } from "@material-ui/icons";
+import { makeStyles } from "@material-ui/core/styles";
+import CustomToolbar from "CustomToolbar";
+import {Autocomplete, Alert} from '@material-ui/lab';
+import MUIDataTable from "mui-datatables";
+import NestedTable from "./NestedTable.js";
 
-const useStyles = makeStyles((theme) => ({
-  appBar: {
-    position: "relative",
-  },
-  title: {
-    marginLeft: theme.spacing(2),
-    flex: 1,
-  },
-  root: {
-    backgroundColor: theme.palette.background.paper,
-  },
-  formControl: {
-    minWidth: "100%",
-  },
-}));
+  const useStyles = makeStyles((theme) => ({
+    appBar: {
+      position: "relative",
+    },
+    title: {
+      marginLeft: theme.spacing(2),
+      flex: 1,
+    },
+    formControl: {
+      minWidth: "100%",
+    },
+  }));
 const SubTables = (props) => {
-  const classes = useStyles(); //custom css
+    const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
+    const [openAlertError, setOpenAlertError] = useState(false);
+
+    const [customers, setCustomers] = useState([]);
+    const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
+    const [countries, setCountries] = useState([]);
+    const [isLoadingCountries, setIsLoadingCountries] = useState(true);
+    const [citiesIn, setCitiesIn] = useState([]);
+    const [isLoadingCitiesIn, setIsLoadingCitiesIn] = useState(true);
+    const [neighbourhoodsIn, setNeighbourhoodsIn] = useState([]);
+    const [isLoadingNeighbourhoodsIn, setIsLoadingNeighbourhoodsIn] = useState(true);
+    const [tiersIn, setTiersIn] = useState([]);
+    const [isLoadingTiersIn, setIsLoadingTiersIn] = useState(true);
+    const [citiesOut, setCitiesOut] = useState([]);
+    const [isLoadingCitiesOut, setIsLoadingCitiesOut] = useState(true);
+    const [neighbourhoodsOut, setNeighbourhoodsOut] = useState([]);
+    const [isLoadingNeighbourhoodsOut, setIsLoadingNeighbourhoodsOut] = useState(true);
+    const [tiersOut, setTiersOut] = useState([]);
+    const [isLoadingTiersOut, setIsLoadingTiersOut] = useState(true);
+
+    const classes = useStyles(); //custom css
+    const nameRef = useRef()
+    const serviceRef = useRef()
+    const submitRef = useRef()
+    const [formValues, setFormValues] = useState({
+      name: "",
+      service: ""
+    });
+    const [formErrors, setFormErrors] = useState({
+      name: {error:false,msg:""},
+      service: {error:false,msg:""}
+    });
     
-  const add1RowInCustomerIn = () => {
-    setCustomerIn([...customerIn, { name: "" }]);
-  };
-  const [customerIn, setCustomerIn] = useState([{ name: "Client1" }]);
-  const [customerInSelect, setCustomerInSelect] = React.useState("");
-  const handleChangeCustomerInSelect = (event) => {
-    setCustomerInSelect(event.target.value);
-  };
+  useEffect(()=>{
+    nameRef.current.focus()
+      const fetchData = async () => {
+        if (props.priceRuleId) {
+          const priceRule = await axios(
+            `${process.env.REACT_APP_BASE_URL}/priceRules/${props.priceRuleId}`,
+            {
+              responseType: "json",
+            }
+          ).then((response) => {
+            setFormValues(response.data);
+            return response.data
+          }).then((response)=>{
+            setCustomers(response.customers);
+            setCountries(response.countries);
+            setCitiesIn(response.citiesIn);
+            setNeighbourhoodsIn(response.neighbourhoodsIn);
+            setTiersIn(response.tiersIn);
+            setCitiesOut(response.citiesOut);
+            setNeighbourhoodsOut(response.neighbourhoodsOut);
+            setTiersOut(response.tiersOut);
 
-  const add1RowInCountryIn = () => {
-    setCountryIn([...countryIn, { name: "" }]);
-  };
-  const [countryIn, setCountryIn] = useState([
-    { name: "Lebanon" },
-    { name: "Ksa" },
-  ]);
-  const [countryInSelect, setCountryInSelect] = React.useState("");
-  const handleChangeCountryInSelect = (event) => {
-    setCountryInSelect(event.target.value);
-  };
+            setIsLoadingCustomers(false);
+            setIsLoadingCountries(false);
+            setIsLoadingCitiesIn(false);
+            setIsLoadingNeighbourhoodsIn(false);
+            setIsLoadingTiersIn(false);
+            setIsLoadingCitiesOut(false);
+            setIsLoadingNeighbourhoodsOut(false);
+            setIsLoadingTiersOut(false);
+          });
+        }
+      };
+      fetchData();
+  },[])
 
-  const add1RowInCityIn = () => {
-    setCityIn([...cityIn, { name: "" }]);
-  };
-  const [cityIn, setCityIn] = useState([
-    { name: "Beirut" },
-    { name: "Jeddah" },
-  ]);
-  const [cityInSelect, setCityInSelect] = React.useState("");
-  const handleChangeCityInSelect = (event) => {
-    setCityInSelect(event.target.value);
-  };
+  
+  useEffect(()=>{
+    setFormValues({ ...formValues,customers })
+  },[customers])
+  
+  useEffect(()=>{
+    setFormValues({ ...formValues,countries })
+  },[countries])
 
-  const add1RowInCityOut = () => {
-    setCityOut([...cityOut, { name: "" }]);
-  };
-  const [cityOut, setCityOut] = useState([
-    { name: "Jounieh" },
-    { name: "Abha" },
-  ]);
-  const [cityOutSelect, setCityOutSelect] = React.useState("");
-  const handleChangeCityOutSelect = (event) => {
-    setCityOutSelect(event.target.value);
-  };
+  useEffect(()=>{
+    setFormValues({ ...formValues, citiesIn })
+  },[citiesIn])
+  
+  useEffect(()=>{
+    setFormValues({ ...formValues,neighbourhoodsIn })
+  },[neighbourhoodsIn])
+  
+  useEffect(()=>{
+    setFormValues({ ...formValues,tiersIn })
+  },[tiersIn])
 
-  const add1RowInNeighbourhoodIn = () => {
-    setNeighbourhoodIn([...neighbourhoodIn, { name: "" }]);
-  };
-  const [neighbourhoodIn, setNeighbourhoodIn] = useState([
-    { name: "Example 1" },
-    { name: "Example 2" },
-  ]);
-  const [neighbourhoodInSelect, setNeighbourhoodInSelect] = React.useState("");
-  const handleChangeNeighbourhoodInSelect = (event) => {
-    setNeighbourhoodInSelect(event.target.value);
-  };
+  useEffect(()=>{
+    setFormValues({ ...formValues, citiesOut })
+  },[citiesOut])
+  
+  useEffect(()=>{
+    setFormValues({ ...formValues,neighbourhoodsOut })
+  },[neighbourhoodsOut])
+  
+  useEffect(()=>{
+    setFormValues({ ...formValues,tiersOut })
+  },[tiersOut])
 
-  const add1RowInNeighbourhoodOut = () => {
-    setNeighbourhoodOut([...neighbourhoodOut, { name: "" }]);
-  };
-  const [neighbourhoodOut, setNeighbourhoodOut] = useState([
-    { name: "Example 1" },
-    { name: "Example 2" },
-  ]);
-  const [neighbourhoodOutSelect, setNeighbourhoodOutSelect] = React.useState(
-    ""
-  );
-  const handleChangeNeighbourhoodOutSelect = (event) => {
-    setNeighbourhoodOutSelect(event.target.value);
-  };
+  const keyPressHandler = (e) => {
+    const { keyCode, target } = e
+    if(keyCode===13){
+      switch (target.name){
+        case "name": serviceRef.current.focus();break;
+        case "service": submitRef.current.focus();break;
+        default: nameRef.current.focus();
+      }
+    }
+}
+const handleChangeForm = (e) => {
+  const { name, value } = e.target;
+  setFormValues({ ...formValues, [name]: value });
+};
+const handleOnSubmit = async () => {
+  for (const [key, value] of Object.entries(formErrors)) {
+      if(value.error===true) return setOpenAlertError(true);
+  }
+  
+  if (props.priceRuleId) {
+    await axios({
+      method: "put",
+      url: `${process.env.REACT_APP_BASE_URL}/priceRules/${props.priceRuleId}`,
+      data: [formValues],
+    })
+    .then(function (response) {
+      setOpenAlertSuccess(true);
+      props.handleClose()
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  } else {
+    await axios({
+      method: "post",
+      url: `${process.env.REACT_APP_BASE_URL}/priceRules/`,
+      data: [formValues],
+    })
+    .then(function (response) {
+      setOpenAlertSuccess(true);
+      setFormValues({
+        name: "",
+        service: ""
+      });
+      props.handleClose()
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }
 
-  const add1RowInTierIn = () => {
-    setTierIn([...tierIn, { name: "" }]);
-  };
-  const [tierIn, setTierIn] = useState([
-    { name: "Example 1" },
-    { name: "Example 2" },
-  ]);
-  const [tierInSelect, setTierInSelect] = React.useState("");
-  const handleChangeTierInSelect = (event) => {
-    setTierInSelect(event.target.value);
-  };
-
-  const add1RowInTierOut = () => {
-    setTierOut([...tierOut, { name: "" }]);
-  };
-  const [tierOut, setTierOut] = useState([
-    { name: "Example 1" },
-    { name: "Example 2" },
-  ]);
-  const [tierOutSelect, setTierOutSelect] = React.useState(
-    ""
-  );
-  const handleChangeTierOutSelect = (event) => {
-    setTierOutSelect(event.target.value);
-  };
-
+}
+const validateInputHandler = (e) => {
+  const { name, value } = e.target;
+  const requiredInput = value.toString().trim().length ? false : true;
+  setFormErrors({ ...formErrors, [name]: {error: requiredInput, msg: "This field is required"} });
+  if(name==="email"){
+      const invalidEmail = !/\S+@\S+\.\S+/.test(value);
+      setFormErrors({ ...formErrors, [name]: {error: invalidEmail, msg: "Enter a valid email address"} });
+  }
+}
   return (
     <Fragment>
-    <AppBar className={classes.appBar}>
-      <Toolbar>
-        <IconButton
-          edge="start"
-          color="inherit"
-          onClick={() => props.setOpenDialog(false)}
-          aria-label="close"
-        >
-          <Close />
-        </IconButton>
-        <Typography variant="h6" className={classes.title}>
-          {props.modalTitle + " Price Rule"}
-        </Typography>
-      </Toolbar>
-    </AppBar>
+      <AppBar className={classes.appBar}>
+        <Toolbar>
+          <Close onClick={props.handleClose} className="btnIcon" />
+          <Typography variant="h6" className={classes.title}>
+            {props.title}
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Collapse in={openAlertSuccess}>
+        <Alert severity="success" onClick={() => setOpenAlertSuccess(false)}>
+          The priceRule is successfully created
+        </Alert>
+      </Collapse>
+      <Collapse in={openAlertError}>
+        <Alert severity="error" onClick={() => setOpenAlertError(false)}>
+          Please validate the Form and submit it again
+        </Alert>
+      </Collapse>
 
-    <Container maxWidth="xl">
-            <div className="overlay-form">
-              <div
-                style={{
-                  marginBottom: "30px",
-                }}
-              >
-                <TextField
-                  id="input-111"
-                  defaultValue="Example"
-                  label="Name"
-                  className="overlay-form__input--top"
-                />
-                <TextField
-                  id="input-12"
-                  defaultValue="Ipsum"
-                  label="Service"
-                  className="overlay-form__input--top"
-                />
-              </div>
-              
-              <h3>Job Fees</h3>
-              <div
-                style={{
-                  marginBottom: "30px",
-                }}
-              >
-                <TextField
-                  id="input-1"
-                  defaultValue="5"
-                  label="Handling IN / OUT ($)"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-2"
-                  defaultValue="0.35"
-                  label="Storage/CBM/DAY ($)"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-3"
-                  defaultValue="50"
-                  label="In House Preventive Maintenance ($)"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-4"
-                  defaultValue="35"
-                  label="Corrective Service In House ($"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-5"
-                  defaultValue="8"
-                  label="Cabinet Testing Fees"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-6"
-                  defaultValue=""
-                  label="Branding Fees/m2"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-6"
-                  defaultValue=""
-                  label="Drop"
-                  className="overlay-form__input"
-                />
-              </div>
-              <h3>Transportation Fees</h3>
-              <div>
-                <TextField
-                  id="input-7"
-                  defaultValue="35"
-                  label="Transp./CBM"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-8"
-                  defaultValue="100"
-                  label="Transp. for 1 Unit"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-9"
-                  defaultValue="120"
-                  label="MinCharge"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-10"
-                  defaultValue="80"
-                  label="Preventive Maintenance"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-11"
-                  defaultValue="20"
-                  label="Exchange Corrective Reaction"
-                  className="overlay-form__input"
-                />
-                <TextField
-                  id="input-12"
-                  defaultValue="140"
-                  label="Corrective Reaction"
-                  className="overlay-form__input"
-                />
-              </div>
-            </div>
-            
-            <h3>Conditions</h3>
-      <Grid container spacing={3} style={{marginBottom:"4rem"}}>
-        <Grid item xs={12}>
-          <MUIDataTable
-            title="Customers"
-            data={customerIn}
-            columns={[
-              {
-                name: "name",
-                label: "Name",
-                options: {
-                  filter: false,
-                  customBodyRender: (value, tableMeta, updateValue) => {
-                    if (value == "") {
-                      return (
-                        <div>
-                          <FormControl className={classes.formControl}>
-                            <NativeSelect
-                              className={classes.selectEmpty}
-                              value={customerInSelect}
-                              name="customerInSelect"
-                              onChange={handleChangeCustomerInSelect}
-                              inputProps={{
-                                "aria-label": "customerInSelect",
-                              }}
-                            >
-                              <option value="" disabled>
-                                Select a name
-                              </option>
-                              <option value={1}>Client 1</option>
-                              <option value={2}>Client 2</option>
-                              <option value={3}>Client 3</option>
-                              <option value={4}>Client 4</option>
-                            </NativeSelect>
-                          </FormControl>
-                        </div>
-                      );
-                    } else {
-                      return <div>{value}</div>;
-                    }
-                  },
-                },
-              },
-            ]}
-            options={{
-              filter:false,
-              selectToolbarPlacement: "replace",
-              customToolbar: () => {
-                return <CustomToolbar listener={add1RowInCustomerIn} />;
-              },
-              customFooter: () => null,
-            }}
-          />
+      <div style={{ padding: "10px 30px" }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="nameInput"
+              label="Name"
+              name="name"
+              onChange={handleChangeForm}
+              fullWidth
+              value={formValues.name || ""}
+              inputRef={nameRef}
+              onKeyDown={keyPressHandler}
+              onBlur={validateInputHandler}
+              helperText={formErrors.name.error ? formErrors.name.msg : null}
+              error={formErrors.name.error}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="serviceInput"
+              label="Service"
+              name="service"
+              onChange={handleChangeForm}
+              fullWidth
+              value={formValues.service || ""}
+              inputRef={serviceRef}
+              onKeyDown={keyPressHandler}
+              onBlur={validateInputHandler}
+              helperText={formErrors.service.error ? formErrors.service.msg : null}
+              error={formErrors.service.error}
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <NestedTable arrayName={customers} setArrayName={setCustomers} tblTitle="Customers" isLoading={isLoadingCustomers} />
+          </Grid>
+          <Grid item xs={12}>
+            <NestedTable arrayName={countries} setArrayName={setCountries} tblTitle="Countries" isLoading={isLoadingCountries} />
+          </Grid>
+          <Grid item xs={12}>
+            <NestedTable arrayName={citiesIn} setArrayName={setCitiesIn} tblTitle="CitiesIn" isLoading={isLoadingCitiesIn} />
+          </Grid>
+          <Grid item xs={12}>
+            <NestedTable arrayName={citiesOut} setArrayName={setCitiesOut} tblTitle="CitiesOut" isLoading={isLoadingCitiesOut} />
+          </Grid>
+          <Grid item xs={12}>
+            <NestedTable arrayName={neighbourhoodsIn} setArrayName={setNeighbourhoodsIn} tblTitle="NeighbourhoodsIn" isLoading={isLoadingNeighbourhoodsIn} />
+          </Grid>
+          <Grid item xs={12}>
+            <NestedTable arrayName={neighbourhoodsOut} setArrayName={setNeighbourhoodsOut} tblTitle="NeighbourhoodsOut" isLoading={isLoadingNeighbourhoodsOut} />
+          </Grid>
+          <Grid item xs={12}>
+            <NestedTable arrayName={tiersIn} setArrayName={setTiersIn} tblTitle="Tiers In" isLoading={isLoadingTiersIn} />
+          </Grid>
+          <Grid item xs={12}>
+            <NestedTable arrayName={tiersOut} setArrayName={setTiersOut} tblTitle="Tiers Out" isLoading={isLoadingTiersOut} />
+          </Grid>
+          
+          <Grid item xs={12} className="clientTables">
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              className="btn btn--save"
+              type="submit"
+              startIcon={<Save />}
+              ref={submitRef}
+              onClick={handleOnSubmit}
+            >
+              Save
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="large"
+              className="btn btn--save"
+              onClick={props.handleClose}
+              startIcon={<Close />}
+            >
+              Close
+            </Button>
+          </Grid>
         </Grid>
-
-        <Grid item xs={12}>
-          <MUIDataTable
-            title="Country"
-            data={countryIn}
-            columns={[
-              {
-                name: "name",
-                label: "Name",
-                options: {
-                  filter: false,
-                  customBodyRender: (value, tableMeta, updateValue) => {
-                    if (value == "") {
-                      return (
-                        <div>
-                          <FormControl className={classes.formControl}>
-                            <NativeSelect
-                              className={classes.selectEmpty}
-                              value={countryInSelect}
-                              name="countryInSelect"
-                              onChange={handleChangeCountryInSelect}
-                              inputProps={{
-                                "aria-label": "countryInSelect",
-                              }}
-                            >
-                              <option value="" disabled>
-                                Select a name
-                              </option>
-                              <option value={1}>Client 1</option>
-                              <option value={2}>Client 2</option>
-                              <option value={3}>Client 3</option>
-                              <option value={4}>Client 4</option>
-                            </NativeSelect>
-                          </FormControl>
-                        </div>
-                      );
-                    } else {
-                      return <div>{value}</div>;
-                    }
-                  },
-                },
-              },
-            ]}
-            options={{
-              filter:false,
-              selectToolbarPlacement: "replace",
-              customToolbar: () => {
-                return <CustomToolbar listener={add1RowInCountryIn} />;
-              },
-              customFooter: () => null,
-            }}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <MUIDataTable
-            title="City In"
-            data={cityIn}
-            columns={[
-              {
-                name: "name",
-                label: "Name",
-                options: {
-                  filter: false,
-                  customBodyRender: (value, tableMeta, updateValue) => {
-                    if (value == "") {
-                      return (
-                        <div>
-                          <FormControl className={classes.formControl}>
-                            <NativeSelect
-                              className={classes.selectEmpty}
-                              value={cityInSelect}
-                              name="cityInSelect"
-                              onChange={handleChangeCityInSelect}
-                              inputProps={{
-                                "aria-label": "cityInSelect",
-                              }}
-                            >
-                              <option value="" disabled>
-                                Select a name
-                              </option>
-                              <option value={1}>Client 1</option>
-                              <option value={2}>Client 2</option>
-                              <option value={3}>Client 3</option>
-                              <option value={4}>Client 4</option>
-                            </NativeSelect>
-                          </FormControl>
-                        </div>
-                      );
-                    } else {
-                      return <div>{value}</div>;
-                    }
-                  },
-                },
-              },
-            ]}
-            options={{
-              filter:false,
-              selectToolbarPlacement: "replace",
-              customToolbar: () => {
-                return <CustomToolbar listener={add1RowInCityIn} />;
-              },
-              customFooter: () => null,
-            }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <MUIDataTable
-            title="City Out"
-            data={cityOut}
-            columns={[
-              {
-                name: "name",
-                label: "Name",
-                options: {
-                  filter: false,
-                  customBodyRender: (value, tableMeta, updateValue) => {
-                    if (value == "") {
-                      return (
-                        <div>
-                          <FormControl className={classes.formControl}>
-                            <NativeSelect
-                              className={classes.selectEmpty}
-                              value={cityOutSelect}
-                              name="cityOutSelect"
-                              onChange={handleChangeCityOutSelect}
-                              inputProps={{
-                                "aria-label": "cityOutSelect",
-                              }}
-                            >
-                              <option value="" disabled>
-                                Select a name
-                              </option>
-                              <option value={1}>Client 1</option>
-                              <option value={2}>Client 2</option>
-                              <option value={3}>Client 3</option>
-                              <option value={4}>Client 4</option>
-                            </NativeSelect>
-                          </FormControl>
-                        </div>
-                      );
-                    } else {
-                      return <div>{value}</div>;
-                    }
-                  },
-                },
-              },
-            ]}
-            options={{
-              filter:false,
-              selectToolbarPlacement: "replace",
-              customToolbar: () => {
-                return <CustomToolbar listener={add1RowInCityOut} />;
-              },
-              customFooter: () => null,
-            }}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <MUIDataTable
-            title="Neighbourhood In"
-            data={neighbourhoodIn}
-            columns={[
-              {
-                name: "name",
-                label: "Name",
-                options: {
-                  filter: false,
-                  customBodyRender: (value, tableMeta, updateValue) => {
-                    if (value == "") {
-                      return (
-                        <div>
-                          <FormControl className={classes.formControl}>
-                            <NativeSelect
-                              className={classes.selectEmpty}
-                              value={neighbourhoodInSelect}
-                              name="neighbourhoodInSelect"
-                              onChange={handleChangeNeighbourhoodInSelect}
-                              inputProps={{
-                                "aria-label": "neighbourhoodInSelect",
-                              }}
-                            >
-                              <option value="" disabled>
-                                Select a name
-                              </option>
-                              <option value={1}>Client 1</option>
-                              <option value={2}>Client 2</option>
-                              <option value={3}>Client 3</option>
-                              <option value={4}>Client 4</option>
-                            </NativeSelect>
-                          </FormControl>
-                        </div>
-                      );
-                    } else {
-                      return <div>{value}</div>;
-                    }
-                  },
-                },
-              },
-            ]}
-            options={{
-              filter:false,
-              
-              selectToolbarPlacement: "replace",
-              customToolbar: () => {
-                return (
-                  <CustomToolbar listener={add1RowInNeighbourhoodIn} />
-                );
-              },
-              customFooter: () => null,
-            }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <MUIDataTable
-            title="Neighbourhood Out"
-            data={neighbourhoodOut}
-            columns={[
-              {
-                name: "name",
-                label: "Name",
-                options: {
-                  filter: false,
-                  customBodyRender: (value, tableMeta, updateValue) => {
-                    if (value == "") {
-                      return (
-                        <div>
-                          <FormControl className={classes.formControl}>
-                            <NativeSelect
-                              className={classes.selectEmpty}
-                              value={neighbourhoodOutSelect}
-                              name="neighbourhoodOutSelect"
-                              onChange={
-                                handleChangeNeighbourhoodOutSelect
-                              }
-                              inputProps={{
-                                "aria-label": "neighbourhoodOutSelect",
-                              }}
-                            >
-                              <option value="" disabled>
-                                Select a name
-                              </option>
-                              <option value={1}>Client 1</option>
-                              <option value={2}>Client 2</option>
-                              <option value={3}>Client 3</option>
-                              <option value={4}>Client 4</option>
-                            </NativeSelect>
-                          </FormControl>
-                        </div>
-                      );
-                    } else {
-                      return <div>{value}</div>;
-                    }
-                  },
-                },
-              },
-            ]}
-            options={{
-              filter:false,
-              selectToolbarPlacement: "replace",
-              customToolbar: () => {
-                return (
-                  <CustomToolbar listener={add1RowInNeighbourhoodOut} />
-                );
-              },
-              customFooter: () => null,
-            }}
-          />
-        </Grid>
-        
-        <Grid item xs={12}>
-          <MUIDataTable
-            title="Tier In"
-            data={tierIn}
-            columns={[
-              {
-                name: "name",
-                label: "Name",
-                options: {
-                  filter: false,
-                  customBodyRender: (value, tableMeta, updateValue) => {
-                    if (value == "") {
-                      return (
-                        <div>
-                          <FormControl className={classes.formControl}>
-                            <NativeSelect
-                              className={classes.selectEmpty}
-                              value={tierInSelect}
-                              name="tierInSelect"
-                              onChange={handleChangeTierInSelect}
-                              inputProps={{
-                                "aria-label": "tierInSelect",
-                              }}
-                            >
-                              <option value="" disabled>
-                                Select a name
-                              </option>
-                              <option value={1}>Client 1</option>
-                              <option value={2}>Client 2</option>
-                              <option value={3}>Client 3</option>
-                              <option value={4}>Client 4</option>
-                            </NativeSelect>
-                          </FormControl>
-                        </div>
-                      );
-                    } else {
-                      return <div>{value}</div>;
-                    }
-                  },
-                },
-              },
-            ]}
-            options={{
-              filter:false,
-              
-              selectToolbarPlacement: "replace",
-              customToolbar: () => {
-                return (
-                  <CustomToolbar listener={add1RowInTierIn} />
-                );
-              },
-              customFooter: () => null,
-            }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <MUIDataTable
-            title="Tier Out"
-            data={tierOut}
-            columns={[
-              {
-                name: "name",
-                label: "Name",
-                options: {
-                  filter: false,
-                  customBodyRender: (value, tableMeta, updateValue) => {
-                    if (value == "") {
-                      return (
-                        <div>
-                          <FormControl className={classes.formControl}>
-                            <NativeSelect
-                              className={classes.selectEmpty}
-                              value={tierOutSelect}
-                              name="tierOutSelect"
-                              onChange={
-                                handleChangeTierOutSelect
-                              }
-                              inputProps={{
-                                "aria-label": "tierOutSelect",
-                              }}
-                            >
-                              <option value="" disabled>
-                                Select a name
-                              </option>
-                              <option value={1}>Client 1</option>
-                              <option value={2}>Client 2</option>
-                              <option value={3}>Client 3</option>
-                              <option value={4}>Client 4</option>
-                            </NativeSelect>
-                          </FormControl>
-                        </div>
-                      );
-                    } else {
-                      return <div>{value}</div>;
-                    }
-                  },
-                },
-              },
-            ]}
-            options={{
-              filter:false,
-              selectToolbarPlacement: "replace",
-              customToolbar: () => {
-                return (
-                  <CustomToolbar listener={add1RowInTierOut} />
-                );
-              },
-              customFooter: () => null,
-            }}
-          />
-        </Grid>
-        
-        <Grid item xs={12} className="clientTables">
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            className="btn btn--save"
-            onClick={() => props.setOpenDialog(false)}
-            startIcon={<Save />}
-          >
-            Save
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            size="large"
-            className="btn btn--save"
-            onClick={() => props.setOpenDialog(false)}
-            startIcon={<Close />}
-          >
-            Close
-          </Button>
-        </Grid>
-      
-      
-      
-      </Grid>
-    </Container>
-  
-      </Fragment>
+      </div>
+    </Fragment>
   );
 };
 

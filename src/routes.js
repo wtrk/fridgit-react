@@ -44,7 +44,8 @@ import Privilege from "views/Userrole/Privilege.js";
 import DashboardPage from "views/Dashboard/Dashboard.js";
 import UserProfile from "views/UserProfile/UserProfile.js";
 import TableList from "views/TableList/TableList.js";
-import Cabinets from "views/Typography/Typography.js";
+import Typography from "views/Typography/Typography.js";
+import Cabinets from "views/Cabinets/Cabinets.js";
 import FinanceJobs from "views/Finance/FinanceJobs.js";
 import FinanceReports from "views/Finance/FinanceReports.js";
 import Country from "views/Country/Country.js";
@@ -113,6 +114,10 @@ const switchRoutes = (
           case "Clients":
             e.icon = Person;
             e.component = ClientsList;
+            break;
+          case "Typography":
+            e.icon = Kitchen;
+            e.component = Typography;
             break;
           case "Cabinets":
             e.icon = Kitchen;

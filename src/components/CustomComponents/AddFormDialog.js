@@ -45,7 +45,7 @@ const AddFormDialog = (props) => {
     <Fragment>
       <AppBar className={classes.appBar}>
         <Toolbar>
-          <Close onClick={props.handleClose} class="btnIcon" />
+          <Close onClick={props.handleClose} className="btnIcon" />
           <Typography variant="h6" className={classes.title}>
             {props.title}
           </Typography>

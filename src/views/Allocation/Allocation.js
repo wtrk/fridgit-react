@@ -1,10 +1,7 @@
-import React, { useState } from "react";
-import PropTypes from "prop-types";
+import React, { useState, useEffect } from "react";
 import CustomToolbar from "../../CustomToolbar";
 import {
   Container,
-  Typography,
-  Box,
   Dialog,
   Slide,
   TextField,
@@ -18,56 +15,41 @@ import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
-import dataJson from "./data.json";
-
-
-
-// Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
-const top100Films = [];
-
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`full-width-tabpanel-${index}`}
-      aria-labelledby={`full-width-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box p={3}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
-    </div>
-  );
-}
-
+import axios from 'axios';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-TabPanel.propTypes = {
-  children: PropTypes.node,
-  index: PropTypes.any.isRequired,
-  value: PropTypes.any.isRequired,
-};
-
-export default function FullWidthTabs() {
-  const [isLoading, setIsloading] = useState(true);
-  const [items, setItems] = useState(dataJson); //table items
-  const [open, setOpen] = useState(false); //for modal
-  const [RowID, setRowID] = useState(0); //current row
-  const [modal_Title, setmodal_Title] = useState("Add"); //modal title
+const AllocationRule = () => {
+  const [isLoading, setIsloading] = useState(true);  
+  const [openAddForm, setOpenAddForm] = useState(false); //for modal
+  const [allocationRuleId, setAllocationRuleID] = useState(); //modal title
+  const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
+  const [items, setItems] = useState([]); //table items
+  const [itemsBackup, setItemsBackup] = useState([]);
+  const [searchValue, setSearchValue] = useState({});
 
-
-
+  useEffect(() => {
+    const fetchData = async () => {
+      await axios(`${process.env.REACT_APP_BASE_URL}/allocationRules`, {
+        responseType: "json",
+      }).then((response) => {
+        setItems(response.data)
+        return setIsloading(false)
+      });
+    };
+    fetchData();
+  }, [openAddForm]);
 
   const columns = [
+    {
+      name: "_id",
+      options: {
+        display: false,
+      }
+    },
     {
       name: "code",
       label: "Code",
@@ -76,7 +58,11 @@ export default function FullWidthTabs() {
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
             <div>
-              <a onClick={() => handleClickOpen("1", "Edit")}>
+              <a
+                onClick={() => {
+                  handleAdd("Edit Allocation Rule - "+tableMeta.rowData[2],tableMeta.rowData[0]);
+                }}
+              >
                 {value}
               </a>
             </div>
@@ -87,11 +73,7 @@ export default function FullWidthTabs() {
     {
       name: "name",
       label: "Name",
-    },
-    {
-      name: "supplier",
-      label: "Supplier",
-    },
+    }
   ];
 
   const options = {
@@ -102,8 +84,21 @@ export default function FullWidthTabs() {
     selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
-        <CustomToolbar listener={handleClickOpen} handleFilter={handleFilter} />
+        <CustomToolbar
+          listener={() => {
+            handleAdd("Add New Allocation Rule");
+          }}
+          handleFilter={handleFilter}
+        />
       );
+    },
+    onRowsDelete: (rowsDeleted, dataRows) => {
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
+        axios.delete(`${process.env.REACT_APP_BASE_URL}/allocationRules/${idsToDelete}`, {
+          responseType: "json",
+        }).then((response) => {
+          console.log("deleted")
+        });
     },
     textLabels: {
         body: {
@@ -115,38 +110,47 @@ export default function FullWidthTabs() {
     setFilterDialog(true)
   };
 
-  const handleClickOpen = (rowID, modal_Title) => {
-    setOpen(true);
-    setRowID(rowID);
-    setmodal_Title(modal_Title);
+  const handleAdd = (title, allocationRuleId) => {
+    setOpenAddForm(true);
+    setAllocationRuleID(allocationRuleId);
+    setFormTitle(title);
   };
+  const handleCloseAddForm = () => setOpenAddForm(false)
 
+
+  //Search component ---------------START--------------
+  const handleChangeSearch = (e, newValue) => {
+    if(itemsBackup.length===0) setItemsBackup(items)
+    setSearchValue(newValue)
+    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+  }
+  //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
-        multiple
-        id="tags-filled"
-        options={top100Films.map((option) => option.title)}
-        defaultValue={[]}
-        freeSolo
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="filled"
-            label=""
-            placeholder="Search Data"
+    <Autocomplete
+      id="tags-filled"
+      options={items || {}}
+      value={searchValue || {}}
+      getOptionLabel={(option) => option.name || ""}
+      onChange={handleChangeSearch}
+      renderTags={(value, getTagProps) =>
+        value.map((option, index) => (
+          <Chip
+            variant="outlined"
+            label={option}
+            {...getTagProps({ index })}
           />
-        )}
-      />
+        ))
+      }
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="filled"
+          label=""
+          placeholder="Search by Name"
+        />
+      )}
+    />
 
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
@@ -160,11 +164,15 @@ export default function FullWidthTabs() {
       <div>
         <Dialog
           fullScreen
-          open={open}
-          onClose={() => setOpen(false)}
+          open={openAddForm}
+          onClose={handleCloseAddForm}
           TransitionComponent={Transition}
         >
-          <SubTables setOpenDialog={() => setOpen(false)} />
+          <SubTables
+            title={formTitle}
+            handleClose={handleCloseAddForm}
+            allocationRuleId={allocationRuleId}
+          />
         </Dialog>
         {/*********************** FILTER start ****************************/}
         <Dialog
@@ -177,6 +185,7 @@ export default function FullWidthTabs() {
           <FilterComponent setOpenDialog={setFilterDialog} />
         </Dialog>
       </div>
-      </Container>
+    </Container>
   );
 }
+export default AllocationRule

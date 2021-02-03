@@ -1,66 +1,55 @@
-import React, { useState } from "react";
-import PropTypes from "prop-types";
+import React, { useState, useEffect } from "react";
 import CustomToolbar from "../../CustomToolbar";
-import MUIDataTable from "mui-datatables";
-import {datatableTheme} from "assets/css/datatable-theme.js";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import { MuiThemeProvider } from "@material-ui/core/styles";
 import {
   Container,
-  Typography,
-  Box,
   Dialog,
   Slide,
   TextField,
   Chip,
+  CircularProgress,
 } from "@material-ui/core";
+import { MuiThemeProvider } from "@material-ui/core/styles";
+import {Autocomplete} from "@material-ui/lab";
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
-import "./Price_rules.css";
-import items from "./items.json";
+import MUIDataTable from "mui-datatables";
+import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
-
-// Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
-const top100Films = [];
-
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`full-width-tabpanel-${index}`}
-      aria-labelledby={`full-width-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box p={3}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
-    </div>
-  );
-}
+import axios from 'axios';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-TabPanel.propTypes = {
-  children: PropTypes.node,
-  index: PropTypes.any.isRequired,
-  value: PropTypes.any.isRequired,
-};
-
-export default function FullWidthTabs() {
-
-  const [openSubTable, setOpenSubTable] = useState(false); //for modal
-  const [RowID, setRowID] = useState(0); //current row
-  const [subTablesTitle, setSubTablesTitle] = useState("Add"); //modal title
+const PriceRule = () => {
+  const [isLoading, setIsloading] = useState(true);  
+  const [openAddForm, setOpenAddForm] = useState(false); //for modal
+  const [priceRuleId, setPriceRuleID] = useState(); //modal title
+  const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
+  const [items, setItems] = useState([]); //table items
+  const [itemsBackup, setItemsBackup] = useState([]);
+  const [searchValue, setSearchValue] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await axios(`${process.env.REACT_APP_BASE_URL}/priceRules`, {
+        responseType: "json",
+      }).then((response) => {
+        setItems(response.data)
+        return setIsloading(false)
+      });
+    };
+    fetchData();
+  }, [openAddForm]);
 
   const columns = [
+    {
+      name: "_id",
+      options: {
+        display: false,
+      }
+    },
     {
       name: "name",
       label: "Name",
@@ -68,13 +57,14 @@ export default function FullWidthTabs() {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
-            <div
-              onClick={() => {
-                handleClickOpenSubTable("1", "Edit");
-              }}
-              class="table-link"
-            >
-              {value}
+            <div>
+              <a
+                onClick={() => {
+                  handleAdd("Edit Price Rule - "+tableMeta.rowData[1],tableMeta.rowData[0]);
+                }}
+              >
+                {value}
+              </a>
             </div>
           );
         },
@@ -83,11 +73,9 @@ export default function FullWidthTabs() {
     {
       name: "service",
       label: "Service",
-      options: {
-        filter: false,
-      },
     }
   ];
+
   const options = {
     filter: false,
     onRowsDelete: null,
@@ -95,60 +83,96 @@ export default function FullWidthTabs() {
     rowsPerPageOptions: [20, 50, 100],
     selectToolbarPlacement: "replace",
     customToolbar: () => {
-      return <CustomToolbar listener={handleClickOpenSubTable} handleFilter={handleFilter} />;
+      return (
+        <CustomToolbar
+          listener={() => {
+            handleAdd("Add New Price Rule");
+          }}
+          handleFilter={handleFilter}
+        />
+      );
+    },
+    onRowsDelete: (rowsDeleted, dataRows) => {
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
+        axios.delete(`${process.env.REACT_APP_BASE_URL}/priceRules/${idsToDelete}`, {
+          responseType: "json",
+        }).then((response) => {
+          console.log("deleted")
+        });
+    },
+    textLabels: {
+        body: {
+            noMatch: !isLoading && 'Sorry, there is no matching data to display'
+        },
     },
   };
   const handleFilter = () => {
     setFilterDialog(true)
   };
-  const handleClickOpenSubTable = (rowID = 1, subTablesTitle = "Add") => {
-    setOpenSubTable(true);
-    setRowID(rowID);
-    setSubTablesTitle(subTablesTitle);
-  };
 
+  const handleAdd = (title, priceRuleId) => {
+    setOpenAddForm(true);
+    setPriceRuleID(priceRuleId);
+    setFormTitle(title);
+  };
+  const handleCloseAddForm = () => setOpenAddForm(false)
+
+
+  //Search component ---------------START--------------
+  const handleChangeSearch = (e, newValue) => {
+    if(itemsBackup.length===0) setItemsBackup(items)
+    setSearchValue(newValue)
+    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+  }
+  //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
-        multiple
-        id="tags-filled"
-        options={top100Films.map((option) => option.title)}
-        defaultValue={[]}
-        freeSolo
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="filled"
-            label=""
-            placeholder="Search Data"
+    <Autocomplete
+      id="tags-filled"
+      options={items || {}}
+      value={searchValue || {}}
+      getOptionLabel={(option) => option.name || ""}
+      onChange={handleChangeSearch}
+      renderTags={(value, getTagProps) =>
+        value.map((option, index) => (
+          <Chip
+            variant="outlined"
+            label={option}
+            {...getTagProps({ index })}
           />
-        )}
-      />
+        ))
+      }
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="filled"
+          label=""
+          placeholder="Search by Name"
+        />
+      )}
+    />
+
       <MuiThemeProvider theme={datatableTheme}>
         <MUIDataTable
-          title=""
+          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
           data={items}
           columns={columns}
           options={options}
         />
       </MuiThemeProvider>
+
       <div>
         <Dialog
           fullScreen
-          open={openSubTable}
-          onClose={() => setOpenSubTable(false)}
+          open={openAddForm}
+          onClose={handleCloseAddForm}
           TransitionComponent={Transition}
         >
-          <SubTables setOpenDialog={setOpenSubTable} modalTitle={subTablesTitle} />
+          <SubTables
+            title={formTitle}
+            handleClose={handleCloseAddForm}
+            priceRuleId={priceRuleId}
+          />
         </Dialog>
         {/*********************** FILTER start ****************************/}
         <Dialog
@@ -164,3 +188,4 @@ export default function FullWidthTabs() {
     </Container>
   );
 }
+export default PriceRule
