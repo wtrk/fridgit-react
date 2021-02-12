@@ -7,8 +7,9 @@ import {
   TextField,
   Chip,
   CircularProgress,
+  Typography,
 } from "@material-ui/core";
-import { MuiThemeProvider } from "@material-ui/core/styles";
+import { makeStyles, MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
@@ -17,27 +18,55 @@ import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import axios from 'axios';
 
+
+
+// Top 100 films as rated by IMDb neighbourhoods. http://www.imdb.com/chart/top
+const top100Films = [];
+
+
+const useStyles = makeStyles((theme) => ({
+  appBar: {
+    position: "relative",
+  },
+  title: {
+    marginLeft: theme.spacing(2),
+    flex: 1,
+  },
+  root: {
+    backgroundColor: theme.palette.background.paper,
+  },
+  formControl: {
+    minWidth: "100%",
+  },
+}));
+
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const Neighbourhood = () => {
+  const classes = useStyles(); //custom css
   const [isLoading, setIsloading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [neighbourhoodId, setNeighbourhoodID] = useState(); //modal title
+  const [citiesList, setCitiesList] = useState([]);
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
+
   const [items, setItems] = useState([]); //table items
-  const [itemsBackup, setItemsBackup] = useState([]);
-  const [searchValue, setSearchValue] = useState({});
-  
   useEffect(() => {
     const fetchData = async () => {
+      const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
+        responseType: "json",
+      }).then((response) => {
+        setCitiesList(response.data)
+        return response.data
+      });
       await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
-        return setIsloading(false)
+        return setIsloading(false);
       });
     };
     fetchData();
@@ -71,15 +100,29 @@ const Neighbourhood = () => {
     },
     {
       name: "name"
+    },
+    {
+      name: "city_id",
+      label: "City",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let cityValue = "-"
+          if(citiesList.filter(e=> e._id==value)[0]){
+            cityValue = citiesList.filter(e=> e._id==value)[0].name;
+          }
+
+          return cityValue
+        }
+      },
     }
   ];
 
   const options = {
     filter: false,
     onRowsDelete: null,
+    selectToolbarPlacement: "replace",
     rowsPerPage: 20,
     rowsPerPageOptions: [20, 50, 100],
-    selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
         <CustomToolbar
@@ -91,7 +134,7 @@ const Neighbourhood = () => {
       );
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
-      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex].id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/neighbourhoods/${idsToDelete}`, {
           responseType: "json",
         }).then((response) => {
@@ -114,9 +157,12 @@ const Neighbourhood = () => {
     setFormTitle(title);
   };
 
+
   const handleCloseAddForm = () => setOpenAddForm(false)
 
   //Search component ---------------START--------------
+  const [itemsBackup, setItemsBackup] = useState([]);
+  const [searchValue, setSearchValue] = useState({});
   const handleChangeSearch = (e, newValue) => {
     if(itemsBackup.length===0) setItemsBackup(items)
     setSearchValue(newValue)
@@ -149,6 +195,7 @@ const Neighbourhood = () => {
           />
         )}
       />
+
       {!isLoading ? (
         <MuiThemeProvider theme={datatableTheme}>
           <MUIDataTable
@@ -173,6 +220,7 @@ const Neighbourhood = () => {
             title={formTitle}
             handleClose={handleCloseAddForm}
             neighbourhoodId={neighbourhoodId}
+            citiesList={citiesList}
           />
         </Dialog>
         {/*********************** FILTER start ****************************/}

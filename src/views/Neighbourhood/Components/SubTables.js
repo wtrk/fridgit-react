@@ -16,9 +16,13 @@ import {
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
+import CustomInput from "components/CustomInput/CustomInput.js";
 import { makeStyles } from "@material-ui/core/styles";
 import CustomToolbar from "CustomToolbar";
-import Alert from '@material-ui/lab/Alert';
+import {Autocomplete, Alert} from '@material-ui/lab';
+
+import MUIDataTable from "mui-datatables";
+
 
 
   const useStyles = makeStyles((theme) => ({
@@ -36,17 +40,22 @@ import Alert from '@material-ui/lab/Alert';
 const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
+    const [cityValue, setCityValue] = useState({});
+    const [alias, setAlias] = useState([]);
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
+    const cityRef = useRef()
     const submitRef = useRef()
     const [formValues, setFormValues] = useState({
       code: "",
-      name: ""
+      name: "",
+      city_id: ""
     });
     const [formErrors, setFormErrors] = useState({
       code: {error:false,msg:""},
-      name: {error:false,msg:""}
+      name: {error:false,msg:""},
+      city_id: {error:false,msg:""}
     });
     
   useEffect(()=>{
@@ -60,37 +69,57 @@ const SubTables = (props) => {
           }
         ).then((response) => {
           setFormValues(response.data);
-        }).catch((err)=>console.log(err));
+          setCityValue(props.citiesList.filter(e=> e._id==response.data.city_id)[0])
+          setAlias(response.data.alias);
+        });
       };
       fetchData();
     }
   },[])
-  const add1RowInNeighbourhood = () => {
-    setNeighbourhood([...neighbourhood, { name: "" }]);
+
+  const add1RowInAlias = () => {
+    setAlias([...alias, { name: "" }]);
   };
-  const [neighbourhood, setNeighbourhood] = useState([
-    { name: "Jounieh" },
-    { name: "Abha" },
-  ]);
-  const [neighbourhoodSelect, setNeighbourhoodSelect] = React.useState("");
-  const handleChangeNeighbourhoodSelect = (event) => {
-    setNeighbourhoodSelect(event.target.value);
+  const [aliasSelect, setAliasSelect] = React.useState("");
+
+  const handleChangeAliasInput = (e) => {
+    setAliasSelect(e.target.value);
   };
-  
+  const keyPressAliasHandler = (e) => {
+    const { keyCode, target } = e
+    if(keyCode===13){
+      setAliasSelect("")
+      setAlias([...alias.filter(e=>e.name!==""), { name: target.value }]);
+    }
+  }
+  const options = {
+    filter: false,
+    customToolbar: () => {
+      return <CustomToolbar listener={add1RowInAlias} />;
+    }
+  };
+  useEffect(()=>{
+    setFormValues({ ...formValues, alias:alias })
+  },[alias])
   const keyPressHandler = (e) => {
     const { keyCode, target } = e
     if(keyCode===13){
       switch (target.name){
         case "code": nameRef.current.focus();break;
-        case "name": submitRef.current.focus();break;
+        case "name": cityRef.current.focus();break;
+        case "city_id": submitRef.current.focus();break;
         default: codeRef.current.focus();
       }
     }
-}
+  }
 const handleChangeForm = (e) => {
   const { name, value } = e.target;
   setFormValues({ ...formValues, [name]: value });
 };
+const handleChangeCity = (e, newValue) =>{
+  setCityValue(newValue)
+  if(newValue) setFormValues({ ...formValues, city_id: newValue._id });
+}
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
@@ -119,14 +148,15 @@ const handleOnSubmit = async () => {
                setOpenAlertSuccess(true);
                setFormValues({
                  code: "",
-                 name: ""
+                 name: "",
+                 city_id: ""
                });
                props.handleClose()
              })
              .catch((error) => {
                console.log(error);
              });
-         }
+  }
 
 }
 const validateInputHandler = (e) => {
@@ -138,7 +168,6 @@ const validateInputHandler = (e) => {
       setFormErrors({ ...formErrors, [name]: {error: invalidEmail, msg: "Enter a valid email address"} });
   }
 }
-
 
   return (
     <Fragment>
@@ -164,7 +193,7 @@ const validateInputHandler = (e) => {
 
       <div style={{ padding: "10px 30px" }}>
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={4}>
             <TextField
               id="codeInput"
               label="Code"
@@ -181,8 +210,7 @@ const validateInputHandler = (e) => {
               error={formErrors.code.error}
             />
           </Grid>
-          <Grid item xs={12} sm={2}></Grid>
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={4}>
             <TextField
               id="nameInput"
               label="Name"
@@ -199,6 +227,67 @@ const validateInputHandler = (e) => {
               error={formErrors.name.error}
             />
           </Grid>
+          <Grid item xs={12} sm={4}>
+            <Autocomplete
+              id="CityInput"
+              options={props.citiesList || {}}
+              value={cityValue || {}}
+              getOptionLabel={(option) => {
+                return Object.keys(option).length!==0 ? option.name : "";
+              }}
+              fullWidth
+              onChange={handleChangeCity}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="City"
+                  inputRef={cityRef}
+                  onKeyDown={keyPressHandler}
+                  onBlur={validateInputHandler}
+                  helperText={
+                    formErrors.city_id.error ? formErrors.city_id.msg : null
+                  }
+                  error={formErrors.city_id.error}
+                />
+              )}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <MUIDataTable
+              title="Alias"
+              data={alias}
+              columns={[
+                {
+                  name: "name",
+                  label: "Name",
+                  options: {
+                    filter: false,
+                    customBodyRender: (value, tableMeta, updateValue) => {
+                      if (value == "") {
+                        return (
+                          <div>
+                            <TextField
+                              id="aliasInput"
+                              label="Add new neighbourhood alias"
+                              onChange={handleChangeAliasInput}
+                              onKeyDown={keyPressAliasHandler}
+                              fullWidth
+                              value={aliasSelect || ""}
+                              name="aliasSelect"
+                            />
+                          </div>
+                        );
+                      } else {
+                        return <div>{value}</div>;
+                      }
+                    },
+                  },
+                },
+              ]}
+              options={options}
+            />
+          </Grid>
+
           <Grid item xs={12} className="clientTables">
             <Button
               variant="contained"

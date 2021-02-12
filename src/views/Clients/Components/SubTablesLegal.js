@@ -37,6 +37,7 @@ const AddFormDialog = (props) => {
   const vat_numberRef = useRef()
   const vat_percentageRef = useRef()
   const submitRef = useRef()
+  const [updated, setUpdated] = useState(false);
   const [formValues, setFormValues] = useState({
     name: "",
     nickname: "",
@@ -80,10 +81,21 @@ const AddFormDialog = (props) => {
     for (const [key, value] of Object.entries(formErrors)) {
         if(value.error===true) return setOpenAlertError(true);
     }
+    props.dataLegal.map(e=>{
+      delete e._id
+    })
+    props.setDataLegal([...props.dataLegal,formValues])
+    setUpdated(true)
+
+  }
+  
+  useEffect(()=>{
+    if(updated===true){
+      const fetchData = async () => {
         await axios({
           method: "put",
-          url: `${process.env.REACT_APP_BASE_URL}/clientLegals/${props.clientId}`,
-          data: [formValues],
+          url: `${process.env.REACT_APP_BASE_URL}/clients/${props.clientId}`,
+          data: {"legals": props.dataLegal}
         })
           .then(function (response) {
             setFormValues({
@@ -99,8 +111,11 @@ const AddFormDialog = (props) => {
           .catch((error) => {
             console.log(error);
           });
+      };
+      fetchData();
+    }
+    },[props.dataLegal])
 
-  }
   const validateInputHandler = (e) => {
     const { name, value } = e.target;
     const requiredInput = value.toString().trim().length ? false : true;

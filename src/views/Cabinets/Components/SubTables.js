@@ -30,16 +30,19 @@ const SubTables = (props) => {
     const [clientValue, setClientValue] = useState({});
     const [fridgesTypeValue, setfridgesTypeValue] = useState({});
     const [cityValue, setCityValue] = useState({});
+    const [neighbourhoodValue, setNeighbourhoodValue] = useState({});
     const classes = useStyles(); //custom css
     const snRef = useRef()
     const typeRef = useRef()
     const clientRef = useRef()
     const cityRef = useRef()
+    const neighbourhoodRef = useRef()
     const areaRef = useRef()
     const mobileRef = useRef()
     const submitRef = useRef()
     const [formLocationValues, setFormLocationValues] = useState({
-        city_id: "",
+      city_id: "",
+      neighbourhood_id: "",
         area: "",
         mobile: ""
     });
@@ -56,6 +59,7 @@ const SubTables = (props) => {
       client: {error:false,msg:""},
       location: {
         city_id: {error:false,msg:""},
+        neighbourhood_id: {error:false,msg:""},
         area:{error:false,msg:""},
         mobile: {error:false,msg:""},
       },
@@ -75,6 +79,7 @@ const SubTables = (props) => {
             return response.data
           }).then((response)=>{
             setCityValue(props.citiesList.filter(e=> e._id==response.location.city_id)[0])
+            setNeighbourhoodValue(props.neighbourhoodsList.filter(e=> e._id==response.location.neighbourhood_id)[0])
             setClientValue(props.clientsList.filter(e=> e._id==response.client)[0])
             setfridgesTypeValue(props.fridgesTypesList.filter(e=> e._id==response.type)[0])
             setFormLocationValues(response.location)
@@ -97,6 +102,7 @@ const SubTables = (props) => {
         case "type": clientRef.current.focus();break;
         case "client": cityRef.current.focus();break;
         case "city_id": areaRef.current.focus();break;
+        case "neighbourhood_id": areaRef.current.focus();break;
         case "area": mobileRef.current.focus();break;
         case "mobile": submitRef.current.focus();break;
         default: snRef.current.focus();
@@ -114,6 +120,10 @@ const handleChangeForm = (e) => {
 const handleChangeCity = (e, newValue) =>{
   setCityValue(newValue)
   if(newValue) setFormLocationValues({ ...formLocationValues, city_id: newValue._id });
+}
+const handleChangeNeighbourhood = (e, newValue) =>{
+  setNeighbourhoodValue(newValue)
+  if(newValue) setFormLocationValues({ ...formLocationValues, neighbourhood_id: newValue._id });
 }
 const handleChangeClient = (e, newValue) =>{
   setClientValue(newValue)
@@ -159,6 +169,7 @@ const handleOnSubmit = async () => {
         client: "",
         location: {
           city_id: "",
+          neighbourhood_id: "",
           area:"",
           mobile: "",
         },
@@ -292,6 +303,32 @@ const validateInputHandler = (e) => {
                     formErrors.location.city_id.error ? formErrors.location.city_id.msg : null
                   }
                   error={formErrors.location.city_id.error}
+                />
+              )}
+            />
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Autocomplete
+              id="neighbourhoodInput"
+              options={props.neighbourhoodsList || {}}
+              value={neighbourhoodValue || {}}
+              getOptionLabel={(option) => {
+                return Object.keys(option).length!==0 ? option.name : "";
+              }}
+              fullWidth
+              onChange={handleChangeNeighbourhood}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Neighbourhood"
+                  inputRef={neighbourhoodRef}
+                  onKeyDown={keyPressHandler}
+                  onBlur={validateInputHandler}
+                  helperText={
+                    formErrors.location.neighbourhood_id.error ? formErrors.location.neighbourhood_id.msg : null
+                  }
+                  error={formErrors.location.neighbourhood_id.error}
                 />
               )}
             />

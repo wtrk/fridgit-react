@@ -1,4 +1,5 @@
 import React, {useState,useEffect} from "react";
+import CustomToolbar from "../../CustomToolbar";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import {
   Container,
@@ -12,6 +13,7 @@ import MUIDataTable from "mui-datatables";
 import { MuiThemeProvider} from "@material-ui/core/styles";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import ClientDetails from "./Components/ClientDetails.js";
+import AddFormDialog from "./Components/AddFormDialog.js";
 import axios from 'axios';
 import "./Clients.css";
 
@@ -22,6 +24,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const ClientsList = () => {
   const [isLoading, setIsloading] = useState(true);
   const [items, setItems] = useState([]); //table items
+  const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [openDetails, setOpenDetails] = useState(false);
   const [clientDetailsTitle, setClientDetailsTitle] = useState("");
   const [clientDetails, setClientDetails] = useState([]);
@@ -35,7 +38,7 @@ const ClientsList = () => {
       });
     };
     fetchData();
-  }, [openDetails]);
+  }, [openDetails, openAddForm]);
 
   const options = {
     filter: false,
@@ -43,10 +46,23 @@ const ClientsList = () => {
     rowsPerPage: 20,
     rowsPerPageOptions: [20, 50, 100],
     selectToolbarPlacement: "replace",
+    onRowsDelete: (rowsDeleted, dataRows) => {
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
+        axios.delete(`${process.env.REACT_APP_BASE_URL}/clients/${idsToDelete}`, {
+          responseType: "json",
+        }).then((response) => {
+          console.log("deleted")
+        });
+    },
     textLabels: {
         body: {
             noMatch: !isLoading && 'Sorry, there is no matching data to display'
         },
+    },
+    customToolbar: () => {
+      return <CustomToolbar listener={() => {
+        handleAddForm();
+      }} />;
     },
   };
   const columns = [
@@ -88,6 +104,13 @@ const ClientsList = () => {
     setClientDetailsTitle(title);
   }
 
+  const handleAddForm = () => {
+    setOpenAddForm(true);
+  };
+
+  const handleCloseAddForm = () => {
+    setOpenAddForm(false);
+  };
   //Search component ---------------START--------------
   const [itemsBackup, setItemsBackup] = useState([]);
   const [searchValue, setSearchValue] = useState({});
@@ -137,6 +160,18 @@ const ClientsList = () => {
         <CircularProgress size={30} className="pageLoader" />
       )}
       <div>
+        
+      <Dialog
+          fullScreen
+          open={openAddForm}
+          onClose={handleCloseAddForm}
+          TransitionComponent={Transition}
+        >
+          <AddFormDialog
+            title="Add Client"
+            handleClose={handleCloseAddForm}
+          />
+        </Dialog>
         <Dialog
           fullScreen
           open={openDetails}
@@ -148,11 +183,6 @@ const ClientsList = () => {
             title={clientDetailsTitle}
             data={clientDetails[0]}
           />
-          {/* <SubTables
-            title={formTitle}
-            handleClose={handleCloseAddForm}
-            countryId={countryId}
-          /> */}
         </Dialog>
       </div>
     </Container>

@@ -79,6 +79,7 @@ const Cabinet = () => {
   const [itemsBackup, setItemsBackup] = useState([]);
   const [searchValue, setSearchValue] = useState({});
   const [citiesList, setCitiesList] = useState([]);
+  const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
   const [clientsList, setClientsList] = useState([]);
   const [fridgesTypesList, setFridgesTypesList] = useState([]);
   const [modal_Title, setmodal_Title] = useState("Add"); //modal title
@@ -90,6 +91,12 @@ const Cabinet = () => {
         responseType: "json",
       }).then((response) => {
         setCitiesList(response.data)
+        return response.data
+      });
+      const neighbourhoods = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
+        responseType: "json",
+      }).then((response) => {
+        setNeighbourhoodsList(response.data)
         return response.data
       });
       const clients = await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
@@ -331,11 +338,15 @@ const Cabinet = () => {
           if(citiesList.filter(e=> e._id==value.city_id)[0]){
             cityValue = citiesList.filter(e=> e._id==value.city_id)[0].name;
           }
+          let neighbourhoodValue = "-"
+          if(neighbourhoodsList.filter(e=> e._id==value.neighbourhood_id)[0]){
+            neighbourhoodValue = neighbourhoodsList.filter(e=> e._id==value.neighbourhood_id)[0].name;
+          }
 
           return <div style={{ width: 200 }}>
             <strong>City</strong>: {cityValue}
             <br />
-            <strong>Area</strong>: {value ? value.area : "-"}
+            <strong>Neighbourhood</strong>: {neighbourhoodValue}
             <br />
             <strong>Mobile</strong>: {value ? value.mobile : "-"}
             <br />
@@ -392,9 +403,9 @@ const Cabinet = () => {
     onDownload: (buildHead, buildBody, columns, data) => {
       data.map(rowData=>{
         const city = citiesList.filter(e=> e._id==rowData.data[8].city_id)[0].name
-        const area = rowData.data[8].area
+        const neighbourhood = neighbourhoodsList.filter(e=> e._id==rowData.data[8].neighbourhood_id)[0].name
         const mobile =rowData.data[8].mobile
-        rowData.data[8] = "City: "+city+"\nArea: "+area+"\nMobile: "+mobile
+        rowData.data[8] = "City: "+city+"\nNeighbourhood: "+neighbourhood+"\nMobile: "+mobile
         return rowData
       })
       return buildHead(columns) + buildBody(data);
@@ -605,6 +616,7 @@ const Cabinet = () => {
               handleClose={handleCloseAddForm}
               cabinetId={cabinetsId}
               citiesList={citiesList}
+              neighbourhoodsList={neighbourhoodsList}
               clientsList={clientsList}
               fridgesTypesList={fridgesTypesList}
             />

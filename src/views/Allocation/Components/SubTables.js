@@ -120,7 +120,6 @@ const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
   }
-  
   if (props.allocationRuleId) {
     await axios({
       method: "put",

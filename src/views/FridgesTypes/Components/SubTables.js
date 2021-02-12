@@ -305,7 +305,7 @@ const validateInputHandler = (e) => {
           <Grid item xs={12} sm={5}>
             <TextField
               id="preventiveInput"
-              label="PreventiveTttt"
+              label="Preventive"
               name="preventive"
               onChange={handleChangeForm}
               fullWidth

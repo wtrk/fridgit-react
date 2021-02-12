@@ -29,6 +29,8 @@ const Clients = (props) => {
   const [openAlertError, setOpenAlertError] = useState(false);
   const [openAddLegal, setOpenAddLegal] = useState(false);
   const [openAddContact, setOpenAddContact] = useState(false);
+  const [dataLegal, setDataLegal] = useState(props.data.legals);
+  const [dataContacts, setDataContacts] = useState(props.data.contacts);
   const optionsContact = {
     filterType: "checkbox",
     rowsPerPage: 6,
@@ -40,13 +42,15 @@ const Clients = (props) => {
       );
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
-      const idsToDelete = rowsDeleted.data.map(d => props.data.contacts[d.dataIndex]._id); // array of all ids to to be deleted
+      const idsToDelete = rowsDeleted.data.map(d => dataContacts[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/clientContacts/${clientId}/${idsToDelete}`, {
           responseType: "json",
         }).then((response) => {
           console.log("deleted")
         });
-    }
+    },
+    rowsPerPage: 100,
+    customFooter: () => ""
   };
   const columnsContact = [
     {
@@ -86,13 +90,15 @@ const Clients = (props) => {
       );
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
-      const idsToDelete = rowsDeleted.data.map(d => props.data.legals[d.dataIndex]._id); // array of all ids to to be deleted
+      const idsToDelete = rowsDeleted.data.map(d => dataLegal[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/clientLegals/${clientId}/${idsToDelete}`, {
           responseType: "json",
         }).then((response) => {
           console.log("deleted")
         });
-    }
+    },
+    rowsPerPage: 100,
+    customFooter: () => ""
   };
   
 
@@ -250,14 +256,14 @@ const handleOnSubmit = async () => {
           <Grid item xs={12} md={8} className="clientTables">
             <MUIDataTable
               title={"LEGAL INFO"}
-              data={props.data.legals}
+              data={dataLegal}
               columns={columnsLegalInfo}
               options={optionsLegalInfo}
               fullWidth
             />
             <MUIDataTable
               title={"CONTACT"}
-              data={props.data.contacts}
+              data={dataContacts}
               columns={columnsContact}
               options={optionsContact}
               fullWidth
@@ -275,6 +281,8 @@ const handleOnSubmit = async () => {
           <SubTablesLegal
             handleClose={handleCloseAddLegal}
             clientId={clientId}
+            dataLegal={dataLegal}
+            setDataLegal={setDataLegal}
           />
         </Dialog>
         
@@ -287,6 +295,8 @@ const handleOnSubmit = async () => {
           <SubTablesContact
             handleClose={handleCloseAddContact}
             clientId={clientId}
+            dataContacts={dataContacts}
+            setDataContacts={setDataContacts}
           />
         </Dialog>
      

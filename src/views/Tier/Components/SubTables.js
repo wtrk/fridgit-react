@@ -13,6 +13,7 @@ import { Close,Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import CustomToolbar from "CustomToolbar";
 import Alert from '@material-ui/lab/Alert';
+import NestedTable from "./NestedTable.js";
 
 import MUIDataTable from "mui-datatables";
 
@@ -73,7 +74,6 @@ const SubTables = (props) => {
     }
   },[])
 
-
   const add1RowInTierCity = () => {
     setTierCitySelect("")
     setTierCity([...tierCity, { name: "" }]);
@@ -86,7 +86,6 @@ const SubTables = (props) => {
   const keyPressTierCityHandler = async (e) => {
     const { keyCode, target } = e
     if(keyCode===13){
-      console.log(target.value)
       if (props.tierId) {
         await axios({
           method: "put",
@@ -112,7 +111,7 @@ const SubTables = (props) => {
     }
   }
   useEffect(()=>{
-    setFormValues({ ...formValues, tierCity:tierCity })
+    setFormValues({ ...formValues, cities:tierCity })
   },[tierCity])
   const keyPressHandler = (e) => {
     const { keyCode, target } = e
@@ -132,10 +131,7 @@ const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
   }
-  
   if (props.tierId) {
-    delete formValues.cities
-    delete formValues.tierCity
       await axios({
         method: "put",
         url: `${process.env.REACT_APP_BASE_URL}/tiers/${props.tierId}`,
@@ -247,7 +243,11 @@ const validateInputHandler = (e) => {
               error={formErrors.name.error}
             />
           </Grid>
-          <Grid item xs={12} >
+          
+          <Grid item xs={12}>
+            <NestedTable arrayName={tierCity} setArrayName={setTierCity} title="TierCities" dbTable="cities" />
+          </Grid>
+          {/* <Grid item xs={12} >
             <MUIDataTable
               title="TierCity"
               data={tierCity}
@@ -286,7 +286,7 @@ const validateInputHandler = (e) => {
                 }
               }}
             />
-          </Grid>
+          </Grid> */}
 
           <Grid item xs={12} className="clientTables">
             <Button

@@ -32,25 +32,21 @@ const AddFormDialog = (props) => {
   const [openAlertError, setOpenAlertError] = useState(false);
   const classes = useStyles(); //custom css
   const nameRef = useRef()
-  const phoneRef = useRef()
   const addressRef = useRef()
+  const phoneRef = useRef()
   const emailRef = useRef()
-  const positionRef = useRef()
   const submitRef = useRef()
-  const [updated, setUpdated] = useState(false);
   const [formValues, setFormValues] = useState({
     name: "",
-    phone: "",
     address: "",
-    email: "",
-    position: ""
+    phone: "",
+    email: ""
   });
   const [formErrors, setFormErrors] = useState({
     name: {error:false,msg:""},
-    phone: {error:false,msg:""},
     address: {error:false,msg:""},
-    email: {error:false,msg:""},
-    position: {error:false,msg:""}
+    phone: {error:false,msg:""},
+    email: {error:false,msg:""}
   });
   useEffect(()=>{
     nameRef.current.focus()
@@ -59,11 +55,10 @@ const AddFormDialog = (props) => {
       const { keyCode, target } = e
       if(keyCode===13){
         switch (target.name){
-          case "name": phoneRef.current.focus();break;
-          case "phone": addressRef.current.focus();break;
-          case "address": emailRef.current.focus();break;
-          case "email": positionRef.current.focus();break;
-          case "position": submitRef.current.focus();break;
+          case "name": submitRef.current.focus();break;
+          case "address": nameRef.current.focus();break;
+          case "phone": nameRef.current.focus();break;
+          case "email": nameRef.current.focus();break;
           default: nameRef.current.focus();
         }
       }
@@ -77,48 +72,34 @@ const AddFormDialog = (props) => {
     const { name, checked } = e.target;
     setFormValues({ ...formValues, [name]: checked ? 1 : 0 });
   }
-  
   const handleOnSubmit = async () => {
-    for (const [key, value] of Object.entries(formErrors)) {
-        if(value.error===true) return setOpenAlertError(true);
+    for (const [
+      key,
+      value,
+    ] of Object.entries(formErrors)) {
+      if (value.error === true)
+        return setOpenAlertError(true);
     }
-    props.dataContacts.map(e=>{
-      delete e._id
+
+    await axios({
+      method: "post",
+      url: `${process.env.REACT_APP_BASE_URL}/clients`,
+      data: [formValues],
     })
-    props.setDataContacts([...props.dataContacts,formValues])
-    setUpdated(true)
-
+      .then(function (response) {
+        setFormValues({
+          name: "",
+          address: "",
+          phone: "",
+          email: ""
+        });
+        props.handleClose();
+        return setOpenAlertSuccess(true);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
-  
-  useEffect(()=>{
-    if(updated===true){
-      const fetchData = async () => {
-        await axios({
-          method: "put",
-          url: `${process.env.REACT_APP_BASE_URL}/clients/${props.clientId}`,
-          data: {"contacts": props.dataContacts}
-        })
-        .then(function (response) {
-          setFormValues({
-            name: "",
-            phone: "",
-            address: "",
-            email: "",
-            position: ""
-          });
-          props.handleClose()
-          return setOpenAlertSuccess(true);
-        })
-          .catch((error) => {
-            console.log(error);
-          });
-      };
-      fetchData();
-    }
-    },[props.dataContacts])
-
-
-
   const validateInputHandler = (e) => {
     const { name, value } = e.target;
     const requiredInput = value.toString().trim().length ? false : true;
@@ -150,15 +131,15 @@ const AddFormDialog = (props) => {
       </Collapse>
 
       <div style={{ padding: "50px" }}>
-        <Grid container spacing={3}>
+        <Grid container spacing={3}>        
           <Grid item xs={12} sm={6}>
             <TextField
               id="nameInput"
-              label="Name"
+              label="Company name"
               name="name"
+              value={formValues.name || ""}
               onChange={handleChangeForm}
               fullWidth
-              value={formValues.name || ""}
               inputRef={nameRef}
               onKeyDown={keyPressHandler}
               onBlur={validateInputHandler}
@@ -168,78 +149,57 @@ const AddFormDialog = (props) => {
               error={formErrors.name.error}
             />
           </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            id="phoneInput"
-            label="Phone"
-            name="phone"
-            value={formValues.phone || ""}
-            onChange={handleChangeForm}
-            fullWidth
-            inputRef={phoneRef}
-            onKeyDown={keyPressHandler}
-            onBlur={validateInputHandler}
-            helperText={
-              formErrors.phone.error ? formErrors.phone.msg : null
-            }
-            error={formErrors.phone.error}
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            id="addressInput"
-            label="Address"
-            name="address"
-            value={formValues.address || ""}
-            onChange={handleChangeForm}
-            fullWidth
-            inputRef={addressRef}
-            onKeyDown={keyPressHandler}
-            onBlur={validateInputHandler}
-            helperText={
-              formErrors.address.error ? formErrors.address.msg : null
-            }
-            error={formErrors.address.error}
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            id="emailInput"
-            label="Email"
-            name="email"
-            value={formValues.email || ""}
-            onChange={handleChangeForm}
-            fullWidth
-            inputRef={emailRef}
-            onKeyDown={keyPressHandler}
-            onBlur={validateInputHandler}
-            helperText={
-              formErrors.email.error ? formErrors.email.msg : null
-            }
-            error={formErrors.email.error}
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            id="positionInput"
-            label="Position"
-            name="position"
-            value={formValues.position || ""}
-            onChange={handleChangeForm}
-            fullWidth
-            inputRef={positionRef}
-            onKeyDown={keyPressHandler}
-            onBlur={validateInputHandler}
-            helperText={
-              formErrors.position.error ? formErrors.position.msg : null
-            }
-            error={formErrors.position.error}
-          />
-        </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="addressInput"
+              label="Address"
+              name="address"
+              onChange={handleChangeForm}
+              fullWidth
+              value={formValues.address || ""}
+              inputRef={addressRef}
+              onKeyDown={keyPressHandler}
+              onBlur={validateInputHandler}
+              helperText={
+                formErrors.address.error ? formErrors.address.msg : null
+              }
+              error={formErrors.address.error}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="phoneInput"
+              label="Phone"
+              name="phone"
+              onChange={handleChangeForm}
+              fullWidth
+              value={formValues.phone || ""}
+              inputRef={phoneRef}
+              onKeyDown={keyPressHandler}
+              onBlur={validateInputHandler}
+              helperText={
+                formErrors.phone.error ? formErrors.phone.msg : null
+              }
+              error={formErrors.phone.error}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="emailInput"
+              label="Email"
+              name="email"
+              onChange={handleChangeForm}
+              fullWidth
+              value={formValues.email || ""}
+              inputRef={emailRef}
+              onKeyDown={keyPressHandler}
+              onBlur={validateInputHandler}
+              helperText={
+                formErrors.email.error ? formErrors.email.msg : null
+              }
+              error={formErrors.email.error}
+            />
+          </Grid>
 
           <Grid item xs={12} className="clientTables">
             <Button
