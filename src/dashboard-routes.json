@@ -102,17 +102,6 @@
     "haschild": false
   },
   {
-    "_id":91,
-    "path": "/Typography",
-    "name": "Typography",
-    "rtlname": "",
-    "icon": "KitchenIcon",
-    "layout": "/admin",
-    "type": "sub",
-    "parent": "Master Data",
-    "haschild": false
-  },
-  {
     "_id":10,
     "path": "/Stores",
     "name": "Stores",
