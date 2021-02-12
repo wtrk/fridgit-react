@@ -57,7 +57,8 @@ const ClientsList = () => {
       }
     },
     {
-      name: "company",
+      name: "name",
+      label: "company",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
           return <a onClick={() => handleOpenDetails("Client Details",tableMeta.rowData[0])}>
@@ -98,38 +99,43 @@ const ClientsList = () => {
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-    <Autocomplete
-      id="tags-filled"
-      options={items || {}}
-      value={searchValue || {}}
-      getOptionLabel={(option) => option.company || ""}
-      onChange={handleChangeSearch}
-      renderTags={(value, getTagProps) =>
-        value.map((option, index) => (
-          <Chip
-            variant="outlined"
-            label={option}
-            {...getTagProps({ index })}
+      <Autocomplete
+        id="tags-filled"
+        options={items || {}}
+        value={searchValue || {}}
+        getOptionLabel={(option) => option.name || ""}
+        onChange={handleChangeSearch}
+        renderTags={(value, getTagProps) =>
+          value.map((option, index) => (
+            <Chip
+              variant="outlined"
+              label={option}
+              {...getTagProps({ index })}
+            />
+          ))
+        }
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            variant="filled"
+            label=""
+            placeholder="Search by Name"
           />
-        ))
-      }
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          variant="filled"
-          label=""
-          placeholder="Search by Name"
-        />
+        )}
+      />
+
+      {!isLoading ? (
+        <MuiThemeProvider theme={datatableTheme}>
+          <MUIDataTable
+            title=""
+            data={items}
+            columns={columns}
+            options={options}
+          />
+        </MuiThemeProvider>
+      ) : (
+        <CircularProgress size={30} className="pageLoader" />
       )}
-    />
-      <MuiThemeProvider theme={datatableTheme}>
-        <MUIDataTable
-          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
-          data={items}
-          columns={columns}
-          options={options}
-        />
-      </MuiThemeProvider>
       <div>
         <Dialog
           fullScreen
@@ -141,7 +147,6 @@ const ClientsList = () => {
             handleClose={handleCloseDetails}
             title={clientDetailsTitle}
             data={clientDetails[0]}
-            
           />
           {/* <SubTables
             title={formTitle}

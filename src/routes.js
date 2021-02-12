@@ -58,6 +58,7 @@ import ClientsList from "views/Clients/Clients_list.js";
 import Allocation from "views/Allocation/Allocation.js";
 import Tier from "views/Tier/Tier.js";
 import ServiceType from "views/ServiceType/ServiceType.js";
+import FridgesTypes from "views/FridgesTypes/FridgesTypes.js";
 import LiveOperation from "views/LiveOperation/LiveOperation.js";
 import LiveOperationAdd from "views/LiveOperation/LiveOperationAdd.js";
 import Warehouse from "views/Warehouse/Warehouse.js";
@@ -73,12 +74,12 @@ const switchRoutes = (
     <Route
       path="/admin/Privilege"
       component={Privilege}
-      key={dashboardRoutes}
+      key="11111"
     />
     <Route
       path="/admin/LiveOperationAdd"
       component={LiveOperationAdd}
-      key={dashboardRoutes + 2}
+      key="2222"
     />
     {dashboardRoutes.map((e, i) => {
       if (e.layout === "/admin") {
@@ -168,6 +169,10 @@ const switchRoutes = (
             e.icon = Apps;
             e.component = ServiceType;
             break;
+          case "FridgesTypes":
+            e.icon = Apps;
+            e.component = FridgesTypes;
+            break;
           case "Price Rules":
             e.icon = Notifications;
             e.component = Price_rules;
@@ -178,7 +183,7 @@ const switchRoutes = (
             break;
         }
         return (
-          <Route path={e.layout + e.path} component={e.component} key={i}  />
+          <Route path={e.layout + e.path} component={e.component} key={e._id}  />
         );
       }
       return null;

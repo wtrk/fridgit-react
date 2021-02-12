@@ -456,7 +456,7 @@ const AddFormDialog = (props) => {
               options={clientsList || {}}
               value={clientValue || {}}
               getOptionLabel={(option) => {
-                return Object.keys(option).length!==0 ? option.company : "";
+                return Object.keys(option).length!==0 ? option.name : "";
               }}
               fullWidth
               onChange={handleChangeClient}

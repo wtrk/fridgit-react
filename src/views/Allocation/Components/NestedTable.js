@@ -1,35 +1,42 @@
 import React, {useState,useEffect} from "react";
-import {
-  TextField,
-  CircularProgress,
-} from "@material-ui/core";
+import { TextField, CircularProgress } from "@material-ui/core";
+import {Autocomplete} from '@material-ui/lab';
 import CustomToolbar from "CustomToolbar";
 import MUIDataTable from "mui-datatables";
+import axios from 'axios';
 
 const NestedTable = (props) => {
   const [valueSelected, setValueSelected] = useState("");
-
-
+  const [dataList, setDataList] = useState([]);
 
   const add1Row = () => {
     props.setArrayName([...props.arrayName, { name: "" }]);
   };
-  const handleChangeInput = (e) => {
-    setValueSelected(e.target.value);
-  };
-  const keyPressHandler = (e) => {
-    const { keyCode, target } = e
-    if(keyCode===13){
-      setValueSelected("")
-      props.setArrayName([...props.arrayName.filter(e=>e.name!==""), { name: target.value }]);
+    const handleChange = (e, newValue) =>{
+      setValueSelected([])
+      props.setArrayName([...props.arrayName.filter(e=>e.name!==""), newValue ]);
+
     }
-  }
+  
+  useEffect(()=>{
+    const fetchData = async () => {
+      let dbTable = props.dbTable
+      if(props.title==="operations") dbTable="cities"
+      await axios(`${process.env.REACT_APP_BASE_URL}/${dbTable}`, {
+        responseType: "json",
+      }).then((response) => {
+        setDataList(response.data)
+        return response.data
+      });
+      };
+    fetchData();
+  },[])
+
 
   return (
     <MUIDataTable
-      title={props.title}
       data={props.arrayName}
-      title={props.isLoading && <CircularProgress  size={30} style={{position:"absolute",top:"120px",left:"45%",zIndex:100}} />}
+      title={props.title}
       columns={[
         {
           name: "name",
@@ -40,14 +47,22 @@ const NestedTable = (props) => {
               if (value == "") {
                 return (
                   <div>
-                    <TextField
+                    <Autocomplete
                       id={`${props.title}Input`}
-                      label={`Add new ${props.title}`}
-                      onChange={handleChangeInput}
-                      onKeyDown={keyPressHandler}
-                      fullWidth
-                      value={valueSelected || ""}
-                      name="valueSelected"
+                      options={dataList || {}}
+                      value={valueSelected || {}}
+                      getOptionLabel={(option) => {
+                        return Object.keys(option).length !== 0
+                          ? option.name
+                          : "";
+                      }}
+                      onChange={handleChange}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label={`Add new ${props.title}`}
+                        />
+                      )}
                     />
                   </div>
                 );

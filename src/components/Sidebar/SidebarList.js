@@ -56,7 +56,7 @@ export default function SidebarList(props) {
         {props.routes.map((e, i) => {
           return e.type === "Main" ? (
             e.haschild === true ? (
-              <ListItem button onClick={() => handleOpenChild(e.name)}  key={e.key}>
+              <ListItem button onClick={() => handleOpenChild(e.name)}  key={e._id}>
                 <ListItemIcon>
                   <e.icon />
                 </ListItemIcon>
@@ -67,7 +67,7 @@ export default function SidebarList(props) {
                 />
               </ListItem>
             ) : (
-              <NavLink to={e.layout + e.path} className={classes.item} key={e.key}>
+              <NavLink to={e.layout + e.path} className={classes.item} key={e._id}>
                 <ListItem
                   
                   button
@@ -82,7 +82,7 @@ export default function SidebarList(props) {
               </NavLink>
             )
           ) : (
-            <NavLink to={e.layout + e.path} className={classes.item} key={e.key}>
+            <NavLink to={e.layout + e.path} className={classes.item} key={e._id}>
               <Collapse in={openSidebar[e.parent]} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
                   <ListItem

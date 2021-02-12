@@ -342,7 +342,7 @@ export default function FullWidthTabs() {
       .then((data) => {
         const listclients = data.map((data, index) => (
           <MenuItem key={index} value={data.serial}>
-            {data.company}
+            {data.name}
           </MenuItem>
         ));
         setClients(listclients);

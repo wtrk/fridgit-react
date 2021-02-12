@@ -6,14 +6,12 @@ import {
   Button,
   Grid,
   Toolbar,
-  Collapse
+  Collapse,CircularProgress
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
-import CustomToolbar from "CustomToolbar";
 import {Autocomplete, Alert} from '@material-ui/lab';
-import MUIDataTable from "mui-datatables";
 import NestedTable from "./NestedTable.js";
 
   const useStyles = makeStyles((theme) => ({
@@ -34,13 +32,10 @@ const SubTables = (props) => {
     const [suppliersList, setSuppliersList] = useState([]); //table items
     const [supplierValue, setSupplierValue] = useState({}); //table items
     const [cities, setCities] = useState([]);
-    const [isLoadingCities, setIsLoadingCities] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [neighbourhoods, setNeighbourhoods] = useState([]);
-    const [isLoadingNeighbourhoods, setIsLoadingNeighbourhoods] = useState(true);
-    const [customers, setCustomers] = useState([]);
-    const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
+    const [clients, setClients] = useState([]);
     const [operations, setOperations] = useState([]);
-    const [isLoadingOperations, setIsLoadingOperations] = useState(true);
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
@@ -58,9 +53,7 @@ const SubTables = (props) => {
     });
     
   useEffect(()=>{
-    codeRef.current.focus()
       const fetchData = async () => {
-      
         const suppliers = await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
           responseType: "json",
         }).then((response) => {
@@ -80,90 +73,26 @@ const SubTables = (props) => {
           }).then((response)=>{
             setCities(response.cities);
             setNeighbourhoods(response.neighbourhoods);
-            setCustomers(response.customers);
+            setClients(response.clients);
             setOperations(response.operations);
             setSupplierValue(suppliers.filter(e=> e._id==response.supplier_id)[0])
-            setIsLoadingCities(false);
-            setIsLoadingNeighbourhoods(false);
-            setIsLoadingCustomers(false);
-            setIsLoadingOperations(false);
+            setIsLoading(false);
+            codeRef.current.focus()
           });
         }
       };
       fetchData();
   },[])
 
-  const add1RowInCities = () => {
-    setCities([...cities, { name: "" }]);
-  };
-  const [citiesSelect, setCitiesSelect] = React.useState("");
-  const handleChangeCitiesInput = (e) => {
-    setCitiesSelect(e.target.value);
-  };
-  const keyPressCitiesHandler = (e) => {
-    const { keyCode, target } = e
-    if(keyCode===13){
-      setCitiesSelect("")
-      setCities([...cities.filter(e=>e.name!==""), { name: target.value }]);
-    }
-  }
   useEffect(()=>{
     setFormValues({ ...formValues, cities })
   },[cities])
-  
-
-  const add1RowInNeighbourhoods = () => {
-    setNeighbourhoods([...neighbourhoods, { name: "" }]);
-  };
-  const [neighbourhoodsSelect, setNeighbourhoodsSelect] = React.useState("");
-  const handleChangeNeighbourhoodsInput = (e) => {
-    setNeighbourhoodsSelect(e.target.value);
-  };
-  const keyPressNeighbourhoodsHandler = (e) => {
-    const { keyCode, target } = e
-    if(keyCode===13){
-      setNeighbourhoodsSelect("")
-      setNeighbourhoods([...neighbourhoods.filter(e=>e.name!==""), { name: target.value }]);
-    }
-  }
   useEffect(()=>{
     setFormValues({ ...formValues,neighbourhoods })
   },[neighbourhoods])
-  
-
-  const add1RowInCustomers = () => {
-    setCustomers([...customers, { name: "" }]);
-  };
-  const [customersSelect, setCustomersSelect] = React.useState("");
-  const handleChangeCustomersInput = (e) => {
-    setCustomersSelect(e.target.value);
-  };
-  const keyPressCustomersHandler = (e) => {
-    const { keyCode, target } = e
-    if(keyCode===13){
-      setCustomersSelect("")
-      setCustomers([...customers.filter(e=>e.name!==""), { name: target.value }]);
-    }
-  }
   useEffect(()=>{
-    setFormValues({ ...formValues,customers })
-  },[customers])
-  
-
-  const add1RowInOperations = () => {
-    setOperations([...operations, { name: "" }]);
-  };
-  const [operationsSelect, setOperationsSelect] = React.useState("");
-  const handleChangeOperationsInput = (e) => {
-    setOperationsSelect(e.target.value);
-  };
-  const keyPressOperationsHandler = (e) => {
-    const { keyCode, target } = e
-    if(keyCode===13){
-      setOperationsSelect("")
-      setOperations([...operations.filter(e=>e.name!==""), { name: target.value }]);
-    }
-  }
+    setFormValues({ ...formValues,clients })
+  },[clients])
   useEffect(()=>{
     setFormValues({ ...formValues,operations })
   },[operations])
@@ -256,6 +185,7 @@ const validateInputHandler = (e) => {
         </Alert>
       </Collapse>
 
+      {!isLoading ?
       <div style={{ padding: "10px 30px" }}>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={4}>
@@ -313,18 +243,17 @@ const validateInputHandler = (e) => {
               )}
             />
           </Grid>
-          
-          <Grid item xs={12}>
-            <NestedTable arrayName={cities} setArrayName={setCities} title="Cities" isLoading={isLoadingNeighbourhoods} />
+            <Grid item xs={12}>
+            <NestedTable arrayName={cities} setArrayName={setCities} title="cities" dbTable="cities" />
           </Grid>
           <Grid item xs={12}>
-            <NestedTable arrayName={neighbourhoods} setArrayName={setNeighbourhoods} title="Neighbourhoods" isLoading={isLoadingNeighbourhoods} />
+            <NestedTable arrayName={neighbourhoods} setArrayName={setNeighbourhoods} title="neighbourhoods" dbTable="neighbourhoods" />
           </Grid>
           <Grid item xs={12}>
-            <NestedTable arrayName={customers} setArrayName={setCustomers} title="Customers" isLoading={isLoadingCustomers} />
+            <NestedTable arrayName={clients} setArrayName={setClients} title="clients" dbTable="clients" />
           </Grid>
           <Grid item xs={12}>
-            <NestedTable arrayName={operations} setArrayName={setOperations} title="Operations" isLoading={isLoadingOperations} />
+            <NestedTable arrayName={operations} setArrayName={setOperations} title="operations" dbTable="operations" />
           </Grid>
           
           <Grid item xs={12} className="clientTables">
@@ -353,6 +282,8 @@ const validateInputHandler = (e) => {
           </Grid>
         </Grid>
       </div>
+      :<CircularProgress  size={30} className="pageLoader" />
+    }
     </Fragment>
   );
 };

@@ -1,9 +1,9 @@
 [
   {
-    "key":1,
+    "_id":1,
     "path": "/dashboard",
     "name": "Operation",
-    "rtlname": "لوحة القيادة",
+    "rtlname": "",
     "icon": "Dashboard",
     "layout": "/admin",
     "type": "Main",
@@ -11,10 +11,10 @@
     "haschild": true
   },
   {
-    "key":2,
+    "_id":2,
     "path": "/LiveOperation",
     "name": "Live",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "DynamicFeedIcon",
     "layout": "/admin",
     "type": "sub",
@@ -22,10 +22,10 @@
     "haschild": false
   },
   {
-    "key":3,
+    "_id":3,
     "path": "/table",
     "name": "Finance",
-    "rtlname": "قائمة الجدول",
+    "rtlname": "",
     "icon": "AttachMoneyIcon",
     "layout": "/admin",
     "type": "Main",
@@ -33,10 +33,10 @@
     "haschild": true
   },
   {
-    "key":4,
+    "_id":4,
     "path": "/finance_jobs",
     "name": "Finance Jobs",
-    "rtlname": "قائمة الجدول",
+    "rtlname": "",
     "icon": "LocalAtmOutlined",
     "layout": "/admin",
     "type": "sub",
@@ -45,10 +45,10 @@
   },
   
   {
-    "key":5,
+    "_id":5,
     "path": "/finance_reports",
     "name": "Financial Report",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "AssessmentIcon",
     "layout": "/admin",
     "type": "sub",
@@ -56,10 +56,10 @@
     "haschild": false
   },
   {
-    "key":6,
+    "_id":6,
     "path": "/user",
     "name": "Invoice",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "ReceiptIcon",
     "layout": "/admin",
     "type": "sub",
@@ -68,7 +68,7 @@
   },
 
   {
-    "key":7,
+    "_id":7,
     "path": "/Cabinets",
     "name": "Master Data",
     "rtlname": "",
@@ -80,7 +80,7 @@
   },
 
   {
-    "key":8,
+    "_id":8,
     "path": "/Clients_List",
     "name": "Clients",
     "rtlname": "",
@@ -91,7 +91,7 @@
     "haschild": false
   },
   {
-    "key":9,
+    "_id":9,
     "path": "/Cabinets",
     "name": "Cabinets",
     "rtlname": "",
@@ -102,10 +102,10 @@
     "haschild": false
   },
   {
-    "key":91,
+    "_id":91,
     "path": "/Typography",
     "name": "Typography",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "KitchenIcon",
     "layout": "/admin",
     "type": "sub",
@@ -113,7 +113,7 @@
     "haschild": false
   },
   {
-    "key":10,
+    "_id":10,
     "path": "/Stores",
     "name": "Stores",
     "rtlname": "",
@@ -124,10 +124,10 @@
     "haschild": false
   },
   {
-    "key":11,
+    "_id":11,
     "path": "/users",
     "name": "Users",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "Person",
     "layout": "/admin",
     "type": "sub",
@@ -135,10 +135,10 @@
     "haschild": false
   },
   {
-    "key":12,
+    "_id":12,
     "path": "/Userrole",
     "name": "User Roles",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "GroupAddIcon",
     "layout": "/admin",
     "type": "sub",
@@ -146,10 +146,10 @@
     "haschild": false
   },
   {
-    "key":13,
+    "_id":13,
     "path": "/supplier",
     "name": "Supplier",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "AccountBoxIcon",
     "layout": "/admin",
     "type": "sub",
@@ -157,10 +157,10 @@
     "haschild": false
   },
   {
-    "key":14,
+    "_id":14,
     "path": "/warehouse",
     "name": "Warehouse",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "GroupWorkIcon",
     "layout": "/admin",
     "type": "sub",
@@ -168,10 +168,10 @@
     "haschild": false
   },
   {
-    "key":15,
+    "_id":15,
     "path": "/country",
     "name": "Country",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "PublicIcon",
     "layout": "/admin",
     "type": "sub",
@@ -180,10 +180,10 @@
   },
 
   {
-    "key":16,
+    "_id":16,
     "path": "/City",
     "name": "City",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "LocationCityIcon",
     "layout": "/admin",
     "type": "sub",
@@ -191,10 +191,10 @@
     "haschild": false
   },
   {
-    "key":17,
+    "_id":17,
     "path": "/Neighbourhood",
     "name": "Neighbourhood",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "AccountBalanceIcon",
     "layout": "/admin",
     "type": "sub",
@@ -202,10 +202,10 @@
     "haschild": false
   },
   {
-    "key":18,
+    "_id":18,
     "path": "/Allocation",
     "name": "Allocation Rules",
-    "rtlname": "ملف تعريفي للمستخدم",
+    "rtlname": "",
     "icon": "AppsIcon",
     "layout": "/admin",
     "type": "sub",
@@ -213,7 +213,7 @@
     "haschild": false
   },
   {
-    "key":19,
+    "_id":19,
     "path": "/Tier",
     "name": "Tier",
     "rtlname": "",
@@ -224,7 +224,7 @@
     "haschild": false
   },
   {
-    "key":20,
+    "_id":20,
     "path": "/ServiceType",
     "name": "ServiceType",
     "rtlname": "",
@@ -234,12 +234,23 @@
     "parent": "Master Data",
     "haschild": false
   },
+  {
+    "_id":21,
+    "path": "/FridgesTypes",
+    "name": "FridgesTypes",
+    "rtlname": "",
+    "icon": "AppsIcon",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
 
   {
-    "key":21,
+    "_id":22,
     "path": "/Price_rules",
     "name": "Price Rules",
-    "rtlname": "إخطارات",
+    "rtlname": "",
     "icon": "Notifications",
     "layout": "/admin",
     "type": "Main",

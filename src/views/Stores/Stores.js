@@ -59,7 +59,6 @@ const Store = () => {
     },
     {
       name: "code",
-      label: "Code",
       options: {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
@@ -78,12 +77,10 @@ const Store = () => {
       },
     },
     {
-      name: "name",
-      label: "Name",
+      name: "name"
     },
     {
-      name: "branch",
-      label: "Branch",
+      name: "branch"
     },
     {
       name: "branch_number",
@@ -91,7 +88,6 @@ const Store = () => {
     },
     {
       name: "location",
-      label: "Location",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => (
           <div style={{ width: 200 }}>
@@ -106,12 +102,10 @@ const Store = () => {
       },
     },
     {
-      name: "finance",
-      label: "Finance",
+      name: "finance"
     },
     {
-      name: "status",
-      label: "Status",
+      name: "status"
     },
   ];
 
@@ -144,6 +138,16 @@ const Store = () => {
             noMatch: !isLoading && 'Sorry, there is no matching data to display'
         },
     },
+    onDownload: (buildHead, buildBody, columns, data) => {
+      data.map(rowData=>{
+        const city = citiesList.filter(e=> e._id==rowData.data[5].city_id)[0].name
+        const area = rowData.data[5].area
+        const mobile =rowData.data[5].mobile
+        rowData.data[5] = "City: "+city+"\nArea: "+area+"\nMobile: "+mobile
+        return rowData
+      })
+      return buildHead(columns) + buildBody(data);
+    }
   };
   const handleFilter = () => {
     setFilterDialog(true)
@@ -166,39 +170,43 @@ const Store = () => {
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-    <Autocomplete
-      id="tags-filled"
-      options={items || {}}
-      value={searchValue || {}}
-      getOptionLabel={(option) => option.name || ""}
-      onChange={handleChangeSearch}
-      renderTags={(value, getTagProps) =>
-        value.map((option, index) => (
-          <Chip
-            variant="outlined"
-            label={option}
-            {...getTagProps({ index })}
+      <Autocomplete
+        id="tags-filled"
+        options={items || {}}
+        value={searchValue || {}}
+        getOptionLabel={(option) => option.name || ""}
+        onChange={handleChangeSearch}
+        renderTags={(value, getTagProps) =>
+          value.map((option, index) => (
+            <Chip
+              variant="outlined"
+              label={option}
+              {...getTagProps({ index })}
+            />
+          ))
+        }
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            variant="filled"
+            label=""
+            placeholder="Search by Name"
           />
-        ))
-      }
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          variant="filled"
-          label=""
-          placeholder="Search by Name"
-        />
-      )}
-    />
+        )}
+      />
 
-      <MuiThemeProvider theme={datatableTheme}>
-        <MUIDataTable
-          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
-          data={items}
-          columns={columns}
-          options={options}
-        />
-      </MuiThemeProvider>
+      {!isLoading ? (
+        <MuiThemeProvider theme={datatableTheme}>
+          <MUIDataTable
+            title=""
+            data={items}
+            columns={columns}
+            options={options}
+          />
+        </MuiThemeProvider>
+      ) : (
+        <CircularProgress size={30} className="pageLoader" />
+      )}
 
       <div>
         <Dialog

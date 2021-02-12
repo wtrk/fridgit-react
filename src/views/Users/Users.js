@@ -110,7 +110,6 @@ export default function FullWidthTabs() {
     },
     {
       name: "name",
-      label: "Name",
       options: {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
@@ -129,16 +128,13 @@ export default function FullWidthTabs() {
       },
     },
     {
-      name: "profile",
-      label: "Profile",
+      name: "profile"
     },
     {
-      name: "mobile",
-      label: "Mobile",
+      name: "mobile"
     },
     {
-      name: "email",
-      label: "Email",
+      name: "email"
     },
     {
       name: "joinedDate",
@@ -227,14 +223,18 @@ export default function FullWidthTabs() {
         )}
       />
 
-      <MuiThemeProvider theme={datatableTheme}>
-        <MUIDataTable
-          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
-          data={items}
-          columns={columns}
-          options={options}
-        />
-      </MuiThemeProvider>
+      {!isLoading ? (
+        <MuiThemeProvider theme={datatableTheme}>
+          <MUIDataTable
+            title=""
+            data={items}
+            columns={columns}
+            options={options}
+          />
+        </MuiThemeProvider>
+      ) : (
+        <CircularProgress size={30} className="pageLoader" />
+      )}
 
       <div>
         <Dialog

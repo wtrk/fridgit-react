@@ -27,19 +27,16 @@ import {Autocomplete, Alert} from '@material-ui/lab';
 const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
-    const [cityValue, setCityValue] = useState({}); //table items
+    const [clientValue, setClientValue] = useState({});
+    const [fridgesTypeValue, setfridgesTypeValue] = useState({});
+    const [cityValue, setCityValue] = useState({});
     const classes = useStyles(); //custom css
     const snRef = useRef()
     const typeRef = useRef()
-    const manufactureRef = useRef()
     const clientRef = useRef()
-    const days_to_prevRef = useRef()
-    const prev_statusRef = useRef()
-    const financeRef = useRef()
     const cityRef = useRef()
     const areaRef = useRef()
     const mobileRef = useRef()
-    const statusRef = useRef()
     const submitRef = useRef()
     const [formLocationValues, setFormLocationValues] = useState({
         city_id: "",
@@ -49,30 +46,19 @@ const SubTables = (props) => {
     const [formValues, setFormValues] = useState({
       sn: "",
       type: "",
-      manufacture: "",
       client: "",
-      days_to_prev: "",
-      prev_status: "",
-      finance: "",
       location: {...formLocationValues},
-      status: "",
-      is_new: false,
-      booked: true,
+      is_new: false
     });
     const [formErrors, setFormErrors] = useState({
       sn: {error:false,msg:""},
       type: {error:false,msg:""},
-      manufacture: {error:false,msg:""},
       client: {error:false,msg:""},
-      days_to_prev: {error:false,msg:""},
-      prev_status: {error:false,msg:""},
-      finance: {error:false,msg:""},
       location: {
         city_id: {error:false,msg:""},
         area:{error:false,msg:""},
         mobile: {error:false,msg:""},
       },
-      status: {error:false,msg:""},
     });
     
   useEffect(()=>{
@@ -89,6 +75,8 @@ const SubTables = (props) => {
             return response.data
           }).then((response)=>{
             setCityValue(props.citiesList.filter(e=> e._id==response.location.city_id)[0])
+            setClientValue(props.clientsList.filter(e=> e._id==response.client)[0])
+            setfridgesTypeValue(props.fridgesTypesList.filter(e=> e._id==response.type)[0])
             setFormLocationValues(response.location)
           });
         }
@@ -106,16 +94,11 @@ const SubTables = (props) => {
     if(keyCode===13){
       switch (target.name){
         case "sn": typeRef.current.focus();break;
-        case "type": manufactureRef.current.focus();break;
-        case "manufacture": clientRef.current.focus();break;
-        case "client": days_to_prevRef.current.focus();break;
-        case "days_to_prev": prev_statusRef.current.focus();break;
-        case "prev_status": financeRef.current.focus();break;
-        case "finance": cityRef.current.focus();break;
+        case "type": clientRef.current.focus();break;
+        case "client": cityRef.current.focus();break;
         case "city_id": areaRef.current.focus();break;
         case "area": mobileRef.current.focus();break;
-        case "mobile": statusRef.current.focus();break;
-        case "status": submitRef.current.focus();break;
+        case "mobile": submitRef.current.focus();break;
         default: snRef.current.focus();
       }
     }
@@ -131,6 +114,14 @@ const handleChangeForm = (e) => {
 const handleChangeCity = (e, newValue) =>{
   setCityValue(newValue)
   if(newValue) setFormLocationValues({ ...formLocationValues, city_id: newValue._id });
+}
+const handleChangeClient = (e, newValue) =>{
+  setClientValue(newValue)
+  if(newValue) setFormValues({ ...formValues, client: newValue._id });
+}
+const handleChangeFridgesType = (e, newValue) =>{
+  setfridgesTypeValue(newValue)
+  if(newValue) setFormValues({ ...formValues, type: newValue._id });
 }
 const handleChangeLocation = (e) => {
   const { name, value } = e.target;
@@ -165,17 +156,12 @@ const handleOnSubmit = async () => {
       setFormValues({
         sn: "",
         type: "",
-        manufacture: "",
         client: "",
-        days_to_prev: "",
-        prev_status: "",
-        finance: "",
         location: {
           city_id: "",
           area:"",
           mobile: "",
         },
-        status: "",
       });
       props.handleClose()
     })
@@ -232,96 +218,56 @@ const validateInputHandler = (e) => {
               error={formErrors.sn.error}
             />
           </Grid>
+          
           <Grid item xs={12} sm={6}>
-            <TextField
-              id="typeInput"
-              label="Type"
-              name="type"
-              onChange={handleChangeForm}
+            <Autocomplete
+              id="fridgesTypeInput"
+              options={props.fridgesTypesList || {}}
+              value={fridgesTypeValue || {}}
+              getOptionLabel={(option) => {
+                return Object.keys(option).length!==0 ? option.refrigerant_type : "";
+              }}
               fullWidth
-              value={formValues.type || ""}
-              inputRef={typeRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={formErrors.type.error ? formErrors.type.msg : null}
-              error={formErrors.type.error}
+              onChange={handleChangeFridgesType}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Fridges Type"
+                  inputRef={typeRef}
+                  onKeyDown={keyPressHandler}
+                  onBlur={validateInputHandler}
+                  helperText={
+                    formErrors.type.error ? formErrors.type.msg : null
+                  }
+                  error={formErrors.type.error}
+                />
+              )}
             />
           </Grid>
           
           <Grid item xs={12} sm={6}>
-            <TextField
-              id="manufactureInput"
-              label="Manufacture"
-              name="manufacture"
-              onChange={handleChangeForm}
+            <Autocomplete
+              id="ClientInput"
+              options={props.clientsList || {}}
+              value={clientValue || {}}
+              getOptionLabel={(option) => {
+                return Object.keys(option).length!==0 ? option.name : "";
+              }}
               fullWidth
-              value={formValues.manufacture || ""}
-              inputRef={manufactureRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={formErrors.manufacture.error ? formErrors.manufacture.msg : null}
-              error={formErrors.manufacture.error}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              id="clientInput"
-              label="Client"
-              name="client"
-              onChange={handleChangeForm}
-              fullWidth
-              value={formValues.client || ""}
-              inputRef={clientRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={formErrors.client.error ? formErrors.client.msg : null}
-              error={formErrors.client.error}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <TextField
-              id="days_to_prevInput"
-              label="Days to Prev"
-              name="days_to_prev"
-              onChange={handleChangeForm}
-              fullWidth
-              value={formValues.days_to_prev || ""}
-              inputRef={days_to_prevRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={formErrors.days_to_prev.error ? formErrors.days_to_prev.msg : null}
-              error={formErrors.days_to_prev.error}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              id="prev_statusInput"
-              label="Prev Status"
-              name="prev_status"
-              onChange={handleChangeForm}
-              fullWidth
-              value={formValues.prev_status || ""}
-              inputRef={prev_statusRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={formErrors.prev_status.error ? formErrors.prev_status.msg : null}
-              error={formErrors.prev_status.error}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              id="financeInput"
-              label="Finance"
-              name="finance"
-              onChange={handleChangeForm}
-              fullWidth
-              value={formValues.finance || ""}
-              inputRef={financeRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={formErrors.finance.error ? formErrors.finance.msg : null}
-              error={formErrors.finance.error}
+              onChange={handleChangeClient}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Client"
+                  inputRef={clientRef}
+                  onKeyDown={keyPressHandler}
+                  onBlur={validateInputHandler}
+                  helperText={
+                    formErrors.client.error ? formErrors.client.msg : null
+                  }
+                  error={formErrors.client.error}
+                />
+              )}
             />
           </Grid>
           
@@ -338,7 +284,7 @@ const validateInputHandler = (e) => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Cities"
+                  label="City"
                   inputRef={cityRef}
                   onKeyDown={keyPressHandler}
                   onBlur={validateInputHandler}
@@ -381,21 +327,6 @@ const validateInputHandler = (e) => {
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField
-              id="statusInput"
-              label="Status"
-              name="status"
-              onChange={handleChangeForm}
-              fullWidth
-              value={formValues.status || ""}
-              inputRef={statusRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={formErrors.status.error ? formErrors.status.msg : null}
-              error={formErrors.status.error}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -405,18 +336,7 @@ const validateInputHandler = (e) => {
                   color="primary"
                 />
               }
-              label="Is New"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formValues.booked ? true : false}
-                  onChange={handleChangeCheckbox}
-                  name="booked"
-                  color="primary"
-                />
-              }
-              label="Booked"
+              label="Is Received New"
             />
           </Grid>
           <Grid item xs={12} className="clientTables">

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import CustomToolbar from "../../CustomToolbar";
 import {
   Container,
@@ -9,6 +9,7 @@ import {
 } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
+import axios from 'axios';
 
 import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
@@ -23,18 +24,85 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const LiveOperationAdd = () => {
   const [items, setItems] = useState(); //table items
   const [openAddDialog,setOpenAddDialog] = useState(false); //for modal
-  const columns = [
-    {name:"sn", label:"sn"},
-    {name:"ref", label:"ref"},
-    {name:"type", label:"type"},
-    {name:"brand", label:"brand"},
-    {name:"client", label:"client"},
-    {name:"shop", label:"shop"},
-    {name:"supplier", label:"supplier"},
-    {name:"warehouse", label:"warehouse"},
-    {name:"operation", label:"operation"}
-  ];
+  const [formValuesToSave, setFormValuesToSave] = useState([]);
+  const [citiesList, setCitiesList] = useState([]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
+        responseType: "json",
+      }).then((response) => {
+        setCitiesList(response.data)
+        return response.data
+      });
+    };
+    fetchData();
+  }, []);
+  const columns = [
+    { name: "job_number", label: "Job #" },
+    { name: "operation_number", label: "Operation #" },
+    { name: "operation_type", label: "Operation Type" },
+    { name: "sn" },
+    { name: "client_name", label: "Client Name" },
+    {
+      name: "initiation_address",
+      label: "Initiation Address",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let cityValue = "-";
+          if (citiesList.filter((e) => e._id == value.city_id)[0]) {
+            cityValue = citiesList.filter((e) => e._id == value.city_id)[0]
+              .name;
+          }
+          return (
+            <div style={{ width: 230, display: "flex", alignItems: "center" }}>
+              <div className="avatar_circle">
+                {value.city_id.substring(0, 2)}
+              </div>
+              <div>
+                {cityValue}
+                <br />
+                {value ? value.area : "-"}
+                <br />
+                <strong>
+                  {value ? value.shop_name : "-"} / {value ? value.mobile : "-"}
+                </strong>
+              </div>
+            </div>
+          );
+        },
+      },
+    },
+    {
+      name: "execution_address",
+      label: "Execution Address",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let cityValue = "-";
+          if (citiesList.filter((e) => e._id == value.city_id)[0]) {
+            cityValue = citiesList.filter((e) => e._id == value.city_id)[0]
+              .name;
+          }
+          return (
+            <div style={{ width: 230, display: "flex", alignItems: "center" }}>
+              <div className="avatar_circle">
+                {value.city_id.substring(0, 2)}
+              </div>
+              <div>
+                {cityValue}
+                <br />
+                {value ? value.area : "-"}
+                <br />
+                <strong>
+                  {value ? value.shop_name : "-"} / {value ? value.mobile : "-"}
+                </strong>
+              </div>
+            </div>
+          );
+        },
+      },
+    },
+  ];
   const options = {
     filter: false,
     onRowsDelete: null,
@@ -48,6 +116,32 @@ const LiveOperationAdd = () => {
   const handleOpenAddDialog = () => {
     setOpenAddDialog(true);
   };
+  
+    useEffect(()=>{
+      console.log(formValuesToSave)
+      
+    const fetchData = async () => {
+      await axios({
+        method: "post",
+        url: `${process.env.REACT_APP_BASE_URL}/liveOperations`,
+        data: formValuesToSave
+      })
+      .then(function (response) {
+        setItems(formValuesToSave)
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    };
+    fetchData();
+
+
+
+
+    },[formValuesToSave])
+
+
+
   return (
     <Container maxWidth="xl">
       <Autocomplete
@@ -95,7 +189,7 @@ const LiveOperationAdd = () => {
           onClose={() => setOpenAddDialog(false)}
         >
           <div style={{minHeight:"80vh",overflowX:"hidden"}}>
-          <AddOperationForm setOpenDialog={setOpenAddDialog} />
+          <AddOperationForm setOpenDialog={setOpenAddDialog} setFormValuesToSave={setFormValuesToSave} />
           </div>
         </Dialog>
 

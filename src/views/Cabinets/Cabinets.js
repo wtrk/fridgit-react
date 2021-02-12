@@ -15,7 +15,7 @@ import {Autocomplete} from "@material-ui/lab";
 import { makeStyles } from "@material-ui/core/styles";
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
-import {datatableTheme} from "assets/css/datatable-theme.js";
+import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import axios from 'axios';
 
@@ -37,6 +37,7 @@ import {
   Typography,
   Grid,
 } from "@material-ui/core";
+import TabsOnTopFromStatus from "components/CustomComponents/TabsOnTopFromStatus.js";
 import "./Cabinets.css";
 
 
@@ -78,14 +79,29 @@ const Cabinet = () => {
   const [itemsBackup, setItemsBackup] = useState([]);
   const [searchValue, setSearchValue] = useState({});
   const [citiesList, setCitiesList] = useState([]);
+  const [clientsList, setClientsList] = useState([]);
+  const [fridgesTypesList, setFridgesTypesList] = useState([]);
   const [modal_Title, setmodal_Title] = useState("Add"); //modal title
-
+  const [itemsFiltered, setItemsFiltered] = useState(); //tabs items
+  const [tabIndex, setTabIndex] = useState(0);
   useEffect(() => {
     const fetchData = async () => {
       const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
         responseType: "json",
       }).then((response) => {
         setCitiesList(response.data)
+        return response.data
+      });
+      const clients = await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
+        responseType: "json",
+      }).then((response) => {
+        setClientsList(response.data)
+        return response.data
+      });
+      const fridgesTypesList = await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`, {
+        responseType: "json",
+      }).then((response) => {
+        setFridgesTypesList(response.data)
         return response.data
       });
       await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {
@@ -230,7 +246,6 @@ const Cabinet = () => {
     },
     {
       name: "sn",
-      label: "Sn",
       options: {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
@@ -246,10 +261,12 @@ const Cabinet = () => {
     },
     {
       name: "type",
-      label: "Type",
       options: {
-        filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
+          let typeValue = "-"
+          if(fridgesTypesList.filter(e=> e._id===value)[0]){
+            typeValue = fridgesTypesList.filter((e) => e._id == value )[0].refrigerant_type;
+          }
           return (
             <div>
               <a
@@ -257,7 +274,7 @@ const Cabinet = () => {
                   handleAdd("Edit Cabinet - "+tableMeta.rowData[2],tableMeta.rowData[0]);
                 }}
               >
-                {value}
+                {typeValue}
               </a>
             </div>
           );
@@ -265,20 +282,33 @@ const Cabinet = () => {
       },
     },
     {
-      name: "manufacture",
-      label: "Manufacture",
+      name: "Manufacturer",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let typeValue = "-"
+          if(fridgesTypesList.filter(e=> e._id===tableMeta.rowData[2])[0]){
+            typeValue = fridgesTypesList.filter((e) => e._id == tableMeta.rowData[2] )[0].name;
+          }
+          return typeValue;
+        },
+      },
     },
     {
       name: "client",
-      label: "Client",
       options: {
-        filter: false,
-        customBodyRender: (value, tableMeta, updateValue) => (
-          <div className="d-flex">
-            <div className="avatar_circle">{value.substring(0, 2)}</div>
-            {value}
-          </div>
-        ),
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let companyValue = "-"
+          let avatarValue = ""
+          if(clientsList.filter(e=> e._id===value)[0]){
+            companyValue = clientsList.filter((e) => e._id == value )[0].name;
+            let valueArray=companyValue.split(" ")
+            avatarValue = (valueArray.length>1)? valueArray[0].charAt(0) + valueArray[1].charAt(0): valueArray[0].substring(0,2);
+          }
+          return <div className="d-flex">
+                  <div className="avatar_circle">{avatarValue}</div>
+                  {companyValue}
+                </div>
+        },
       },
     },
     {
@@ -291,27 +321,30 @@ const Cabinet = () => {
     },
     {
       name: "finance",
-      label: "Finance $",
+      label: "Finance $"
     },
     {
       name: "location",
-      label: "Location",
       options: {
-        customBodyRender: (value, tableMeta, updateValue) => (
-          <div style={{ width: 200 }}>
-            <strong>City</strong>: {value ? citiesList.filter(e=> e._id==value.city_id)[0].name : "-"}
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let cityValue = "-"
+          if(citiesList.filter(e=> e._id==value.city_id)[0]){
+            cityValue = citiesList.filter(e=> e._id==value.city_id)[0].name;
+          }
+
+          return <div style={{ width: 200 }}>
+            <strong>City</strong>: {cityValue}
             <br />
             <strong>Area</strong>: {value ? value.area : "-"}
             <br />
             <strong>Mobile</strong>: {value ? value.mobile : "-"}
             <br />
           </div>
-        ),
+        }
       },
     },
     {
-      name: "status",
-      label: "Status",
+      name: "status"
     },
     {
       name: "is_new",
@@ -324,7 +357,6 @@ const Cabinet = () => {
     },
     {
       name: "booked",
-      label: "Booked",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => (
           (value!=0) ? <Check className="text-success" /> : <Close className="text-danger" /> 
@@ -357,11 +389,16 @@ const Cabinet = () => {
           console.log("deleted")
         });
     },
-    textLabels: {
-        body: {
-            noMatch: !isLoading && 'Sorry, there is no matching data to display'
-        },
-    },
+    onDownload: (buildHead, buildBody, columns, data) => {
+      data.map(rowData=>{
+        const city = citiesList.filter(e=> e._id==rowData.data[8].city_id)[0].name
+        const area = rowData.data[8].area
+        const mobile =rowData.data[8].mobile
+        rowData.data[8] = "City: "+city+"\nArea: "+area+"\nMobile: "+mobile
+        return rowData
+      })
+      return buildHead(columns) + buildBody(data);
+    }
   };
   const handleFilter = () => {
     setFilterDialog(true)
@@ -396,182 +433,195 @@ const Cabinet = () => {
   }
   //Search component ---------------END--------------
   return (
-    <Container maxWidth="xl">
-    <Autocomplete
-      id="tags-filled"
-      options={items || {}}
-      value={searchValue || {}}
-      getOptionLabel={(option) => option.sn || ""}
-      onChange={handleChangeSearch}
-      renderTags={(value, getTagProps) =>
-        value.map((option, index) => (
-          <Chip
-            variant="outlined"
-            label={option}
-            {...getTagProps({ index })}
-          />
-        ))
-      }
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          variant="filled"
-          label=""
-          placeholder="Search by Sn"
+    <>
+      <TabsOnTopFromStatus
+        items={items}
+        setItemsFiltered={setItemsFiltered}
+        tabIndex={tabIndex}
+        setTabIndex={setTabIndex}
+      />
+      <Container maxWidth="xl" style={{ paddingTop: "4rem" }}>
+        <Autocomplete
+          id="tags-filled"
+          options={items || {}}
+          value={searchValue || {}}
+          getOptionLabel={(option) => option.sn || ""}
+          onChange={handleChangeSearch}
+          renderTags={(value, getTagProps) =>
+            value.map((option, index) => (
+              <Chip
+                variant="outlined"
+                label={option}
+                {...getTagProps({ index })}
+              />
+            ))
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              variant="filled"
+              label=""
+              placeholder="Search by Sn"
+            />
+          )}
         />
-      )}
-    />
 
-      <MuiThemeProvider theme={datatableTheme}>
-        <MUIDataTable
-          title={isLoading && <CircularProgress  size={30} style={{position:"absolute",top:130,zIndex:100}} />}
-          data={items}
-          columns={columns}
-          options={options}
-        />
-      </MuiThemeProvider>
+        {!isLoading ? (
+          <MuiThemeProvider theme={datatableThemeInTabsPage}>
+            <MUIDataTable
+              title=""
+              data={itemsFiltered ? itemsFiltered : items}
+              columns={columns}
+              options={options}
+            />
+          </MuiThemeProvider>
+        ) : (
+          <CircularProgress size={30} className="pageLoader" />
+        )}
 
-      <div>
-        
-        {/*below Dialog opens when clicking on edit*/}
-        <Dialog
-          fullScreen
-          open={openDialog2}
-          onClose={handleCloseDialog2}
-          TransitionComponent={Transition}
-        >
-          <AddFormDialog
-            title={modal_Title + " Fridge"}
-            handleClose={handleCloseDialog2}
-            inputs={[
-              {
-                labelText: "Client",
-                type: "select",
-                value: ["option 1", "option 2"],
-              },
-              {
-                labelText: "Client",
-                type: "select",
-                value: ["option 1", "option 2", "option 3"],
-              },
-              { labelText: "Sn", type: "text" },
-              { labelText: "Sn2", type: "text" },
-              { labelText: "Note", type: "text" },
-              { labelText: "Branding", type: "text" },
-              { labelText: "Preventive/Year", type: "text" },
-            ]}
-          />
-        </Dialog>
-        
-        {/*below Dialog opens when clicking on item in the list to edit*/}
-        <Dialog
-          onClose={handleCloseDialogItem}
-          maxWidth={"xl"}
-          fullWidth={true}
-          aria-labelledby="customized-dialog-title"
-          open={openDialogItem}
-        >
-          <DialogContent dividers className="entryEditHeader">
-            <Grid container>
-              <Grid item xs={4}>
-                <div className={classes.root_avatar}>
-                  <Avatar>JO</Avatar>
+        <div>
+          {/*below Dialog opens when clicking on edit*/}
+          <Dialog
+            fullScreen
+            open={openDialog2}
+            onClose={handleCloseDialog2}
+            TransitionComponent={Transition}
+          >
+            <AddFormDialog
+              title={modal_Title + " Fridge"}
+              handleClose={handleCloseDialog2}
+              inputs={[
+                {
+                  labelText: "Client",
+                  type: "select",
+                  value: ["option 1", "option 2"],
+                },
+                {
+                  labelText: "Client",
+                  type: "select",
+                  value: ["option 1", "option 2", "option 3"],
+                },
+                { labelText: "Sn", type: "text" },
+                { labelText: "Sn2", type: "text" },
+                { labelText: "Note", type: "text" },
+                { labelText: "Branding", type: "text" },
+                { labelText: "Preventive/Year", type: "text" },
+              ]}
+            />
+          </Dialog>
 
-                  <div>
-                    <strong>Customer</strong>
-                    <br />
-                    Jollychic
+          {/*below Dialog opens when clicking on item in the list to edit*/}
+          <Dialog
+            onClose={handleCloseDialogItem}
+            maxWidth={"xl"}
+            fullWidth={true}
+            aria-labelledby="customized-dialog-title"
+            open={openDialogItem}
+          >
+            <DialogContent dividers className="entryEditHeader">
+              <Grid container>
+                <Grid item xs={4}>
+                  <div className={classes.root_avatar}>
+                    <Avatar>JO</Avatar>
+
+                    <div>
+                      <strong>Customer</strong>
+                      <br />
+                      Jollychic
+                    </div>
                   </div>
-                </div>
-              </Grid>
+                </Grid>
 
-              <Grid item xs={4}>
-                <strong>Sn:</strong> 18GE43250
-                <br />
-                <strong>Status:</strong> Operational
-              </Grid>
+                <Grid item xs={4}>
+                  <strong>Sn:</strong> 18GE43250
+                  <br />
+                  <strong>Status:</strong> Operational
+                </Grid>
 
-              <Grid item xs={4}>
-                <strong>Branding:</strong> Walls
-                <br />
-                <strong>Type:</strong> Walls
+                <Grid item xs={4}>
+                  <strong>Branding:</strong> Walls
+                  <br />
+                  <strong>Type:</strong> Walls
+                </Grid>
               </Grid>
-            </Grid>
-            <div className="entryEditHeader__tabsCont">
+              <div className="entryEditHeader__tabsCont">
+                <Button
+                  className={
+                    "ceeh__tabsCont--btn " +
+                    (dialogItemTab === 1 ? "selected" : "")
+                  }
+                  onClick={() => {
+                    handleClickDialogItemTabs(1);
+                  }}
+                >
+                  History
+                </Button>
+                <Button
+                  className={
+                    "ceeh__tabsCont--btn " +
+                    (dialogItemTab === 2 ? "selected" : "")
+                  }
+                  onClick={() => {
+                    handleClickDialogItemTabs(2);
+                  }}
+                >
+                  Info
+                </Button>
+                <Button
+                  id="Edit"
+                  className="ceeh__tabsCont--btn"
+                  onClick={() => {
+                    handleClickOpenDialog2("1", "Edit");
+                  }}
+                >
+                  Edit
+                </Button>
+              </div>
+            </DialogContent>
+            <DialogContent dividers>
+              <DialogTabsContent tab={dialogItemTab} />
+            </DialogContent>
+            <DialogActions>
               <Button
-                className={
-                  "ceeh__tabsCont--btn " +
-                  (dialogItemTab === 1 ? "selected" : "")
-                }
-                onClick={() => {
-                  handleClickDialogItemTabs(1);
-                }}
+                variant="outlined"
+                color="primary"
+                size="large"
+                className="btn btn--save"
+                onClick={handleCloseDialogItem}
+                startIcon={<Close />}
               >
-                History
+                Close
               </Button>
-              <Button
-                className={
-                  "ceeh__tabsCont--btn " +
-                  (dialogItemTab === 2 ? "selected" : "")
-                }
-                onClick={() => {
-                  handleClickDialogItemTabs(2);
-                }}
-              >
-                Info
-              </Button>
-              <Button
-                id="Edit"
-                className="ceeh__tabsCont--btn"
-                onClick={() => {
-                  handleClickOpenDialog2("1", "Edit");
-                }}
-              >
-                Edit
-              </Button>
-            </div>
-          </DialogContent>
-          <DialogContent dividers>
-            <DialogTabsContent tab={dialogItemTab} />
-          </DialogContent>
-          <DialogActions>
-            <Button
-              variant="outlined"
-              color="primary"
-              size="large"
-              className="btn btn--save"
-              onClick={handleCloseDialogItem}
-              startIcon={<Close />}
-            >
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-        <Dialog
-          fullScreen
-          open={openAddForm}
-          onClose={handleCloseAddForm}
-          TransitionComponent={Transition}
-        >
-          <SubTables
-            title={formTitle}
-            handleClose={handleCloseAddForm}
-            cabinetId={cabinetsId}
-            citiesList={citiesList}
-          />
-        </Dialog>
-        {/*********************** FILTER start ****************************/}
-        <Dialog
-          onClose={() => setFilterDialog(false)}
-          maxWidth={"xl"}
-          fullWidth={true}
-          aria-labelledby="customized-dialog-title"
-          open={filterDialog}
-        >
-          <FilterComponent setOpenDialog={setFilterDialog} />
-        </Dialog>
-      </div>
-    </Container>
+            </DialogActions>
+          </Dialog>
+          <Dialog
+            fullScreen
+            open={openAddForm}
+            onClose={handleCloseAddForm}
+            TransitionComponent={Transition}
+          >
+            <SubTables
+              title={formTitle}
+              handleClose={handleCloseAddForm}
+              cabinetId={cabinetsId}
+              citiesList={citiesList}
+              clientsList={clientsList}
+              fridgesTypesList={fridgesTypesList}
+            />
+          </Dialog>
+          {/*********************** FILTER start ****************************/}
+          <Dialog
+            onClose={() => setFilterDialog(false)}
+            maxWidth={"xl"}
+            fullWidth={true}
+            aria-labelledby="customized-dialog-title"
+            open={filterDialog}
+          >
+            <FilterComponent setOpenDialog={setFilterDialog} />
+          </Dialog>
+        </div>
+      </Container>
+    </>
   );
 }
 export default Cabinet

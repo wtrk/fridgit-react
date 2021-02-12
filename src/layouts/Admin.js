@@ -14,7 +14,6 @@ export default function Admin({ ...rest }) {
   let currentPath=`/${window.location.href.split("/").pop()}`
   dashboardRoutes.forEach(routeDetails => {
     if(routeDetails.path===currentPath){
-      //setTitle(routeDetails.name)
       title=routeDetails.name
     }
   });

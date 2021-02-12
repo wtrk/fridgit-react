@@ -7,6 +7,9 @@ export const datatableTheme = createMuiTheme({
           minWidth: "100px",
           margin: "10px 20px",
         },
+        data:{
+          textTransform: "capitalize"
+        }
       },
       MUIDataTableBodyCell: {
         root: {
@@ -50,6 +53,9 @@ export const datatableTheme = createMuiTheme({
             minWidth: "100px",
             margin: "10px 20px",
           },
+          data:{
+            textTransform: "capitalize"
+          }
         },
         MUIDataTableBodyCell: {
           root: {

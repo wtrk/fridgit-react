@@ -21,19 +21,19 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const Supplier = () => {
-  const [isLoading, setIsloading] = useState(true);  
+const FridgesType = () => {
+  const [isLoading, setIsloading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
-  const [supplierId, setSupplierID] = useState(); //modal title
+  const [fridgesTypeId, setFridgesTypeID] = useState(); //modal title
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
   const [items, setItems] = useState([]); //table items
   const [itemsBackup, setItemsBackup] = useState([]);
   const [searchValue, setSearchValue] = useState({});
-
+  
   useEffect(() => {
     const fetchData = async () => {
-      await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
+      await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`, {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
@@ -51,7 +51,11 @@ const Supplier = () => {
       }
     },
     {
-      name: "name",
+      name: "refrigerant_type",
+      label: "Refrigerant Type",
+    },
+    {
+      name: "code",
       options: {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
@@ -59,7 +63,7 @@ const Supplier = () => {
             <div>
               <a
                 onClick={() => {
-                  handleAdd("Edit Supplier - "+tableMeta.rowData[2],tableMeta.rowData[0]);
+                  handleAdd("Edit FridgesType - "+tableMeta.rowData[2],tableMeta.rowData[0]);
                 }}
               >
                 {value}
@@ -70,10 +74,23 @@ const Supplier = () => {
       },
     },
     {
-      name: "address"
+      name: "name"
     },
     {
-      name: "phone"
+      name: "length"
+    },
+    {
+      name: "width"
+    },
+    {
+      name: "height"
+    },
+    {
+      name: "cbm",
+      label: "CBM",
+    },
+    {
+      name: "preventive"
     }
   ];
 
@@ -87,7 +104,7 @@ const Supplier = () => {
       return (
         <CustomToolbar
           listener={() => {
-            handleAdd("Add New Supplier");
+            handleAdd("Add New FridgesType");
           }}
           handleFilter={handleFilter}
         />
@@ -95,7 +112,7 @@ const Supplier = () => {
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
-        axios.delete(`${process.env.REACT_APP_BASE_URL}/suppliers/${idsToDelete}`, {
+        axios.delete(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/${idsToDelete}`, {
           responseType: "json",
         }).then((response) => {
           console.log("deleted")
@@ -111,13 +128,13 @@ const Supplier = () => {
     setFilterDialog(true)
   };
 
-  const handleAdd = (title, supplierId) => {
+  const handleAdd = (title, fridgesTypeId) => {
     setOpenAddForm(true);
-    setSupplierID(supplierId);
+    setFridgesTypeID(fridgesTypeId);
     setFormTitle(title);
   };
-  const handleCloseAddForm = () => setOpenAddForm(false)
 
+  const handleCloseAddForm = () => setOpenAddForm(false)
 
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
@@ -128,44 +145,41 @@ const Supplier = () => {
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
-        id="tags-filled"
-        options={items || {}}
-        value={searchValue || {}}
-        getOptionLabel={(option) => option.name || ""}
-        onChange={handleChangeSearch}
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="filled"
-            label=""
-            placeholder="Search by Name"
+    <Autocomplete
+      id="tags-filled"
+      options={items || {}}
+      value={searchValue || {}}
+      getOptionLabel={(option) => option.name || ""}
+      onChange={handleChangeSearch}
+      renderTags={(value, getTagProps) =>
+        value.map((option, index) => (
+          <Chip
+            variant="outlined"
+            label={option}
+            {...getTagProps({ index })}
           />
-        )}
-      />
-
-      {!isLoading ? (
-        <MuiThemeProvider theme={datatableTheme}>
-          <MUIDataTable
-            title=""
-            data={items}
-            columns={columns}
-            options={options}
-          />
-        </MuiThemeProvider>
-      ) : (
-        <CircularProgress size={30} className="pageLoader" />
+        ))
+      }
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="filled"
+          label=""
+          placeholder="Search by Name"
+        />
       )}
-
+    />
+    {!isLoading ?
+      <MuiThemeProvider theme={datatableTheme}>
+        <MUIDataTable
+          title=""
+          data={items}
+          columns={columns}
+          options={options}
+        />
+      </MuiThemeProvider>
+    :<CircularProgress  size={30} className="pageLoader" />
+    }
       <div>
         <Dialog
           fullScreen
@@ -176,7 +190,7 @@ const Supplier = () => {
           <SubTables
             title={formTitle}
             handleClose={handleCloseAddForm}
-            supplierId={supplierId}
+            fridgesTypeId={fridgesTypeId}
           />
         </Dialog>
         {/*********************** FILTER start ****************************/}
@@ -193,4 +207,4 @@ const Supplier = () => {
     </Container>
   );
 }
-export default Supplier
+export default FridgesType

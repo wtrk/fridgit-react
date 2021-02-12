@@ -1,25 +1,25 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   Container,
   Slide,
   Dialog,
   TextField,
   Chip,
+  CircularProgress,
 } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import CustomToolbar from "../../CustomToolbar";
 import MUIDataTable from "mui-datatables";
 import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
-
+import Moment from "react-moment";
 import "react-dropzone-uploader/dist/styles.css";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 
-import TabsOnTopFromStatus from "components/CustomComponents/TabsOnTopFromStatus.js";
-import FilterComponent from "components/CustomComponents/FilterComponent.js";
-
 import { useHistory } from "react-router-dom";
 import "./LiveOperation.css";
-import dataJson from "./LiveOperation.json";
+import axios from 'axios';
+import FilterComponent from "components/CustomComponents/FilterComponent.js";
+import TabsOnTop from "./Components/TabsOnTop.js";
 import SnDialog from "./Components/SnDialog.js";
 import OperationDialog from "./Components/OperationDialog.js";
 
@@ -33,15 +33,48 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 export default function FullWidthTabs() {
   let history = useHistory();
 const [tabIndex,setTabIndex] = useState(0); //tabs tabIndex
-const [items, setItems] = useState(dataJson); //table items
+const [isLoading, setIsloading] = useState(true);  
+const [items, setItems] = useState([]); //table items
 const [itemsFiltered,setItemsFiltered] = useState(); //table items
 const [filterDialog,setFilterDialog] = useState(false);
 const [openSnDialog,setOpenSnDialog] = useState(false);
+const [citiesList, setCitiesList] = useState([]);
 const [openOperationDialog,setOpenOperationDialog] = useState(false);
+const [itemsBackup, setItemsBackup] = useState([]); //Search
+
+useEffect(() => {
+  const fetchData = async () => {
+    const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
+      responseType: "json",
+    }).then((response) => {
+      setCitiesList(response.data)
+      return response.data
+    });
+    await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations`, {
+      responseType: "json",
+    }).then((response) => {
+      setItems(response.data)
+      setItemsBackup(response.data)
+      return setIsloading(false)
+    })
+    .catch((error) => {
+      console.log("error",error);
+    });
+  };
+  fetchData();
+}, []);
   /************************* -Tabledata START- ***************************/
   const columns = [
     { name: "job_number", label: "Job #" },
-    { name: "creation_date", label: "Creation Date" },
+    { name: "createdAt", label: "Creation Date",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return (
+            <Moment format="DD/MM/YYYY">{value}</Moment>
+          );
+        },
+      },
+    },
     {
       name: "operation_number",
       label: "Operation #",
@@ -58,7 +91,6 @@ const [openOperationDialog,setOpenOperationDialog] = useState(false);
     { name: "operation_type", label: "Operation Type" },
     {
       name: "sn",
-      label: "Sn",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
@@ -71,68 +103,80 @@ const [openOperationDialog,setOpenOperationDialog] = useState(false);
     },
     {
       name: "brand",
-      label: "Brand",
       options: {
-        customBodyRender: (value, tableMeta, updateValue) => (
+        customBodyRender: (value, tableMeta, updateValue) => (value) ? (
           <div className="d-flex">
             <div className="avatar_circle">{value.substring(0, 2)}</div>
             {value}
           </div>
-        ),
+        ): null,
       },
     },
     { name: "client_name", label: "Client Name" },
     {
       name: "initiation_address",
-      label: "Initiation Address",
+      label: "Initiation Address", 
       options: {
-        customBodyRender: (value, tableMeta, updateValue) => (
-          <div
-            style={{
-              width: 230,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <div className="avatar_circle">{value.City.substring(0, 2)}</div>
+        customBodyRender: (value, tableMeta, updateValue) => {
+          if(value){
+          let cityValue = "-"
+          if(citiesList.filter(e=> e._id==value.city_id)[0]){
+            cityValue = citiesList.filter(e=> e._id==value.city_id)[0].name;
+          }
+          return <div style={{width: 230,display: "flex",alignItems: "center"}}>
+            <div className="avatar_circle">{value.city_id.substring(0, 2)}</div>
             <div>
-              {value ? value.City : "-"}
-              <br />
-              {value ? value.Area : "-"}
-              <br />
-              <strong>
-                {value ? value.shop_name : "-"} / {value ? value.Mobile : "-"}
-              </strong>
+              {cityValue}<br />
+              {value ? value.area : "-"}<br />
+              <strong>{value ? value.shop_name : "-"} / {value ? value.mobile : "-"}</strong>
             </div>
           </div>
-        ),
+          }
+        },
       },
     },
     {
       name: "execution_address",
       label: "Execution Address",
       options: {
-        customBodyRender: (value, tableMeta, updateValue) => (
-          <div
-            style={{
-              width: 230,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <div className="avatar_circle">{value.City.substring(0, 2)}</div>
-            <div>
-              {value ? value.City : "-"}<br />
-              {value ? value.Area : "-"}<br />
-              <strong>{value ? value.shop_name : "-"} / {value ? value.Mobile : "-"}</strong>
-            </div>
-          </div>
-        ),
+        customBodyRender: (value, tableMeta, updateValue) => {
+          if(value){
+                     let cityValue = "-";
+                     if (citiesList.filter((e) => e._id == value.city_id)[0]) {
+                       cityValue = citiesList.filter(
+                         (e) => e._id == value.city_id
+                       )[0].name;
+                     }
+                     return (
+                       <div
+                         style={{
+                           width: 230,
+                           display: "flex",
+                           alignItems: "center",
+                         }}
+                       >
+                         <div className="avatar_circle">
+                           {value.city_id.substring(0, 2)}
+                         </div>
+                         <div>
+                           {cityValue}
+                           <br />
+                           {value ? value.area : "-"}
+                           <br />
+                           <strong>
+                             {value ? value.shop_name : "-"} /{" "}
+                             {value ? value.mobile : "-"}
+                           </strong>
+                         </div>
+                       </div>
+                     );
+                   }
+      },
       },
     },
-    { name: "supplier", label: "Supplier" },
+    { name: "supplier"},
     { name: "client_approval", label: "Client Approval" },
-    { name: "status", label: "Status" },
+    { name: "status"},
     { name: "last_status_user", label: "Last Status User" },
     { name: "last_status_update", label: "Last Status Update" },
     { name: "promise_date", label: "Promise Date" },
@@ -162,41 +206,44 @@ const [openOperationDialog,setOpenOperationDialog] = useState(false);
     setFilterDialog(true);
   };
   /************************* -Tabledata END- ***************************/
+    //Search component ---------------START--------------
+    const handleChangeSearch = (e, newValue) => {
+      if(newValue.length===0) setItems(itemsBackup); else
+      setItems(
+        itemsBackup.filter((e) => {
+          if (newValue.includes(e.job_number)) return true;
+          if (newValue.includes(e.operation_number)) return true;
+          if (newValue.includes(e.sn)) return true;
+        })
+      );
+    }
   return (
     <div>
-      <TabsOnTopFromStatus
+      <TabsOnTop
         items={items}
         setItemsFiltered={setItemsFiltered}
         tabIndex={tabIndex}
         setTabIndex={setTabIndex}
       />
       <Container maxWidth="xl" style={{paddingTop:"4rem"}}>
-        <Autocomplete
-          multiple
-          id="tags-filled"
-          options={top100Films.map((option) => option.title)}
-          defaultValue={[]}
-          freeSolo
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                variant="outlined"
-                label={option}
-                {...getTagProps({
-                  index,
-                })}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="filled"
-              label=""
-              placeholder="Search Job Number/Operation Number/Serial Number"
-            />
-          )}
-        />
+      <Autocomplete
+        multiple
+        freeSolo
+        limitTags={3}
+        id="tags-standard"
+        options={[]}
+        getOptionLabel={(option) => option}
+        onChange={handleChangeSearch}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            variant="standard"
+            placeholder="Search Data"
+            label="Filter by Job #, Operation # and Serial #"
+          />
+        )}
+      />
+        {!isLoading ? (
         <MuiThemeProvider theme={datatableThemeInTabsPage}>
           <MUIDataTable
             title=""
@@ -205,6 +252,11 @@ const [openOperationDialog,setOpenOperationDialog] = useState(false);
             options={options}
           />
         </MuiThemeProvider>
+        ) : (
+          <CircularProgress size={30} className="pageLoader" />
+        )}
+
+
       </Container>
       <div>
         {/*********************** -Operation Dialog START- ****************************/}

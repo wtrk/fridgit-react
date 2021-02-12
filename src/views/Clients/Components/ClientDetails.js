@@ -105,13 +105,13 @@ const Clients = (props) => {
 /*********************************FORM */
 
 const [formValues, setFormValues] = useState({
-  company: props.data.company || "",
+  name: props.data.name || "",
   address: props.data.address || "",
   phone: props.data.phone || "",
   email: props.data.email || ""
 });
 const [formErrors, setFormErrors] = useState({
-  company: {error:false,msg:""},
+  name: {error:false,msg:""},
   address: {error:false,msg:""},
   phone: {error:false,msg:""},
   email: {error:false,msg:""}
@@ -172,16 +172,16 @@ const handleOnSubmit = async () => {
               <img src={require("../../../assets/img/sidebar-2.jpg")} alt="" className="mb-4" />
               <TextField
                 label="Company"
-                name="company"
+                name="name"
                 className="mb-4"
                 fullWidth
-                value={formValues.company}
+                value={formValues.name}
                 onChange={handleChangeForm}
                 onBlur={validateInputHandler}
                 helperText={
-                  formErrors.company.error ? formErrors.company.msg : null
+                  formErrors.name.error ? formErrors.name.msg : null
                 }
-                error={formErrors.company.error}
+                error={formErrors.name.error}
               />
               <TextField
                 label="Address"
