@@ -45,6 +45,7 @@ const SubTables = (props) => {
     const [tiersOut, setTiersOut] = useState([]);
 
     const classes = useStyles(); //custom css
+    const priorityRef = useRef()
     const nameRef = useRef()
     const serviceRef = useRef()
     const handling_inRef = useRef()
@@ -62,6 +63,7 @@ const SubTables = (props) => {
     const corrective_reactionRef = useRef()
     const submitRef = useRef()
     const [formValues, setFormValues] = useState({
+      priority: "",
       name: "",
       service: "",
       handling_in: "",
@@ -79,6 +81,7 @@ const SubTables = (props) => {
       corrective_reaction: ""
     });
     const [formErrors, setFormErrors] = useState({
+      priority: {error:false,msg:""},
       name: {error:false,msg:""},
       service: {error:false,msg:""},
       handling_in: {error:false,msg:""},
@@ -116,10 +119,9 @@ const SubTables = (props) => {
             setTiersOut(response.tiersOut);
             setServiceTypeValue(props.serviceTypesList.filter(e=> e._id==response.service)[0])
 
-            setIsLoading(false);
-            nameRef.current.focus()
           });
         }
+        setIsLoading(false);
       };
       fetchData();
   },[])
@@ -161,6 +163,7 @@ const SubTables = (props) => {
     const { keyCode, target } = e
     if(keyCode===13){
       switch (target.name){
+        case "priority": nameRef.current.focus();break;
         case "name": serviceRef.current.focus();break;
         case "service": handling_inRef.current.focus();break;
         case "handling_in": storageRef.current.focus();break;
@@ -176,7 +179,7 @@ const SubTables = (props) => {
         case "preventive_maintenance": exchange_corrective_reactionRef.current.focus();break;
         case "exchange_corrective_reaction": corrective_reactionRef.current.focus();break;
         case "corrective_reaction": submitRef.current.focus();break;
-        default: nameRef.current.focus();
+        default: priorityRef.current.focus();
       }
     }
 }
@@ -217,6 +220,7 @@ const handleOnSubmit = async () => {
       setOpenAlertSuccess(true);
       setFormValues({
         name: "",
+        priority: "",
         service: "",
         handling_in: "",
         storage: "",
@@ -272,7 +276,22 @@ const validateInputHandler = (e) => {
       {!isLoading ? (
         <div style={{ padding: "10px 30px" }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                id="priorityInput"
+                label="Priority"
+                name="priority"
+                onChange={handleChangeForm}
+                fullWidth
+                value={formValues.priority || ""}
+                inputRef={priorityRef}
+                onKeyDown={keyPressHandler}
+                onBlur={validateInputHandler}
+                helperText={formErrors.priority.error ? formErrors.priority.msg : null}
+                error={formErrors.priority.error}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
               <TextField
                 id="nameInput"
                 label="Name"
@@ -288,7 +307,7 @@ const validateInputHandler = (e) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <Autocomplete
                 id="serviceTypeInput"
                 options={props.serviceTypesList || {}}

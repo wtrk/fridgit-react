@@ -197,7 +197,7 @@ const FridgesType = () => {
         <Dialog
           onClose={() => setFilterDialog(false)}
           maxWidth={"xl"}
-          fullWidth={true}
+          fullWidth
           aria-labelledby="customized-dialog-title"
           open={filterDialog}
         >

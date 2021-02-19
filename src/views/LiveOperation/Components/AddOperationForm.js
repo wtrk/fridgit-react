@@ -1,4 +1,4 @@
-import React, { useState, Fragment,useEffect } from "react";
+import React, { useState, Fragment,useEffect,useRef } from "react";
 import Moment from "react-moment";
 import {
   Select,
@@ -46,28 +46,32 @@ const AddOperationForm = (props) => {
     fridgeType:"",
     serviceType:""
   });
+  const [citiesList, setCitiesList] = useState({});
   const [warehouseValue, setWarehouseValue] = useState({});
   const [warehousesList, setWarehousesList] = useState({});
+  const [cityOut, setCityOut] = useState({});
+  const [neighbourhoodOut, setNeighbourhoodOut] = useState({});
   const [storeValue, setStoreValue] = useState({});
   const [storesList, setStoresList] = useState({});
   const [fridgeTypeValue, setFridgeTypeValue] = useState({});
   const [fridgeTypesList, setFridgeTypesList] = useState({});
   const [cabinetsList, setCabinetsList] = useState({});
+  const [clientsList, setClientsList] = useState({});
+  const [countriesList, setCountriesList] = useState({});
   const [serviceTypeValue, setServiceTypeValue] = useState({});
   const [serviceTypeList, setServiceTypeList] = useState({});
   const [prices, setPrices] = useState({});
+  const [allocationRulesList, setAllocationRulesList] = useState({});
   const [loadingResult, setLoadingResult] = useState(true);
 
   const [currentDate,setCurrentDate] = useState(new Date()); //table items
   const [operationType, setOperationType] = useState("");
-  const [initiationAddress,setInitiationAddress] = useState("");
-  const [executionAddress,setExecutionAddress] = useState("");
-  const [fridgeType,setFridgeType] = useState("");
-  const [serviceType,setServiceType] = useState("");
-  const [sn, setSn] = useState("");
   const [snFilled, setSnFilled] = useState([]);
-  const [openSearch, setOpenSearch] = useState("");
-  const [columns,setColumns]=useState([]);
+  const [openSearch, setOpenSearch] = useState(false);
+  //After Save
+  const [selectedSn, setSelectedSn] = useState([]);
+  const [selectedSupplierId, setSelectedSupplierId] = useState([]);
+
   const optionsOfSnTable = {
     filter:false,
     customToolbarSelect: (selectedRows, displayData, setSelectedRows) => {
@@ -79,30 +83,13 @@ const AddOperationForm = (props) => {
             })
             setOpenSearch(false)
           }}
-          style={{
-            marginRight: "24px",
-            height: "48px",
-            display: "block",
-          }}
+          style={{marginRight: "24px",height: "48px",display: "block",}}
         >
           <Save />
         </IconButton>
     },
     
   };
-  const [input1, setInput1] = useState("Store");
-  const [input2, setInput2] = useState("Warehouse");
-  // const handleChangeOperation = (e) =>  {
-  //   setOperationType(e.target.value)
-  //   if(e.target.value === "Deployment" ||  e.target.value === "Exchange"){
-  //     setInput1("Warehouse")
-  //     setInput2("Store")
-  //     setInitiationAddress("")
-  //     setExecutionAddress("")
-  //     setFridgeType("")
-  //     setSnFilled([])
-  //   }
-  // }
     const handleOpenSearch = () => {
       setOpenSearch(true)
       setCabinetsList(
@@ -122,6 +109,12 @@ const AddOperationForm = (props) => {
   useEffect(()=>{
     const fetchData = async () => {
       await axios(
+        `${process.env.REACT_APP_BASE_URL}/cities`,
+        {responseType: "json"}
+      ).then((response) => {
+        setCitiesList(response.data)
+      })
+      await axios(
         `${process.env.REACT_APP_BASE_URL}/warehouses`,
         {responseType: "json"}
       ).then((response) => {
@@ -140,16 +133,28 @@ const AddOperationForm = (props) => {
         setFridgeTypesList(response.data)
       })
       await axios(
-        `${process.env.REACT_APP_BASE_URL}/cabinets`,
-        {responseType: "json"}
-      ).then((response) => {
-        setCabinetsList(response.data)
-      })
-      await axios(
         `${process.env.REACT_APP_BASE_URL}/serviceTypes`,
         {responseType: "json"}
       ).then((response) => {
         setServiceTypeList(response.data)
+      })
+      await axios(
+        `${process.env.REACT_APP_BASE_URL}/clients`,
+        {responseType: "json"}
+      ).then((response) => {
+        setClientsList(response.data)
+      })
+      await axios(
+        `${process.env.REACT_APP_BASE_URL}/countries`,
+        {responseType: "json"}
+      ).then((response) => {
+        setCountriesList(response.data)
+      })
+      await axios(
+        `${process.env.REACT_APP_BASE_URL}/allocationRules`,
+        {responseType: "json"}
+      ).then((response) => {
+        setAllocationRulesList(response.data)
       })
     };
     fetchData();
@@ -169,9 +174,83 @@ const handleChangeAutoComplete = (e, newValue,name) =>{
   }
   if(newValue) setFormValues({ ...formValues, [name]: newValue._id });
 }
+
+const storeValueFirstRun = useRef(true);
+useEffect(()=>{
+  if (storeValueFirstRun.current) {
+    storeValueFirstRun.current = false;
+  }else{
+    let cityOutId=storeValue.location.city_id
+    let neighbourhoodOutId=storeValue.location.neighbourhood_id
+    setFridgeTypeValue({})
+    setServiceTypeValue({})
+    const fetchData = async () => {
+
+      let cityQuery = await axios(`${process.env.REACT_APP_BASE_URL}/cities/${cityOutId}`, {
+        responseType: "json",
+      }).then((response) => {
+        setCityOut(response.data)
+        return response.data
+      })
+      let neighbourhoodQuery = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods/${neighbourhoodOutId}`, {
+        responseType: "json",
+      }).then((response) => {
+        setNeighbourhoodOut(response.data)
+        return response.data
+      })
+
+      let allocationRulesFiltered=allocationRulesList.filter(e=>{
+        return e.cities.filter((c) => c.name === cityQuery.name).length || e.neighbourhoods.filter((c) => c.name === neighbourhoodQuery.name).length
+      })
+      setSelectedSupplierId(allocationRulesFiltered ? allocationRulesFiltered[0].supplier_id:"")
+    }
+    fetchData();
+  }
+},[storeValue])
+
+const handleChangeSn = (event, newValue) => {
+  setSnFilled([...newValue]);
+}
+const snValueFirstRun = useRef(true);
+useEffect(()=>{
+  if (snValueFirstRun.current) {
+    snValueFirstRun.current = false;
+  }else{
+    setSelectedSn(
+      cabinetsList.filter((e) => {
+        let showRow = false;
+        snFilled.forEach((sn) => {
+          showRow = sn == e.sn ? true : false;
+        });
+        return showRow;
+      })
+    );
+  }
+},[snFilled])
+
+
+const cabinetsFirstRun = useRef(true);
 useEffect(()=>{
   const fetchData = async () => {
-      await axios(`${process.env.REACT_APP_BASE_URL}/priceRules`, {
+    if (cabinetsFirstRun.current) {
+      cabinetsFirstRun.current = false;
+    }else{
+      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {responseType: "json"}).then((response) => {
+        setCabinetsList(
+          response.data.filter((e) => e.type===fridgeTypeValue._id).map(e => {
+            return {...e, type:fridgeTypeValue.refrigerant_type}
+          })
+        );
+      });
+    }
+  };
+  fetchData();
+},[fridgeTypeValue])
+
+
+useEffect(()=>{
+  const fetchData = async () => {
+      await axios(`${process.env.REACT_APP_BASE_URL}/priceRules/cityOut/${cityOut.name}`, {
         responseType: "json",
       }).then((response) => {
         setPrices(response.data.filter(e => e.service===serviceTypeValue._id)[0])
@@ -182,42 +261,89 @@ useEffect(()=>{
   fetchData();
 },[serviceTypeValue])
 
-const handleSaveForm = () => {
-  let selectedSn= cabinetsList.filter((e) => {
-    let showRow = false;
-    snFilled.forEach((sn) => {
-      if (sn == e.sn) {
-        showRow = true;
-      }
-    });
-    return showRow;
-  })
-  let selectedWarehouse= warehousesList.filter(e=> e._id===formValues.warehouse)[0]
-  let selectedStore= storesList.filter(e=> e._id===formValues.store)[0]
-props.setFormValuesToSave(
-  selectedSn.map(e=>{
-    return {
-      job_number: Math.floor(Math.random() * 100000000) + 1,
-      operation_number: Math.floor(Math.random() * 100000) + 1,
-      operation_type: formValues.operationType,
-      sn:e.sn,
-      brand: "",
-      client_id: e.client,
-      client_name: "User 1",
-      initiation_address: {...e.location, shop_name:selectedWarehouse.name},
-      execution_address: {
-        city_id: selectedStore.location.city_id,
-        area: selectedStore.location.area,
-        shop_name: selectedStore.name,
-        mobile: selectedStore.location.mobile
-      },
-      status:"Unassigned"
+
+
+const handleSaveForm = async () => {
+  let formValuesToSave = selectedSn.map((e) => ({
+    job_number: props.jobNumber,
+    operation_number: "ON" + Math.floor(Math.random() * 100000000) + 1,
+    operation_type: formValues.operationType,
+    sn: e.sn,
+    brand: e.brand,
+    client_id: e.client,
+    client_name: "User 1",
+    initiation_address: {
+      city_id: storeValue.location.city_id,
+      neighbourhood_id: storeValue.location.neighbourhood_id,
+      shop_name: storeValue.name,
+      mobile: storeValue.location.mobile,
+    },
+    execution_address: {
+      city_id: storeValue.location.city_id,
+      neighbourhood_id: storeValue.location.neighbourhood_id,
+      shop_name: storeValue.name,
+      mobile: storeValue.location.mobile,
+    },
+    supplier_id: selectedSupplierId,
+    status: selectedSupplierId ? "Assigned" : "Unassigned",
+    last_status_user: "-",
+    last_status_update: currentDate,
+  }));
+console.log("selectedSupplierId",selectedSupplierId)
+  const statusHistoryUnassigned = formValuesToSave.map((e) => ({
+    "status":"Unassigned",
+    "user":"User 1",
+    "notes":"",
+    "operation_number":e.operation_number
+  }));
+  const statusHistoryAssigned = formValuesToSave.map((e) => {
+    if(e.status==="Assigned"){
+      return {
+        status: "Assigned",
+        user: "User 1",
+        notes: "",
+        operation_number: e.operation_number,
+      };
     }
+  });
+  let statusHistory=[...statusHistoryUnassigned, ...statusHistoryAssigned]
+  
+  const fetchData = async () => {
+    await axios({
+      method: "post",
+      url: `${process.env.REACT_APP_BASE_URL}/liveOperations`,
+      data: formValuesToSave,
+    })
+    .then(function (response) {
+      props.setItemsUpdated(formValuesToSave);
+      props.setOpenDialog(false);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+    await axios({
+      method: "post",
+      url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
+      data: statusHistory,
+    })
+    
+  console.log("selectedSn",selectedSn)
+  
+  selectedSn.forEach((e) => {
+    axios({
+      method: "put",
+      url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e._id}`,
+      data: [{
+        location: operationType==="deployment" ? "warehouse" : "store",
+        location_id: storeValue._id
+      }]
+    })
   })
-)
-  props.setOpenDialog(false)
+
+  }
+fetchData();
 }
-  return (
+ return (
     <Fragment>
       <AppBar className={classes.appBar}>
         <Toolbar>
@@ -236,10 +362,9 @@ props.setFormValuesToSave(
         spacing={3}
         justify="center"
         alignContent="center"
-        fullWidth
       >
         <Grid item xs={12} sm={7}>
-          <FormControl className={classes.formControl} fullwidth>
+          <FormControl className={classes.formControl}>
             <InputLabel id="initiationAddressLabel">Operation Type</InputLabel>
             <Select
               labelId="initiationAddressLabel"
@@ -337,10 +462,7 @@ props.setFormValuesToSave(
                   value={snFilled}
                   options={[]}
                   getOptionLabel={(option) => option}
-                  onChange={(event, newValue) => {
-                    console.log(newValue);
-                    setSnFilled([...newValue]);
-                  }}
+                  onChange={handleChangeSn}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -360,143 +482,11 @@ props.setFormValuesToSave(
                   className="btn btn--save"
                   onClick={handleOpenSearch}
                   startIcon={<Search />}
-                ></Button>
+                >Search</Button>
               </Grid>
             </Fragment>
           </Grid>
         ) : null}
-        {/* operationType: "",
-          warehouse: "",
-          store: "",
-          formValues.fridgeType:"" */}
-
-        {/* <Grid item xs={12} sm={7}>
-          {operationType ? (
-            <div onClick={() => setOperationType(false)}>
-              <strong>Operation Type: </strong>
-              {operationType}
-            </div>
-          ) : (
-            <FormControl className={classes.formControl} fullwidth>
-              <InputLabel id="initiationAddressLabel">
-                Operation Type
-              </InputLabel>
-              <Select
-                labelId="initiationAddressLabel"
-                id="initiationAddressInput"
-                value={operationType}
-                onChange={handleChangeOperation}
-              >
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                <MenuItem value="Deployment">Deployment</MenuItem>
-                <MenuItem value="Retrieval">Retrieval</MenuItem>
-                <MenuItem value="Transfer">Transfer</MenuItem>
-                <MenuItem value="Exchange">Exchange</MenuItem>
-                <MenuItem value="Corrective">Corrective Maintenance</MenuItem>
-                <MenuItem value="Preventive">Preventive Maintenance</MenuItem>
-                <MenuItem value="Exchange">Exchange</MenuItem>
-              </Select>
-            </FormControl>
-          )}
-        </Grid> */}
-
-        {/* {operationType &&
-        operationType != "Corrective" &&
-        operationType != "Preventive" ? (
-          <Grid item xs={12} sm={7}>
-            {initiationAddress ? (
-              <div onClick={() => setInitiationAddress(false)}>
-                <strong>Initiation Address: </strong> {initiationAddress}/ City,
-                Area / Contact Person Name / Contact Number / Lat,Long / Store
-                Reference Number / Sales Channel Type
-              </div>
-            ) : (
-              
-              <FormControl className={classes.formControl} fullwidth>
-                
-                <InputLabel id="initiationAddressLabel">
-                  Initiation Address {input1}
-                </InputLabel>
-                <Select
-                  labelId="initiationAddressLabel"
-                  id="initiationAddressInput"
-                  value={initiationAddress}
-                  onChange={(e) => setInitiationAddress(e.target.value)}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  <MenuItem value={input1+"1"}>{input1} 1</MenuItem>
-                  <MenuItem value={input1+"2"}>{input1} 2</MenuItem>
-                  <MenuItem value={input1+"3"}>{input1} 3</MenuItem>
-                </Select>
-              </FormControl>
-            )}
-          </Grid>
-        ) : null} */}
-
-        {/* {initiationAddress ||
-        operationType === "Corrective" ||
-        operationType === "Preventive" ? (
-          <Grid item xs={12} sm={7}>
-            {executionAddress ? (
-              <div onClick={() => setExecutionAddress(false)}>
-                <strong>Execution Address: </strong> {executionAddress}/ City,
-                Area / Contact Person Name / Contact Number / Lat,Long / Store
-                Reference Number / Sales Channel Type
-              </div>
-            ) : (
-              <FormControl className={classes.formControl} fullwidth>
-                <InputLabel id="executionAddressLabel">
-                  Execution Address {input2}
-                </InputLabel>
-                <Select
-                  labelId="executionAddressLabel"
-                  id="executionAddressInput"
-                  value={executionAddress}
-                  onChange={(e) => setExecutionAddress(e.target.value)}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  <MenuItem value={input2+"1"}>{input2} 1</MenuItem>
-                  <MenuItem value={input2+"2"}>{input2} 2</MenuItem>
-                  <MenuItem value={input2+"3"}>{input2} 3</MenuItem>
-                </Select>
-              </FormControl>
-            )}
-          </Grid>
-        ) : null} */}
-
-        {/* {executionAddress ? (
-          <Grid item xs={12} sm={7}>
-            {fridgeType ? (
-              <div onClick={() => setFridgeType(false)}>
-                <strong>Fridge Type: </strong> {fridgeType}
-              </div>
-            ) : (
-              <FormControl className={classes.formControl} fullwidth>
-                <InputLabel id="fridgeTypeLabel">Fridge Type</InputLabel>
-                <Select
-                  labelId="fridgeTypeLabel"
-                  id="fridgeTypeInput"
-                  value={fridgeType}
-                  onChange={(e) => setFridgeType(e.target.value)}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  <MenuItem value="FridgeType1">Fridge Type 1</MenuItem>
-                  <MenuItem value="FridgeType2">Fridge Type 2</MenuItem>
-                  <MenuItem value="FridgeType3">Fridge Type3</MenuItem>
-                </Select>
-              </FormControl>
-            )}
-          </Grid>
-        ) : null} */}
-
         {formValues.fridgeType ? (
           <Grid item xs={12} sm={7}>
             <Autocomplete
@@ -516,33 +506,6 @@ props.setFormValuesToSave(
             />
           </Grid>
         ) : null}
-
-        {/* 
-        {formValues.fridgeType ? (
-          <Grid item xs={12} sm={7}>
-            {serviceType ? (
-              <div onClick={() => setServiceType(false)}>
-                <strong>Service Type: </strong> {serviceType}
-              </div>
-            ) : (
-              <FormControl className={classes.formControl} fullwidth>
-                <InputLabel id="serviceTypeLabel">Service Type</InputLabel>
-                <Select
-                  labelId="serviceTypeLabel"
-                  id="serviceTypeInput"
-                  value={serviceType}
-                  onChange={(e) => setServiceType(e.target.value)}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  <MenuItem value="Express">Express</MenuItem>
-                  <MenuItem value="Standard">Standard</MenuItem>
-                </Select>
-              </FormControl>
-            )}
-          </Grid>
-        ) : null} */}
         {prices ? (
           <Grid item xs={12} sm={7} container spacing={3}>
             {!loadingResult ? (
@@ -622,21 +585,25 @@ props.setFormValuesToSave(
         {/*********************** -Operation Dialog START- ****************************/}
         <Dialog
           maxWidth={"xl"}
-          fullWidth={true}
+          fullWidth
           open={openSearch}
           onClose={() => setOpenSearch(false)}
-          cabinetsList={cabinetsList}
         >
           <MUIDataTable
             title="Operation"
             data={cabinetsList}
             columns={[
               { name: "sn" },
-              { name: "type" },
-              { name: "client" },
+              { name: "sn2" },
+              { name: "type"},
+              { name: "client",
+                options: {
+                  customBodyRender: (value, tableMeta, updateValue) => 
+                    clientsList.filter(e=> e._id===value)[0] ? clientsList.filter((e) => e._id == value )[0].name : "-"
+                }
+              },
               { name: "prev_status" },
-              { name: "finance" },
-              { name: "In Store" },
+              { name: "finance" }
             ]}
             options={optionsOfSnTable}
           />

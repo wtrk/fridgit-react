@@ -29,40 +29,24 @@ const SubTables = (props) => {
     const [openAlertError, setOpenAlertError] = useState(false);
     const [clientValue, setClientValue] = useState({});
     const [fridgesTypeValue, setfridgesTypeValue] = useState({});
-    const [cityValue, setCityValue] = useState({});
-    const [neighbourhoodValue, setNeighbourhoodValue] = useState({});
     const classes = useStyles(); //custom css
     const snRef = useRef()
     const typeRef = useRef()
+    const brandRef = useRef()
     const clientRef = useRef()
-    const cityRef = useRef()
-    const neighbourhoodRef = useRef()
-    const areaRef = useRef()
-    const mobileRef = useRef()
     const submitRef = useRef()
-    const [formLocationValues, setFormLocationValues] = useState({
-      city_id: "",
-      neighbourhood_id: "",
-        area: "",
-        mobile: ""
-    });
     const [formValues, setFormValues] = useState({
       sn: "",
       type: "",
+      brand: "",
       client: "",
-      location: {...formLocationValues},
       is_new: false
     });
     const [formErrors, setFormErrors] = useState({
       sn: {error:false,msg:""},
       type: {error:false,msg:""},
-      client: {error:false,msg:""},
-      location: {
-        city_id: {error:false,msg:""},
-        neighbourhood_id: {error:false,msg:""},
-        area:{error:false,msg:""},
-        mobile: {error:false,msg:""},
-      },
+      brand: {error:false,msg:""},
+      client: {error:false,msg:""}
     });
     
   useEffect(()=>{
@@ -78,33 +62,21 @@ const SubTables = (props) => {
             setFormValues(response.data);
             return response.data
           }).then((response)=>{
-            setCityValue(props.citiesList.filter(e=> e._id==response.location.city_id)[0])
-            setNeighbourhoodValue(props.neighbourhoodsList.filter(e=> e._id==response.location.neighbourhood_id)[0])
             setClientValue(props.clientsList.filter(e=> e._id==response.client)[0])
             setfridgesTypeValue(props.fridgesTypesList.filter(e=> e._id==response.type)[0])
-            setFormLocationValues(response.location)
           });
         }
       };
       fetchData();
   },[])
-  useEffect(()=>{
-    setFormValues({
-      ...formValues,
-      location: formLocationValues,
-    });
-  },[formLocationValues])
   const keyPressHandler = (e) => {
     const { keyCode, target } = e
     if(keyCode===13){
       switch (target.name){
         case "sn": typeRef.current.focus();break;
-        case "type": clientRef.current.focus();break;
-        case "client": cityRef.current.focus();break;
-        case "city_id": areaRef.current.focus();break;
-        case "neighbourhood_id": areaRef.current.focus();break;
-        case "area": mobileRef.current.focus();break;
-        case "mobile": submitRef.current.focus();break;
+        case "type": brandRef.current.focus();break;
+        case "brand": clientRef.current.focus();break;
+        case "client": submitRef.current.focus();break;
         default: snRef.current.focus();
       }
     }
@@ -117,14 +89,6 @@ const handleChangeForm = (e) => {
   const { name, value } = e.target;
   setFormValues({ ...formValues, [name]: value });
 };
-const handleChangeCity = (e, newValue) =>{
-  setCityValue(newValue)
-  if(newValue) setFormLocationValues({ ...formLocationValues, city_id: newValue._id });
-}
-const handleChangeNeighbourhood = (e, newValue) =>{
-  setNeighbourhoodValue(newValue)
-  if(newValue) setFormLocationValues({ ...formLocationValues, neighbourhood_id: newValue._id });
-}
 const handleChangeClient = (e, newValue) =>{
   setClientValue(newValue)
   if(newValue) setFormValues({ ...formValues, client: newValue._id });
@@ -133,10 +97,6 @@ const handleChangeFridgesType = (e, newValue) =>{
   setfridgesTypeValue(newValue)
   if(newValue) setFormValues({ ...formValues, type: newValue._id });
 }
-const handleChangeLocation = (e) => {
-  const { name, value } = e.target;
-  setFormLocationValues({ ...formLocationValues, [name]: value});
-};
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
@@ -166,13 +126,8 @@ const handleOnSubmit = async () => {
       setFormValues({
         sn: "",
         type: "",
-        client: "",
-        location: {
-          city_id: "",
-          neighbourhood_id: "",
-          area:"",
-          mobile: "",
-        },
+        brand: "",
+        client: ""
       });
       props.handleClose()
     })
@@ -255,6 +210,21 @@ const validateInputHandler = (e) => {
               )}
             />
           </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="brandInput"
+              label="Brand"
+              name="brand"
+              onChange={handleChangeForm}
+              fullWidth
+              value={formValues.brand || ""}
+              inputRef={brandRef}
+              onKeyDown={keyPressHandler}
+              onBlur={validateInputHandler}
+              helperText={formErrors.brand.error ? formErrors.brand.msg : null}
+              error={formErrors.brand.error}
+            />
+          </Grid>
           
           <Grid item xs={12} sm={6}>
             <Autocomplete
@@ -279,88 +249,6 @@ const validateInputHandler = (e) => {
                   error={formErrors.client.error}
                 />
               )}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <Autocomplete
-              id="CityInput"
-              options={props.citiesList || {}}
-              value={cityValue || {}}
-              getOptionLabel={(option) => {
-                return Object.keys(option).length!==0 ? option.name : "";
-              }}
-              fullWidth
-              onChange={handleChangeCity}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="City"
-                  inputRef={cityRef}
-                  onKeyDown={keyPressHandler}
-                  onBlur={validateInputHandler}
-                  helperText={
-                    formErrors.location.city_id.error ? formErrors.location.city_id.msg : null
-                  }
-                  error={formErrors.location.city_id.error}
-                />
-              )}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <Autocomplete
-              id="neighbourhoodInput"
-              options={props.neighbourhoodsList || {}}
-              value={neighbourhoodValue || {}}
-              getOptionLabel={(option) => {
-                return Object.keys(option).length!==0 ? option.name : "";
-              }}
-              fullWidth
-              onChange={handleChangeNeighbourhood}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Neighbourhood"
-                  inputRef={neighbourhoodRef}
-                  onKeyDown={keyPressHandler}
-                  onBlur={validateInputHandler}
-                  helperText={
-                    formErrors.location.neighbourhood_id.error ? formErrors.location.neighbourhood_id.msg : null
-                  }
-                  error={formErrors.location.neighbourhood_id.error}
-                />
-              )}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              id="areaInput"
-              label="Area"
-              name="area"
-              onChange={handleChangeLocation}
-              fullWidth
-              value={formLocationValues.area || ""}
-              inputRef={areaRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={formErrors.location.area.error ? formErrors.location.area.msg : null}
-              error={formErrors.location.area.error}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              id="mobileInput"
-              label="Mobile Number"
-              name="mobile"
-              onChange={handleChangeLocation}
-              fullWidth
-              value={formLocationValues.mobile || ""}
-              inputRef={mobileRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={formErrors.location.mobile.error ? formErrors.location.mobile.msg : null}
-              error={formErrors.location.mobile.error}
             />
           </Grid>
           <Grid item xs={12} sm={6}>

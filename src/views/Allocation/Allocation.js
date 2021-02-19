@@ -51,6 +51,9 @@ const AllocationRule = () => {
       }
     },
     {
+      name: "priority"
+    },
+    {
       name: "code",
       options: {
         filter: false,
@@ -59,7 +62,7 @@ const AllocationRule = () => {
             <div>
               <a
                 onClick={() => {
-                  handleAdd("Edit Allocation Rule - "+tableMeta.rowData[2],tableMeta.rowData[0]);
+                  handleAdd("Edit Allocation Rule - "+tableMeta.rowData[3],tableMeta.rowData[0]);
                 }}
               >
                 {value}
@@ -180,7 +183,7 @@ const AllocationRule = () => {
         <Dialog
           onClose={() => setFilterDialog(false)}
           maxWidth={"xl"}
-          fullWidth={true}
+          fullWidth
           aria-labelledby="customized-dialog-title"
           open={filterDialog}
         >

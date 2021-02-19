@@ -39,6 +39,9 @@ const [itemsFiltered,setItemsFiltered] = useState(); //table items
 const [filterDialog,setFilterDialog] = useState(false);
 const [openSnDialog,setOpenSnDialog] = useState(false);
 const [citiesList, setCitiesList] = useState([]);
+const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
+const [clientsList, setClientsList] = useState([]);
+const [suppliersList, setSuppliersList] = useState([]);
 const [openOperationDialog,setOpenOperationDialog] = useState(false);
 const [itemsBackup, setItemsBackup] = useState([]); //Search
 
@@ -48,6 +51,24 @@ useEffect(() => {
       responseType: "json",
     }).then((response) => {
       setCitiesList(response.data)
+      return response.data
+    });
+    const neighbourhood = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
+      responseType: "json",
+    }).then((response) => {
+      setNeighbourhoodsList(response.data)
+      return response.data
+    });
+    const client = await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
+      responseType: "json",
+    }).then((response) => {
+      setClientsList(response.data)
+      return response.data
+    });
+    const supplier = await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
+      responseType: "json",
+    }).then((response) => {
+      setSuppliersList(response.data)
       return response.data
     });
     await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations`, {
@@ -65,13 +86,19 @@ useEffect(() => {
 }, []);
   /************************* -Tabledata START- ***************************/
   const columns = [
+    {
+      name: "_id",
+      options: {
+        display: false,
+      },
+    },
     { name: "job_number", label: "Job #" },
-    { name: "createdAt", label: "Creation Date",
+    {
+      name: "createdAt",
+      label: "Creation Date",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
-          return (
-            <Moment format="DD/MM/YYYY">{value}</Moment>
-          );
+          return <Moment format="DD/MM/YYYY">{value}</Moment>;
         },
       },
     },
@@ -104,33 +131,69 @@ useEffect(() => {
     {
       name: "brand",
       options: {
-        customBodyRender: (value, tableMeta, updateValue) => (value) ? (
-          <div className="d-flex">
-            <div className="avatar_circle">{value.substring(0, 2)}</div>
-            {value}
-          </div>
-        ): null,
+        customBodyRender: (value, tableMeta, updateValue) =>
+          value ? (
+            <div className="d-flex">
+              <div className="avatar_circle">{value.substring(0, 2)}</div>
+              {value}
+            </div>
+          ) : null,
       },
     },
-    { name: "client_name", label: "Client Name" },
     {
-      name: "initiation_address",
-      label: "Initiation Address", 
+      name: "client_id",
+      label: "Client Name",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
-          if(value){
-          let cityValue = "-"
-          if(citiesList.filter(e=> e._id==value.city_id)[0]){
-            cityValue = citiesList.filter(e=> e._id==value.city_id)[0].name;
+          if (value) {
+            let clientValue = clientsList.filter((e) => e._id == value);
+            return clientValue.length ? clientValue[0].name : "-";
           }
-          return <div style={{width: 230,display: "flex",alignItems: "center"}}>
-            <div className="avatar_circle">{value.city_id.substring(0, 2)}</div>
-            <div>
-              {cityValue}<br />
-              {value ? value.area : "-"}<br />
-              <strong>{value ? value.shop_name : "-"} / {value ? value.mobile : "-"}</strong>
-            </div>
-          </div>
+        },
+      },
+    },
+    {
+      name: "initiation_address",
+      label: "Initiation Address",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          if (value) {
+            let cityValue = "-";
+            let neighbourhoodValue = "-";
+            if (citiesList.filter((e) => e._id == value.city_id)[0]) {
+              cityValue = citiesList.filter((e) => e._id == value.city_id)[0]
+                .name;
+            }
+            if (
+              neighbourhoodsList.filter(
+                (e) => e._id == value.neighbourhood_id
+              )[0]
+            ) {
+              neighbourhoodValue = neighbourhoodsList.filter(
+                (e) => e._id == value.neighbourhood_id
+              )[0].name;
+            }
+            return (
+              <div
+                style={{ width: 230, display: "flex", alignItems: "center" }}
+              >
+                {cityValue != "-" ? (
+                  <div className="avatar_circle">
+                    {cityValue.substring(0, 2)}
+                  </div>
+                ) : null}
+                <div>
+                  {cityValue}
+                  <br />
+                  {neighbourhoodValue}
+                  <br />
+                  <strong>
+                    {value ? value.shop_name : "-"} /{" "}
+                    {value ? value.mobile : "-"}
+                  </strong>
+                </div>
+              </div>
+            );
           }
         },
       },
@@ -140,45 +203,73 @@ useEffect(() => {
       label: "Execution Address",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
-          if(value){
-                     let cityValue = "-";
-                     if (citiesList.filter((e) => e._id == value.city_id)[0]) {
-                       cityValue = citiesList.filter(
-                         (e) => e._id == value.city_id
-                       )[0].name;
-                     }
-                     return (
-                       <div
-                         style={{
-                           width: 230,
-                           display: "flex",
-                           alignItems: "center",
-                         }}
-                       >
-                         <div className="avatar_circle">
-                           {value.city_id.substring(0, 2)}
-                         </div>
-                         <div>
-                           {cityValue}
-                           <br />
-                           {value ? value.area : "-"}
-                           <br />
-                           <strong>
-                             {value ? value.shop_name : "-"} /{" "}
-                             {value ? value.mobile : "-"}
-                           </strong>
-                         </div>
-                       </div>
-                     );
-                   }
-      },
+          if (value) {
+            let cityValue = "-";
+            let neighbourhoodValue = "-";
+            if (citiesList.filter((e) => e._id == value.city_id)[0]) {
+              cityValue = citiesList.filter((e) => e._id == value.city_id)[0]
+                .name;
+            }
+            if (
+              neighbourhoodsList.filter(
+                (e) => e._id == value.neighbourhood_id
+              )[0]
+            ) {
+              neighbourhoodValue = neighbourhoodsList.filter(
+                (e) => e._id == value.neighbourhood_id
+              )[0].name;
+            }
+            return (
+              <div
+                style={{ width: 230, display: "flex", alignItems: "center" }}
+              >
+                {cityValue != "-" ? (
+                  <div className="avatar_circle">
+                    {cityValue.substring(0, 2)}
+                  </div>
+                ) : null}
+                <div>
+                  {cityValue}
+                  <br />
+                  {neighbourhoodValue}
+                  <br />
+                  <strong>
+                    {value ? value.shop_name : "-"} /{" "}
+                    {value ? value.mobile : "-"}
+                  </strong>
+                </div>
+              </div>
+            );
+          }
+        },
       },
     },
-    { name: "supplier"},
+    {
+      name: "supplier_id",
+      label: "supplier",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          if (value) {
+            let supplierValue = suppliersList.filter((e) => e._id == value);
+            return supplierValue.length ? supplierValue[0].name : "-";
+          }
+        },
+      },
+    },
     { name: "client_approval", label: "Client Approval" },
-    { name: "status"},
+    { name: "status" },
     { name: "last_status_user", label: "Last Status User" },
-    { name: "last_status_update", label: "Last Status Update" },
+    {
+      name: "last_status_update",
+      label: "Last Status Update",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          if (value) {
+            return <Moment format="DD/MM/YYYY">{value}</Moment>;
+          }
+        },
+      },
+    },
     { name: "promise_date", label: "Promise Date" },
   ];
   const options = {
@@ -189,11 +280,21 @@ useEffect(() => {
     selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
-        <CustomToolbar
-          listener={handleOpenAddDialog}
-          handleFilter={handleFilter}
-        />
+        <CustomToolbar listener={handleOpenAddDialog} handleFilter={handleFilter}/>
       );
+    },
+    onRowsDelete: (rowsDeleted, dataRows) => {
+      const idsToDelete = rowsDeleted.data.map((d) => items[d.dataIndex]._id); // array of all ids to to be deleted
+      axios
+        .delete(
+          `${process.env.REACT_APP_BASE_URL}/liveOperations/${idsToDelete}`,
+          {
+            responseType: "json",
+          }
+        )
+        .then((response) => {
+          console.log("deleted");
+        });
     },
   };
   const handleOpenAddDialog = () => {
@@ -262,7 +363,7 @@ useEffect(() => {
         {/*********************** -Operation Dialog START- ****************************/}
         <Dialog
           maxWidth={"xl"}
-          fullWidth={true}
+          fullWidth
           TransitionComponent={Transition}
           open={openOperationDialog}
           onClose={() => setOpenOperationDialog(false)}
@@ -273,7 +374,7 @@ useEffect(() => {
         {/*********************** -Sn Dialog START- ****************************/}
         <Dialog
           maxWidth={"xl"}
-          fullWidth={true}
+          fullWidth
           TransitionComponent={Transition}
           open={openSnDialog}
           onClose={() => setOpenSnDialog(false)}
@@ -284,7 +385,7 @@ useEffect(() => {
         {/*********************** -FILTER START- ****************************/}
         <Dialog
           maxWidth={"xl"}
-          fullWidth={true}
+          fullWidth
           TransitionComponent={Transition}
           open={filterDialog}
           onClose={() => setFilterDialog(false)}

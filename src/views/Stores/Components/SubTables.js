@@ -26,20 +26,21 @@ const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [cityValue, setCityValue] = useState({}); //table items
+    const [neighbourhoodValue, setNeighbourhoodValue] = useState({}); //table items
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
     const branchRef = useRef()
     const branchNumberRef = useRef()
     const cityRef = useRef()
-    const areaRef = useRef()
+    const neighbourhoodRef = useRef()
     const mobileRef = useRef()
     const financeRef = useRef()
     const statusRef = useRef()
     const submitRef = useRef()
     const [formLocationValues, setFormLocationValues] = useState({
-        city_id: "",
-        area: "",
+      city_id: "",
+      neighbourhood_id: "",
         mobile: ""
     });
     const [formValues, setFormValues] = useState({
@@ -58,7 +59,7 @@ const SubTables = (props) => {
       branch_number: {error:false,msg:""},
       location: {
         city_id: {error:false,msg:""},
-        area:{error:false,msg:""},
+        neighbourhood_id: {error:false,msg:""},
         mobile: {error:false,msg:""},
       },
       finance: {error:false,msg:""},
@@ -79,6 +80,7 @@ const SubTables = (props) => {
             return response.data
           }).then((response)=>{
             setCityValue(props.citiesList.filter(e=> e._id==response.location.city_id)[0])
+            setNeighbourhoodValue(props.neighbourhoodsList.filter(e=> e._id==response.location.neighbourhood_id)[0])
             setFormLocationValues(response.location)
           });
         }
@@ -99,8 +101,8 @@ const SubTables = (props) => {
         case "name": branchRef.current.focus();break;
         case "branch": branchNumberRef.current.focus();break;
         case "branch_number": cityRef.current.focus();break;
-        case "city_id": areaRef.current.focus();break;
-        case "area": mobileRef.current.focus();break;
+        case "city_id": neighbourhoodRef.current.focus();break;
+        case "neighbourhood_id": mobileRef.current.focus();break;
         case "mobile": financeRef.current.focus();break;
         case "finance": statusRef.current.focus();break;
         case "status": submitRef.current.focus();break;
@@ -115,6 +117,10 @@ const handleChangeForm = (e) => {
 const handleChangeCity = (e, newValue) =>{
   setCityValue(newValue)
   if(newValue) setFormLocationValues({ ...formLocationValues, city_id: newValue._id });
+}
+const handleChangeNeighbourhood = (e, newValue) =>{
+  setNeighbourhoodValue(newValue)
+  if(newValue) setFormLocationValues({ ...formLocationValues, neighbourhood_id: newValue._id });
 }
 const handleChangeLocation = (e) => {
   const { name, value } = e.target;
@@ -153,7 +159,7 @@ const handleOnSubmit = async () => {
         branch_number: "",
         location: {
           city_id: "",
-          area:"",
+          neighbourhood_id: "",
           mobile: "",
         },
         finance: "",
@@ -287,18 +293,28 @@ const validateInputHandler = (e) => {
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField
-              id="areaInput"
-              label="Area"
-              name="area"
-              onChange={handleChangeLocation}
+            <Autocomplete
+              id="neighbourhoodInput"
+              options={props.neighbourhoodsList || {}}
+              value={neighbourhoodValue || {}}
+              getOptionLabel={(option) => {
+                return Object.keys(option).length!==0 ? option.name : "";
+              }}
               fullWidth
-              value={formLocationValues.area || ""}
-              inputRef={areaRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={formErrors.location.area.error ? formErrors.location.area.msg : null}
-              error={formErrors.location.area.error}
+              onChange={handleChangeNeighbourhood}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Neighbourhoods"
+                  inputRef={neighbourhoodRef}
+                  onKeyDown={keyPressHandler}
+                  onBlur={validateInputHandler}
+                  helperText={
+                    formErrors.location.neighbourhood_id.error ? formErrors.location.neighbourhood_id.msg : null
+                  }
+                  error={formErrors.location.neighbourhood_id.error}
+                />
+              )}
             />
           </Grid>
           <Grid item xs={12} sm={6}>

@@ -79,6 +79,7 @@ const Cabinet = () => {
   const [itemsBackup, setItemsBackup] = useState([]);
   const [searchValue, setSearchValue] = useState({});
   const [citiesList, setCitiesList] = useState([]);
+  const [storesList, setStoresList] = useState([]);
   const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
   const [clientsList, setClientsList] = useState([]);
   const [fridgesTypesList, setFridgesTypesList] = useState([]);
@@ -103,6 +104,12 @@ const Cabinet = () => {
         responseType: "json",
       }).then((response) => {
         setClientsList(response.data)
+        return response.data
+      });
+      const stores = await axios(`${process.env.REACT_APP_BASE_URL}/stores`, {
+        responseType: "json",
+      }).then((response) => {
+        setStoresList(response.data)
         return response.data
       });
       const fridgesTypesList = await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`, {
@@ -201,7 +208,7 @@ const Cabinet = () => {
                 <strong>Status</strong>: Needs Repair
               </p>
               <p>
-                <strong>Location</strong>: Bekaa - CHAFIC JAMIL FOR GENERAL
+                <strong>Lacation</strong>: Bekaa - CHAFIC JAMIL FOR GENERAL
                 TRADING
               </p>
             </Grid>
@@ -267,6 +274,9 @@ const Cabinet = () => {
       },
     },
     {
+      name: "sn2"
+    },
+    {
       name: "type",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
@@ -278,7 +288,7 @@ const Cabinet = () => {
             <div>
               <a
                 onClick={() => {
-                  handleAdd("Edit Cabinet - "+tableMeta.rowData[2],tableMeta.rowData[0]);
+                  handleAdd("Edit Cabinet - "+typeValue,tableMeta.rowData[0]);
                 }}
               >
                 {typeValue}
@@ -289,12 +299,15 @@ const Cabinet = () => {
       },
     },
     {
-      name: "Manufacturer",
+      name: "brand"
+    },
+    {
+      name: "manufacturer",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
           let typeValue = "-"
-          if(fridgesTypesList.filter(e=> e._id===tableMeta.rowData[2])[0]){
-            typeValue = fridgesTypesList.filter((e) => e._id == tableMeta.rowData[2] )[0].name;
+          if(fridgesTypesList.filter(e=> e._id===tableMeta.rowData[3])[0]){
+            typeValue = fridgesTypesList.filter((e) => e._id == tableMeta.rowData[3] )[0].name;
           }
           return typeValue;
         },
@@ -331,28 +344,33 @@ const Cabinet = () => {
       label: "Finance $"
     },
     {
-      name: "location",
+      name: "location_id",
+      label: "location",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
           let cityValue = "-"
-          if(citiesList.filter(e=> e._id==value.city_id)[0]){
-            cityValue = citiesList.filter(e=> e._id==value.city_id)[0].name;
-          }
           let neighbourhoodValue = "-"
-          if(neighbourhoodsList.filter(e=> e._id==value.neighbourhood_id)[0]){
-            neighbourhoodValue = neighbourhoodsList.filter(e=> e._id==value.neighbourhood_id)[0].name;
+          let mobileValue = "-"
+          if(storesList.filter(e=> e._id==value)[0]){
+            let locationValue = storesList.filter(e=> e._id==value)[0].location;
+            if(citiesList.filter(e=> e._id==locationValue.city_id)[0]){
+              cityValue = citiesList.filter(e=> e._id==locationValue.city_id)[0].name;
+            }
+            if(neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0]){
+              neighbourhoodValue = neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0].name;
+            }
+            mobileValue=locationValue.mobile
           }
-
           return <div style={{ width: 200 }}>
             <strong>City</strong>: {cityValue}
             <br />
             <strong>Neighbourhood</strong>: {neighbourhoodValue}
             <br />
-            <strong>Mobile</strong>: {value ? value.mobile : "-"}
+            <strong>Mobile</strong>: {mobileValue}
             <br />
           </div>
         }
-      },
+      }
     },
     {
       name: "status"
@@ -525,7 +543,7 @@ const Cabinet = () => {
           <Dialog
             onClose={handleCloseDialogItem}
             maxWidth={"xl"}
-            fullWidth={true}
+            fullWidth
             aria-labelledby="customized-dialog-title"
             open={openDialogItem}
           >
@@ -625,7 +643,7 @@ const Cabinet = () => {
           <Dialog
             onClose={() => setFilterDialog(false)}
             maxWidth={"xl"}
-            fullWidth={true}
+            fullWidth
             aria-labelledby="customized-dialog-title"
             open={filterDialog}
           >

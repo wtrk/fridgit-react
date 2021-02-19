@@ -934,7 +934,7 @@ const ClientsList = () => {
               id={`full-width-tab-${i + 1}`}
               aria-controls={`full-width-tabpanel-${i + 1}`}
               key={i + 1}
-              className="text-white"
+              className="tabs-text-color"
               label={
                 <Fragment>
                   <span>{e}</span>
@@ -1015,7 +1015,7 @@ const ClientsList = () => {
         <Dialog
           onClose={handleCloseDialogItem}
           maxWidth={"xl"}
-          fullWidth={true}
+          fullWidth
           aria-labelledby="customized-dialog-title"
           open={openDialogItem}
         >

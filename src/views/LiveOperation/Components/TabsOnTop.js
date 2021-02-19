@@ -14,13 +14,9 @@ const TabsOnTopFromStatus = (props) => {
           });
     return filteredObj.length;
   };
-  const tabsTitle = [
-    /***** get unique status *****/
-    ...new Set(
-      props.items.map((e) => {
-        return e.status;
-      })
-    ),
+  const tabsTitle = [ 
+    // ...new Set(props.items.map((e) => e.status)) ---- get unique status object from items
+    "In Progress","Completed","Failed","On Hold","Assigned","Unassigned","Accepted"
   ];
   const handleChangeTabs = (event, newIndex) => {
     let status = document.querySelector(`#full-width-tab-${newIndex}`)
@@ -62,7 +58,7 @@ const TabsOnTopFromStatus = (props) => {
             id={`full-width-tab-${i + 1}`}
             aria-controls={`full-width-tabpanel-${i + 1}`}
             key={i + 1}
-            className="text-white"
+            className="tabs-text-color"
             label={
               <Fragment>
                 <span>{e}</span>

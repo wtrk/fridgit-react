@@ -31,6 +31,7 @@ const Store = () => {
   const [itemsBackup, setItemsBackup] = useState([]);
   const [searchValue, setSearchValue] = useState({});
   const [citiesList, setCitiesList] = useState([]);
+  const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,6 +39,12 @@ const Store = () => {
         responseType: "json",
       }).then((response) => {
         setCitiesList(response.data)
+        return response.data
+      });
+      const neighbourhoods = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
+        responseType: "json",
+      }).then((response) => {
+        setNeighbourhoodsList(response.data)
         return response.data
       });
       await axios(`${process.env.REACT_APP_BASE_URL}/stores`, {
@@ -91,7 +98,9 @@ const Store = () => {
       options: {
         customBodyRender: (value, tableMeta, updateValue) => (
           <div style={{ width: 200 }}>
-            <strong>City</strong>: {value ? citiesList.filter(e=> e._id==value.city_id)[0].name : "-"}
+          <strong>City</strong>: {value ? citiesList.filter(e=> e._id==value.city_id)[0].name : "-"}
+          <br />
+            <strong>Neighbourhood</strong>: {value ? neighbourhoodsList.filter(e=> e._id==value.neighbourhood_id)[0].name : "-"}
             <br />
             <strong>Area</strong>: {value ? value.area : "-"}
             <br />
@@ -220,13 +229,14 @@ const Store = () => {
             handleClose={handleCloseAddForm}
             storeId={storesId}
             citiesList={citiesList}
+            neighbourhoodsList={neighbourhoodsList}
           />
         </Dialog>
         {/*********************** FILTER start ****************************/}
         <Dialog
           onClose={() => setFilterDialog(false)}
           maxWidth={"xl"}
-          fullWidth={true}
+          fullWidth
           aria-labelledby="customized-dialog-title"
           open={filterDialog}
         >

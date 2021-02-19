@@ -40,16 +40,19 @@ const SubTables = (props) => {
     const codeRef = useRef()
     const nameRef = useRef()
     const supplierRef = useRef()
+    const priorityRef = useRef()
     const submitRef = useRef()
     const [formValues, setFormValues] = useState({
       code: "",
       name: "",
-      supplier_id: ""
+      supplier_id: "",
+      priority:""
     });
     const [formErrors, setFormErrors] = useState({
       code: {error:false,msg:""},
       name: {error:false,msg:""},
-      supplier_id: {error:false,msg:""}
+      supplier_id: {error:false,msg:""},
+      priority: {error:false,msg:""},
     });
     
   useEffect(()=>{
@@ -103,7 +106,8 @@ const SubTables = (props) => {
       switch (target.name){
         case "code": nameRef.current.focus();break;
         case "name": supplierRef.current.focus();break;
-        case "supplier_id": submitRef.current.focus();break;
+        case "supplier_id": priorityRef.current.focus();break;
+        case "priority": submitRef.current.focus();break;
         default: codeRef.current.focus();
       }
     }
@@ -144,7 +148,8 @@ const handleOnSubmit = async () => {
       setFormValues({
         code: "",
         name: "",
-        supplier_id:""
+        supplier_id:"",
+        priority:""
       });
       props.handleClose()
     })
@@ -187,7 +192,7 @@ const validateInputHandler = (e) => {
       {!isLoading ?
       <div style={{ padding: "10px 30px" }}>
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12} sm={3}>
             <TextField
               id="codeInput"
               label="Code"
@@ -202,7 +207,7 @@ const validateInputHandler = (e) => {
               error={formErrors.code.error}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12} sm={3}>
             <TextField
               id="nameInput"
               label="Name"
@@ -217,7 +222,7 @@ const validateInputHandler = (e) => {
               error={formErrors.name.error}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12} sm={3}>
             <Autocomplete
               id="SupplierInput"
               options={suppliersList || {}}
@@ -240,6 +245,21 @@ const validateInputHandler = (e) => {
                   error={formErrors.supplier_id.error}
                 />
               )}
+            />
+          </Grid>
+          <Grid item xs={12} sm={3}>
+            <TextField
+              id="priorityInput"
+              label="Priority"
+              name="priority"
+              onChange={handleChangeForm}
+              fullWidth
+              value={formValues.priority || ""}
+              inputRef={priorityRef}
+              onKeyDown={keyPressHandler}
+              onBlur={validateInputHandler}
+              helperText={formErrors.priority.error ? formErrors.priority.msg : null}
+              error={formErrors.priority.error}
             />
           </Grid>
             <Grid item xs={12}>

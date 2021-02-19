@@ -23,27 +23,61 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const LiveOperationAdd = () => {
   const [items, setItems] = useState(); //table items
+  const [itemsUpdated, setItemsUpdated] = useState(); //table items
   const [openAddDialog,setOpenAddDialog] = useState(false); //for modal
-  const [formValuesToSave, setFormValuesToSave] = useState([]);
   const [citiesList, setCitiesList] = useState([]);
+  const [suppliersList, setSuppliersList] = useState([]);
+  const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
+  const [jobNumber, setJobNumber] = useState();
 
   useEffect(() => {
     const fetchData = async () => {
+      setJobNumber("JN"+Math.floor(Math.random() * 100000000) + 1)
       const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
         responseType: "json",
       }).then((response) => {
         setCitiesList(response.data)
         return response.data
       });
+      const supplier = await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
+        responseType: "json",
+      }).then((response) => {
+        setSuppliersList(response.data)
+        return response.data
+      });
+      const neighbourhood = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
+        responseType: "json",
+      }).then((response) => {
+        setNeighbourhoodsList(response.data)
+        return response.data
+      });
     };
     fetchData();
   }, []);
   const columns = [
+    {
+      name: "_id",
+      options: {
+        display: false,
+      }
+    },
     { name: "job_number", label: "Job #" },
     { name: "operation_number", label: "Operation #" },
     { name: "operation_type", label: "Operation Type" },
     { name: "sn" },
-    { name: "client_name", label: "Client Name" },
+    { name: "brand" },
+    {
+      name: "supplier_id",
+      label: "supplier",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          if (value) {
+            let supplierValue = suppliersList.filter((e) => e._id == value);
+            return supplierValue.length ? supplierValue[0].name : "-";
+          }
+        },
+      },
+    },
     {
       name: "initiation_address",
       label: "Initiation Address",
@@ -54,15 +88,20 @@ const LiveOperationAdd = () => {
             cityValue = citiesList.filter((e) => e._id == value.city_id)[0]
               .name;
           }
+          let neighbourhoodValue = "-";
+          if (neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]) {
+            neighbourhoodValue = neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]
+              .name;
+          }
           return (
             <div style={{ width: 230, display: "flex", alignItems: "center" }}>
               <div className="avatar_circle">
-                {value.city_id.substring(0, 2)}
+                {cityValue.substring(0, 2)}
               </div>
               <div>
                 {cityValue}
                 <br />
-                {value ? value.area : "-"}
+                {neighbourhoodValue}
                 <br />
                 <strong>
                   {value ? value.shop_name : "-"} / {value ? value.mobile : "-"}
@@ -83,15 +122,20 @@ const LiveOperationAdd = () => {
             cityValue = citiesList.filter((e) => e._id == value.city_id)[0]
               .name;
           }
+          let neighbourhoodValue = "-";
+          if (neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]) {
+            neighbourhoodValue = neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]
+              .name;
+          }
           return (
             <div style={{ width: 230, display: "flex", alignItems: "center" }}>
               <div className="avatar_circle">
-                {value.city_id.substring(0, 2)}
+                {cityValue.substring(0, 2)}
               </div>
               <div>
                 {cityValue}
                 <br />
-                {value ? value.area : "-"}
+                {neighbourhoodValue}
                 <br />
                 <strong>
                   {value ? value.shop_name : "-"} / {value ? value.mobile : "-"}
@@ -108,39 +152,34 @@ const LiveOperationAdd = () => {
     onRowsDelete: null,
     selectToolbarPlacement: "replace",
     customToolbar: () => {
-      return (
-        <CustomToolbar listener={handleOpenAddDialog} />
-      );
+      return <CustomToolbar listener={handleOpenAddDialog} />;
+    },
+    onRowsDelete: (rowsDeleted, dataRows) => {
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
+        axios.delete(`${process.env.REACT_APP_BASE_URL}/liveOperations/${idsToDelete}`, {
+          responseType: "json",
+        }).then((response) => {
+          console.log("deleted")
+        });
     },
   };
   const handleOpenAddDialog = () => {
     setOpenAddDialog(true);
   };
   
-    useEffect(()=>{
-      console.log(formValuesToSave)
-      
-    const fetchData = async () => {
-      await axios({
-        method: "post",
-        url: `${process.env.REACT_APP_BASE_URL}/liveOperations`,
-        data: formValuesToSave
-      })
-      .then(function (response) {
-        setItems(formValuesToSave)
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-    };
-    fetchData();
 
 
 
-
-    },[formValuesToSave])
-
-
+    useEffect(()=>{  
+      const fetchData = async () => {
+        const itemsByJobNumber = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/byJobNumber/${jobNumber}`, {
+          responseType: "json",
+        }).then((response) => {
+          setItems(response.data)
+        });  
+      };
+      fetchData();
+      },[itemsUpdated])
 
   return (
     <Container maxWidth="xl">
@@ -183,13 +222,13 @@ const LiveOperationAdd = () => {
         {/*********************** -Add START- ****************************/}
         <Dialog
           maxWidth={"lg"}
-          fullWidth={true}
+          fullWidth
           TransitionComponent={Transition}
           open={openAddDialog}
           onClose={() => setOpenAddDialog(false)}
         >
           <div style={{minHeight:"80vh",overflowX:"hidden"}}>
-          <AddOperationForm setOpenDialog={setOpenAddDialog} setFormValuesToSave={setFormValuesToSave} />
+          <AddOperationForm setOpenDialog={setOpenAddDialog} jobNumber={jobNumber} setItemsUpdated={setItemsUpdated}  />
           </div>
         </Dialog>
 

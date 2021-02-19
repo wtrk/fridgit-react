@@ -45,6 +45,7 @@ const PriceRule = () => {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
+        setItemsBackup(response.data)
         return setIsloading(false)
       });
     };
@@ -59,6 +60,18 @@ const PriceRule = () => {
       }
     },
     {
+      name: "priority"
+    },
+    {
+      name: "clients",
+      label: "Client",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return value ? value.map(e=>e.name).toString():"";
+        },
+      },
+    },
+    {
       name: "name",
       label: "Name",
       options: {
@@ -68,7 +81,7 @@ const PriceRule = () => {
             <div>
               <a
                 onClick={() => {
-                  handleAdd("Edit Price Rule - "+tableMeta.rowData[1],tableMeta.rowData[0]);
+                  handleAdd("Edit Price Rule - "+tableMeta.rowData[2],tableMeta.rowData[0]);
                 }}
               >
                 {value}
@@ -179,14 +192,34 @@ const PriceRule = () => {
 
   const handleAdd = (title, priceRuleId) => {
     setOpenAddForm(true);
-    setPriceRuleID(priceRuleId);
     setFormTitle(title);
+    setPriceRuleID(priceRuleId);
   };
   const handleCloseAddForm = () => setOpenAddForm(false)
 
 
+
+  // await axios(`${process.env.REACT_APP_BASE_URL}/priceRules/priceRuleFromClient/${ddddd}`, {
+  //   responseType: "json",
+  // }).then((response) => {
+  //   setItems(response.data)
+  //   return setIsloading(false)
+  // });
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
+    if(newValue.length===0) setItems(itemsBackup); else{
+      setItems(
+        itemsBackup.filter((e) => {
+          if (newValue.includes(e.job_number)) return true;
+          if (newValue.includes(e.operation_number)) return true;
+          if (newValue.includes(e.sn)) return true;
+        })
+      );
+
+    }
+
+
+
     if(itemsBackup.length===0) setItemsBackup(items)
     setSearchValue(newValue)
     if(newValue===null) setItems(itemsBackup); else setItems([newValue])
@@ -250,7 +283,7 @@ const PriceRule = () => {
         <Dialog
           onClose={() => setFilterDialog(false)}
           maxWidth={"xl"}
-          fullWidth={true}
+          fullWidth
           aria-labelledby="customized-dialog-title"
           open={filterDialog}
         >
