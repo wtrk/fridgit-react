@@ -6,7 +6,7 @@ import {
   Slide,
   TextField,
   Chip,
-  CircularProgress,
+  CircularProgress,Button,Tooltip,Zoom
 } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
@@ -15,6 +15,7 @@ import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
+
 import axios from 'axios';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -67,7 +68,10 @@ const PriceRule = () => {
       label: "Client",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
-          return value ? value.map(e=>e.name).toString():"";
+          let clientsValue=value.map(e=>e.name).toString()
+          return  <Tooltip TransitionComponent={Zoom} placement="right" arrow title={clientsValue}>
+          <span>{clientsValue.slice(0, 15)}</span>
+        </Tooltip>
         },
       },
     },
@@ -81,7 +85,7 @@ const PriceRule = () => {
             <div>
               <a
                 onClick={() => {
-                  handleAdd("Edit Price Rule - "+tableMeta.rowData[2],tableMeta.rowData[0]);
+                  handleAdd("Edit Price Rule - "+tableMeta.rowData[3],tableMeta.rowData[0]);
                 }}
               >
                 {value}

@@ -22,6 +22,7 @@ import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import TabsOnTop from "./Components/TabsOnTop.js";
 import SnDialog from "./Components/SnDialog.js";
 import OperationDialog from "./Components/OperationDialog.js";
+import CustomToolbarSelect from "./Components/CustomToolbarSelect.js";
 
 // Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
 const top100Films = [];
@@ -44,6 +45,7 @@ const [clientsList, setClientsList] = useState([]);
 const [suppliersList, setSuppliersList] = useState([]);
 const [openOperationDialog,setOpenOperationDialog] = useState(false);
 const [itemsBackup, setItemsBackup] = useState([]); //Search
+const [statusUpdated, setStatusUpdated] = useState([]); //Status Updated
 
 useEffect(() => {
   const fetchData = async () => {
@@ -71,6 +73,11 @@ useEffect(() => {
       setSuppliersList(response.data)
       return response.data
     });
+  };
+  fetchData();
+}, []);
+useEffect(() => {
+  const fetchData = async () => {
     await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations`, {
       responseType: "json",
     }).then((response) => {
@@ -83,7 +90,7 @@ useEffect(() => {
     });
   };
   fetchData();
-}, []);
+}, [statusUpdated]);
   /************************* -Tabledata START- ***************************/
   const columns = [
     {
@@ -283,19 +290,9 @@ useEffect(() => {
         <CustomToolbar listener={handleOpenAddDialog} handleFilter={handleFilter}/>
       );
     },
-    onRowsDelete: (rowsDeleted, dataRows) => {
-      const idsToDelete = rowsDeleted.data.map((d) => items[d.dataIndex]._id); // array of all ids to to be deleted
-      axios
-        .delete(
-          `${process.env.REACT_APP_BASE_URL}/liveOperations/${idsToDelete}`,
-          {
-            responseType: "json",
-          }
-        )
-        .then((response) => {
-          console.log("deleted");
-        });
-    },
+    customToolbarSelect: (selectedRows, displayData, setSelectedRows) => {
+     return  <CustomToolbarSelect setStatusUpdated={setStatusUpdated} selectedRows={selectedRows} displayData={displayData} setSelectedRows={setSelectedRows} setItems={setItems} items={items}  />
+    }
   };
   const handleOpenAddDialog = () => {
     //setOpenAddDialog(true);

@@ -52,6 +52,17 @@ const Country = () => {
     },
     {
       name: "code",
+      label: "flag",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          if(value)
+          return <img src={`https://www.countryflags.io/${value}/flat/32.png`}/>
+          
+        },
+      },
+    },
+    {
+      name: "code",
       options: {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {

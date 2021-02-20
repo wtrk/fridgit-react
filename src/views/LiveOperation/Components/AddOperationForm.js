@@ -217,13 +217,7 @@ useEffect(()=>{
     snValueFirstRun.current = false;
   }else{
     setSelectedSn(
-      cabinetsList.filter((e) => {
-        let showRow = false;
-        snFilled.forEach((sn) => {
-          showRow = sn == e.sn ? true : false;
-        });
-        return showRow;
-      })
+      cabinetsList.filter((e) => snFilled.includes(e.sn))
     );
   }
 },[snFilled])
@@ -289,7 +283,6 @@ const handleSaveForm = async () => {
     last_status_user: "-",
     last_status_update: currentDate,
   }));
-console.log("selectedSupplierId",selectedSupplierId)
   const statusHistoryUnassigned = formValuesToSave.map((e) => ({
     "status":"Unassigned",
     "user":"User 1",
@@ -327,7 +320,6 @@ console.log("selectedSupplierId",selectedSupplierId)
       data: statusHistory,
     })
     
-  console.log("selectedSn",selectedSn)
   
   selectedSn.forEach((e) => {
     axios({

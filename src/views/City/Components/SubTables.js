@@ -16,10 +16,9 @@ import {
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
-import CustomInput from "components/CustomInput/CustomInput.js";
 import { makeStyles } from "@material-ui/core/styles";
 import CustomToolbar from "CustomToolbar";
-import Alert from '@material-ui/lab/Alert';
+import {Autocomplete, Alert} from '@material-ui/lab';
 
 import MUIDataTable from "mui-datatables";
 
@@ -49,18 +48,22 @@ const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [modal_Title, setmodal_Title] = useState("Add"); //modal title
+    const [countryValue, setCountryValue] = useState({});
     const [alias, setAlias] = useState([]);
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
+    const countryRef = useRef()
     const submitRef = useRef()
     const [formValues, setFormValues] = useState({
       code: "",
-      name: ""
+      name: "",
+      country: "",
     });
     const [formErrors, setFormErrors] = useState({
       code: {error:false,msg:""},
-      name: {error:false,msg:""}
+      name: {error:false,msg:""},
+      country: {error:false,msg:""}
     });
     
   useEffect(()=>{
@@ -73,6 +76,7 @@ const SubTables = (props) => {
             responseType: "json",
           }
         ).then((response) => {
+          setCountryValue(props.countriesList.filter(e=> e._id==response.country)[0])
           setFormValues(response.data);
           setAlias(response.data.alias);
         });
@@ -115,7 +119,8 @@ const SubTables = (props) => {
     if(keyCode===13){
       switch (target.name){
         case "code": nameRef.current.focus();break;
-        case "name": submitRef.current.focus();break;
+        case "name": countryRef.current.focus();break;
+        case "country": submitRef.current.focus();break;
         default: codeRef.current.focus();
       }
     }
@@ -124,11 +129,15 @@ const handleChangeForm = (e) => {
   const { name, value } = e.target;
   setFormValues({ ...formValues, [name]: value });
 };
+const handleChangeCountry = (e, newValue) =>{
+  setCountryValue(newValue)
+  if(newValue) setFormValues({ ...formValues, country: newValue._id });
+}
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
   }
-  
+  console.log("formValues,formValues",formValues)
   if (props.cityId) {
       await axios({
         method: "put",
@@ -152,7 +161,8 @@ const handleOnSubmit = async () => {
                setOpenAlertSuccess(true);
                setFormValues({
                  code: "",
-                 name: ""
+                 name: "",
+                 country: ""
                });
                props.handleClose()
              })
@@ -196,7 +206,7 @@ const validateInputHandler = (e) => {
 
       <div style={{ padding: "10px 30px" }}>
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={4}>
             <TextField
               id="codeInput"
               label="Code"
@@ -213,8 +223,7 @@ const validateInputHandler = (e) => {
               error={formErrors.code.error}
             />
           </Grid>
-          <Grid item xs={12} sm={2}></Grid>
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={4}>
             <TextField
               id="nameInput"
               label="Name"
@@ -229,6 +238,32 @@ const validateInputHandler = (e) => {
                 formErrors.name.error ? formErrors.name.msg : null
               }
               error={formErrors.name.error}
+            />
+          </Grid>
+          
+          <Grid item xs={12} sm={4}>
+            <Autocomplete
+              id="CountryInput"
+              options={props.countriesList || {}}
+              value={countryValue || {}}
+              getOptionLabel={(option) => {
+                return Object.keys(option).length!==0 ? option.name : "";
+              }}
+              fullWidth
+              onChange={handleChangeCountry}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Country"
+                  inputRef={countryRef}
+                  onKeyDown={keyPressHandler}
+                  onBlur={validateInputHandler}
+                  helperText={
+                    formErrors.country.error ? formErrors.country.msg : null
+                  }
+                  error={formErrors.country.error}
+                />
+              )}
             />
           </Grid>
           <Grid item xs={12}>
@@ -267,7 +302,12 @@ const validateInputHandler = (e) => {
                 filter: false,
                 customToolbar: () => {
                   return <CustomToolbar listener={add1RowInAlias} />;
-                }
+                },
+                onRowsDelete: (rowsDeleted, dataRows) => {
+                  const idsToDelete = rowsDeleted.data.map(d => alias[d.dataIndex]._id);
+                  const rowsToKeep=alias.filter(e=> !idsToDelete.includes(e._id))
+                  setAlias(rowsToKeep)
+                },
               }}
             />
           </Grid>

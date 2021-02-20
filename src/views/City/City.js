@@ -49,13 +49,19 @@ const City = () => {
   const [isLoading, setIsloading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [cityId, setCityID] = useState(); //modal title
-  const [RowID, setRowID] = useState(0); //current row
+  const [countriesList, setCountriesList] = useState([]);
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
 
   const [items, setItems] = useState([]); //table items
   useEffect(() => {
     const fetchData = async () => {
+      const countries = await axios(`${process.env.REACT_APP_BASE_URL}/countries`, {
+        responseType: "json",
+      }).then((response) => {
+        setCountriesList(response.data)
+        return response.data
+      });
       await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
         responseType: "json",
       }).then((response) => {
@@ -94,6 +100,21 @@ const City = () => {
     },
     {
       name: "name"
+    },
+    {
+      name: "country",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let countryValue
+          if(countriesList.filter(e=> e._id===value)[0]){
+            countryValue = countriesList.filter((e) => e._id == value )[0];
+          }
+          return !countryValue ? "-" : <div className="d-flex">
+                  <img src={`https://www.countryflags.io/${countryValue.code}/flat/32.png`}/> &nbsp; 
+                  {countryValue.name}
+                </div>
+        },
+      },
     }
   ];
 
@@ -200,6 +221,7 @@ const City = () => {
             title={formTitle}
             handleClose={handleCloseAddForm}
             cityId={cityId}
+            countriesList={countriesList}
           />
         </Dialog>
         {/*********************** FILTER start ****************************/}

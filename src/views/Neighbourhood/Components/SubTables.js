@@ -92,12 +92,6 @@ const SubTables = (props) => {
       setAlias([...alias.filter(e=>e.name!==""), { name: target.value }]);
     }
   }
-  const options = {
-    filter: false,
-    customToolbar: () => {
-      return <CustomToolbar listener={add1RowInAlias} />;
-    }
-  };
   useEffect(()=>{
     setFormValues({ ...formValues, alias:alias })
   },[alias])
@@ -284,7 +278,17 @@ const validateInputHandler = (e) => {
                   },
                 },
               ]}
-              options={options}
+              options={{
+                filter: false,
+                customToolbar: () => {
+                  return <CustomToolbar listener={add1RowInAlias} />;
+                },
+                onRowsDelete: (rowsDeleted, dataRows) => {
+                  const idsToDelete = rowsDeleted.data.map(d => alias[d.dataIndex]._id);
+                  const rowsToKeep=alias.filter(e=> !idsToDelete.includes(e._id))
+                  setAlias(rowsToKeep)
+                },
+              }}
             />
           </Grid>
 

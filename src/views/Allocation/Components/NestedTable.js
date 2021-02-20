@@ -83,6 +83,11 @@ const NestedTable = (props) => {
                 noMatch: !props.isLoading && 'Sorry, there is no matching data to display'
             },
         },
+        onRowsDelete: (rowsDeleted, dataRows) => {
+          const idsToDelete = rowsDeleted.data.map(d => props.arrayName[d.dataIndex]._id);
+          const rowsToKeep=props.arrayName.filter(e=> !idsToDelete.includes(e._id))
+          props.setArrayName(rowsToKeep)
+        }
       }}
     />
   );
