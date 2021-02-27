@@ -52,7 +52,7 @@ const Neighbourhood = () => {
   const [citiesList, setCitiesList] = useState([]);
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
-
+  const [itemsBackup, setItemsBackup] = useState([]);
   const [items, setItems] = useState([]); //table items
   useEffect(() => {
     const fetchData = async () => {
@@ -66,6 +66,7 @@ const Neighbourhood = () => {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
+        setItemsBackup(response.data)
         return setIsloading(false);
       });
     };
@@ -159,39 +160,39 @@ const Neighbourhood = () => {
 
 
   const handleCloseAddForm = () => setOpenAddForm(false)
-
   //Search component ---------------START--------------
-  const [itemsBackup, setItemsBackup] = useState([]);
-  const [searchValue, setSearchValue] = useState({});
   const handleChangeSearch = (e, newValue) => {
-    if(itemsBackup.length===0) setItemsBackup(items)
-    setSearchValue(newValue)
-    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+    if(newValue.length===0) setItems(itemsBackup); else{
+      let valueToSearch=[]
+      newValue.forEach(newValueEntry=>{
+        valueToSearch.push(...itemsBackup.filter((e,i) => {
+          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
+            if (e.name.toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+          }
+        }))
+      })
+      setItems(valueToSearch)
+    }
   }
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
       <Autocomplete
-        id="tags-filled"
-        options={items || {}}
-        value={searchValue || {}}
-        getOptionLabel={(option) => option.name || ""}
+        multiple
+        freeSolo
+        limitTags={3}
+        id="tags-standard"
+        options={[]}
+        getOptionLabel={(option) => option}
         onChange={handleChangeSearch}
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
         renderInput={(params) => (
           <TextField
             {...params}
-            variant="filled"
-            label=""
-            placeholder="Search by Name"
+            variant="standard"
+            placeholder="Search Data"
+            label="Filter by Name"
           />
         )}
       />

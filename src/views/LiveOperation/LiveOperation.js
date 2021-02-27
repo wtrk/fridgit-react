@@ -44,6 +44,7 @@ const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
 const [clientsList, setClientsList] = useState([]);
 const [suppliersList, setSuppliersList] = useState([]);
 const [openOperationDialog,setOpenOperationDialog] = useState(false);
+const [operationId,setOperationId] = useState();
 const [itemsBackup, setItemsBackup] = useState([]); //Search
 const [statusUpdated, setStatusUpdated] = useState([]); //Status Updated
 
@@ -105,7 +106,7 @@ useEffect(() => {
       label: "Creation Date",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
-          return <Moment format="DD/MM/YYYY">{value}</Moment>;
+          return <Moment  format="DD MMM YYYY">{value}</Moment>;
         },
       },
     },
@@ -116,7 +117,7 @@ useEffect(() => {
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
             <div>
-              <a onClick={() => setOpenOperationDialog(true)}>{value}</a>
+              <a onClick={()=>handleOpenOperationDialog(tableMeta.rowData[0])}>{value}</a>
             </div>
           );
         },
@@ -272,7 +273,7 @@ useEffect(() => {
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
           if (value) {
-            return <Moment format="DD/MM/YYYY">{value}</Moment>;
+            return <Moment  format="DD MMM YYYY">{value}</Moment>;
           }
         },
       },
@@ -294,6 +295,10 @@ useEffect(() => {
      return  <CustomToolbarSelect setStatusUpdated={setStatusUpdated} selectedRows={selectedRows} displayData={displayData} setSelectedRows={setSelectedRows} setItems={setItems} items={items}  />
     }
   };
+  const handleOpenOperationDialog = (id)=>{
+    setOpenOperationDialog(true)
+    setOperationId(id)
+  }
   const handleOpenAddDialog = () => {
     //setOpenAddDialog(true);
     //let path = `/admin/LiveTransportation_1`;
@@ -303,18 +308,33 @@ useEffect(() => {
   const handleFilter = () => {
     setFilterDialog(true);
   };
-  /************************* -Tabledata END- ***************************/
-    //Search component ---------------START--------------
-    const handleChangeSearch = (e, newValue) => {
-      if(newValue.length===0) setItems(itemsBackup); else
-      setItems(
-        itemsBackup.filter((e) => {
-          if (newValue.includes(e.job_number)) return true;
-          if (newValue.includes(e.operation_number)) return true;
-          if (newValue.includes(e.sn)) return true;
-        })
-      );
+
+    
+  //Search component ---------------START--------------
+  const handleChangeSearch = (e, newValue) => {
+    if(newValue.length===0) setItems(itemsBackup); else{
+      let valueToSearch=[]
+      newValue.forEach(newValueEntry=>{
+        valueToSearch.push(...itemsBackup.filter((e,i) => {
+          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
+            if (e.job_number.toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+            if (e.operation_number.toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+            if (e.sn.toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+          }
+        }))
+      })
+      setItems(valueToSearch)
     }
+  }
+  //Search component ---------------END--------------
+
+
   return (
     <div>
       <TabsOnTop
@@ -365,7 +385,7 @@ useEffect(() => {
           open={openOperationDialog}
           onClose={() => setOpenOperationDialog(false)}
         >
-          <OperationDialog setOpenDialog={setOpenOperationDialog} />
+          <OperationDialog setOpenDialog={setOpenOperationDialog} operationId={operationId} />
         </Dialog>
 
         {/*********************** -Sn Dialog START- ****************************/}

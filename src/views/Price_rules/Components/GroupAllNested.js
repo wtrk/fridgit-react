@@ -31,6 +31,9 @@ const GroupAllNested = (props) => {
           <Grid item xs={12}>
             <NestedTable arrayName={props.arrayNames.tiersOut} setArrayName={props.setArrayNames.setTiersOut} title="Tiers Out" dbTable="tiers" />
           </Grid>
+          <Grid item xs={12}>
+            <NestedTable arrayName={props.arrayNames.operations} setArrayName={props.setArrayNames.setOperations} title="Operations" dbTable="operations" />
+          </Grid>
     </>
   );
 };

@@ -50,24 +50,38 @@ const SubTables = (props) => {
     const [openAlertError, setOpenAlertError] = useState(false);
     const [modal_Title, setmodal_Title] = useState("Add"); //modal title
     const [tiersList, setTiersList] = useState([]); //table items
-    const [tierValue, setTierValue] = useState({}); //table items
+    const [tierValue, setTierValue] = useState({});
+    const [cityValue, setCityValue] = useState({});
+    const [neighbourhoodValue, setNeighbourhoodValue] = useState({});
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
     const tierRef = useRef()
+    const cityRef = useRef()
     const neighbourhoodRef = useRef()
+    const mobileRef = useRef()
     const submitRef = useRef()
+    const [formLocationValues, setFormLocationValues] = useState({
+      city_id: "",
+      neighbourhood_id: "",
+      mobile: ""
+    });
+
     const [formValues, setFormValues] = useState({
       code: "",
       name: "",
       tier_id: "",
-      neighbourhood_id: ""
+      location: {...formLocationValues},
     });
     const [formErrors, setFormErrors] = useState({
       code: {error:false,msg:""},
       name: {error:false,msg:""},
       tier_id: {error:false,msg:""},
-      neighbourhood_id: {error:false,msg:""}
+      location: {
+        city_id: {error:false,msg:""},
+        neighbourhood_id: {error:false,msg:""},
+        mobile: {error:false,msg:""}
+      },
     });
     
   useEffect(()=>{
@@ -92,35 +106,20 @@ const SubTables = (props) => {
             return response.data
           }).then((response)=>{
             setTierValue(tiers.filter(e=> e._id==response.tier_id)[0])
-            
+            setCityValue(props.citiesList.filter(e=> e._id==response.location.city_id)[0])
+            setNeighbourhoodValue(props.neighbourhoodsList.filter(e=> e._id==response.location.neighbourhood_id)[0])
+            setFormLocationValues(response.location)
           });
         }
       };
       fetchData();
   },[])
-  const add1RowInWarehouse = () => {
-    setWarehouse([...warehouse, { name: "" }]);
-  };
-  const [warehouse, setWarehouse] = useState([
-    { name: "Jounieh" },
-    { name: "Abha" },
-  ]);
-  const [warehouseSelect, setWarehouseSelect] = React.useState("");
-  const handleChangeWarehouseSelect = (event) => {
-    setWarehouseSelect(event.target.value);
-  };
-
-  const add1RowInAlias = () => {
-    setAlias([...alias, { name: "" }]);
-  };
-  const [alias, setAlias] = useState([
-    { name: "Example 1" },
-    { name: "Example 2" },
-  ]);
-  const [aliasSelect, setAliasSelect] = React.useState("");
-  const handleChangeAliasSelect = (event) => {
-    setAliasSelect(event.target.value);
-  };
+  useEffect(()=>{
+    setFormValues({
+      ...formValues,
+      location: formLocationValues,
+    });
+  },[formLocationValues])
   
   const keyPressHandler = (e) => {
     const { keyCode, target } = e
@@ -128,8 +127,10 @@ const SubTables = (props) => {
       switch (target.name){
         case "code": nameRef.current.focus();break;
         case "name": tierRef.current.focus();break;
-        case "tier_id": neighbourhoodRef.current.focus();break;
-        case "neighbourhood_id": submitRef.current.focus();break;
+        case "tier_id": cityRef.current.focus();break;
+        case "city_id": neighbourhoodRef.current.focus();break;
+        case "neighbourhood_id": mobileRef.current.focus();break;
+        case "mobile": submitRef.current.focus();break;
         default: codeRef.current.focus();
       }
     }
@@ -142,7 +143,21 @@ const handleChangeTier = (e, newValue) =>{
   setTierValue(newValue)
   if(newValue) setFormValues({ ...formValues, tier_id: newValue._id });
 }
+
+const handleChangeCity = (e, newValue) =>{
+  setCityValue(newValue)
+  if(newValue) setFormLocationValues({ ...formLocationValues, city_id: newValue._id });
+}
+const handleChangeNeighbourhood = (e, newValue) =>{
+  setNeighbourhoodValue(newValue)
+  if(newValue) setFormLocationValues({ ...formLocationValues, neighbourhood_id: newValue._id });
+}
+const handleChangeLocation = (e) => {
+  const { name, value } = e.target;
+  setFormLocationValues({ ...formLocationValues, [name]: value});
+};
 const handleOnSubmit = async () => {
+  console.log("f",formLocationValues)
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
   }
@@ -172,7 +187,11 @@ const handleOnSubmit = async () => {
         code: "",
         name: "",
         tier_id:"",
-        neighbourhood_id:""
+        location: {
+          city_id: "",
+          neighbourhood_id: "",
+          mobile: ""
+        }
       });
       props.handleClose()
     })
@@ -267,6 +286,72 @@ const validateInputHandler = (e) => {
                   error={formErrors.tier_id.error}
                 />
               )}
+            />
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Autocomplete
+              id="CityInput"
+              options={props.citiesList || {}}
+              value={cityValue || {}}
+              getOptionLabel={(option) => {
+                return Object.keys(option).length!==0 ? option.name : "";
+              }}
+              fullWidth
+              onChange={handleChangeCity}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="City"
+                  inputRef={cityRef}
+                  onKeyDown={keyPressHandler}
+                  onBlur={validateInputHandler}
+                  helperText={
+                    formErrors.location.city_id.error ? formErrors.location.city_id.msg : null
+                  }
+                  error={formErrors.location.city_id.error}
+                />
+              )}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Autocomplete
+              id="neighbourhoodInput"
+              options={props.neighbourhoodsList || {}}
+              value={neighbourhoodValue || {}}
+              getOptionLabel={(option) => {
+                return Object.keys(option).length!==0 ? option.name : "";
+              }}
+              fullWidth
+              onChange={handleChangeNeighbourhood}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Neighbourhood"
+                  inputRef={neighbourhoodRef}
+                  onKeyDown={keyPressHandler}
+                  onBlur={validateInputHandler}
+                  helperText={
+                    formErrors.location.neighbourhood_id.error ? formErrors.location.neighbourhood_id.msg : null
+                  }
+                  error={formErrors.location.neighbourhood_id.error}
+                />
+              )}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="mobileInput"
+              label="Mobile Number"
+              name="mobile"
+              onChange={handleChangeLocation}
+              fullWidth
+              value={formLocationValues.mobile || ""}
+              inputRef={mobileRef}
+              onKeyDown={keyPressHandler}
+              onBlur={validateInputHandler}
+              helperText={formErrors.location.mobile.error ? formErrors.location.mobile.msg : null}
+              error={formErrors.location.mobile.error}
             />
           </Grid>
 

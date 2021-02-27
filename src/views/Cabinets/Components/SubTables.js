@@ -29,14 +29,17 @@ const SubTables = (props) => {
     const [openAlertError, setOpenAlertError] = useState(false);
     const [clientValue, setClientValue] = useState({});
     const [fridgesTypeValue, setfridgesTypeValue] = useState({});
+    const [oldIsNew, setOldIsNew] = useState();
     const classes = useStyles(); //custom css
     const snRef = useRef()
+    const sn2Ref = useRef()
     const typeRef = useRef()
     const brandRef = useRef()
     const clientRef = useRef()
     const submitRef = useRef()
     const [formValues, setFormValues] = useState({
       sn: "",
+      sn2: "",
       type: "",
       brand: "",
       client: "",
@@ -44,36 +47,40 @@ const SubTables = (props) => {
     });
     const [formErrors, setFormErrors] = useState({
       sn: {error:false,msg:""},
+      sn2: {error:false,msg:""},
       type: {error:false,msg:""},
       brand: {error:false,msg:""},
       client: {error:false,msg:""}
     });
     
-  useEffect(()=>{
-    snRef.current.focus()
-      const fetchData = async () => {
-        if (props.cabinetId) {
-          const cabinet = await axios(
-            `${process.env.REACT_APP_BASE_URL}/cabinets/${props.cabinetId}`,
-            {
-              responseType: "json",
-            }
-          ).then((response) => {
-            setFormValues(response.data);
-            return response.data
-          }).then((response)=>{
-            setClientValue(props.clientsList.filter(e=> e._id==response.client)[0])
-            setfridgesTypeValue(props.fridgesTypesList.filter(e=> e._id==response.type)[0])
-          });
-        }
-      };
-      fetchData();
-  },[])
+    useEffect(()=>{
+      snRef.current.focus()
+        const fetchData = async () => {
+          if (props.cabinetId) {
+            const cabinet = await axios(
+              `${process.env.REACT_APP_BASE_URL}/cabinets/${props.cabinetId}`,
+              {
+                responseType: "json",
+              }
+            ).then((response) => {
+              setFormValues(response.data);
+              return response.data
+            }).then((response)=>{
+              setClientValue(props.clientsList.filter(e=> e._id==response.client)[0])
+              setfridgesTypeValue(props.fridgesTypesList.filter(e=> e._id==response.type)[0])
+              setOldIsNew(response.is_new)
+            });
+            
+          }
+        };
+        fetchData();
+    },[])
   const keyPressHandler = (e) => {
     const { keyCode, target } = e
     if(keyCode===13){
       switch (target.name){
-        case "sn": typeRef.current.focus();break;
+        case "sn": sn2Ref.current.focus();break;
+        case "sn2": typeRef.current.focus();break;
         case "type": brandRef.current.focus();break;
         case "brand": clientRef.current.focus();break;
         case "client": submitRef.current.focus();break;
@@ -83,7 +90,7 @@ const SubTables = (props) => {
 }
 const handleChangeCheckbox = (e) => {
   const { name, checked } = e.target;
-  setFormValues({ ...formValues, [name]: checked ? 1 : 0 });
+  setFormValues({ ...formValues, [name]: checked ? true : false });
 }
 const handleChangeForm = (e) => {
   const { name, value } = e.target;
@@ -101,8 +108,15 @@ const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
   }
-  
   if (props.cabinetId) {
+    const liveOperationBySn = await axios(
+      `${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${formValues.sn}`,{responseType: "json"}
+    ).then((response) => response.data)
+    if(liveOperationBySn.length || oldIsNew===formValues.is_new){
+      formValues.is_new=formValues.oldIsNew;
+    }else{
+      formValues.status=formValues.is_new ? "Operational" : "Needs test";
+    }
     await axios({
       method: "put",
       url: `${process.env.REACT_APP_BASE_URL}/cabinets/${props.cabinetId}`,
@@ -116,15 +130,17 @@ const handleOnSubmit = async () => {
       console.log(error);
     });
   } else {
+    const status=formValues.is_new ? "Operational" : "Needs test";
     await axios({
       method: "post",
       url: `${process.env.REACT_APP_BASE_URL}/cabinets/`,
-      data: [formValues],
+      data: [{...formValues,status}],
     })
     .then(function (response) {
       setOpenAlertSuccess(true);
       setFormValues({
         sn: "",
+        sn2: "",
         type: "",
         brand: "",
         client: ""
@@ -182,6 +198,21 @@ const validateInputHandler = (e) => {
               onBlur={validateInputHandler}
               helperText={formErrors.sn.error ? formErrors.sn.msg : null}
               error={formErrors.sn.error}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="sn2Input"
+              label="SN2"
+              name="sn2"
+              onChange={handleChangeForm}
+              fullWidth
+              value={formValues.sn2 || ""}
+              inputRef={sn2Ref}
+              onKeyDown={keyPressHandler}
+              onBlur={validateInputHandler}
+              helperText={formErrors.sn2.error ? formErrors.sn2.msg : null}
+              error={formErrors.sn2.error}
             />
           </Grid>
           

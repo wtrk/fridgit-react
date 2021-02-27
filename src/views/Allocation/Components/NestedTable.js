@@ -21,7 +21,6 @@ const NestedTable = (props) => {
   useEffect(()=>{
     const fetchData = async () => {
       let dbTable = props.dbTable
-      if(props.title==="operations") dbTable="cities"
       await axios(`${process.env.REACT_APP_BASE_URL}/${dbTable}`, {
         responseType: "json",
       }).then((response) => {

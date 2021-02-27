@@ -8,6 +8,7 @@ import {
   Chip,
   CircularProgress,Button,Tooltip,Zoom
 } from "@material-ui/core";
+import Moment from "react-moment";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 
@@ -109,6 +110,10 @@ const PriceRule = () => {
       },
     },
     {
+      name: "promise_day",
+      label: "Promise Day"
+    },
+    {
       name: "handling_in",
       label: "Handling In",
     },
@@ -201,60 +206,45 @@ const PriceRule = () => {
   };
   const handleCloseAddForm = () => setOpenAddForm(false)
 
-
-
-  // await axios(`${process.env.REACT_APP_BASE_URL}/priceRules/priceRuleFromClient/${ddddd}`, {
-  //   responseType: "json",
-  // }).then((response) => {
-  //   setItems(response.data)
-  //   return setIsloading(false)
-  // });
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
     if(newValue.length===0) setItems(itemsBackup); else{
-      setItems(
-        itemsBackup.filter((e) => {
-          if (newValue.includes(e.job_number)) return true;
-          if (newValue.includes(e.operation_number)) return true;
-          if (newValue.includes(e.sn)) return true;
-        })
-      );
-
+      let valueToSearch=[]
+      newValue.forEach(newValueEntry=>{
+        valueToSearch.push(...itemsBackup.filter((e,i) => {
+          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
+            if (e.name.toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+            if (e.clients.map(eSub=>eSub.name).toString().toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+          }
+        }))
+      })
+      setItems(valueToSearch)
     }
-
-
-
-    if(itemsBackup.length===0) setItemsBackup(items)
-    setSearchValue(newValue)
-    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
   }
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
-        id="tags-filled"
-        options={items || {}}
-        value={searchValue || {}}
-        getOptionLabel={(option) => option.name || ""}
-        onChange={handleChangeSearch}
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="filled"
-            label=""
-            placeholder="Search by Name"
-          />
-        )}
-      />
+    <Autocomplete
+      multiple
+      freeSolo
+      limitTags={3}
+      id="tags-standard"
+      options={[]}
+      getOptionLabel={(option) => option}
+      onChange={handleChangeSearch}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="standard"
+          placeholder="Search Data"
+          label="Filter by Name or Client"
+        />
+      )}
+    />
 
       {!isLoading ? (
         <MuiThemeProvider theme={datatableTheme}>

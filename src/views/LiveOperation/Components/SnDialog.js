@@ -57,7 +57,7 @@ const SnDialog = (props) => {
   const DialogTabsContent = (props) => {
     if (props.tab === 1) {
       return (
-        <Timeline align="alternate">
+        <Timeline align="right">
           <TimelineItem>
             <TimelineOppositeContent>
               <Typography>Created</Typography>
@@ -236,7 +236,7 @@ const SnDialog = (props) => {
                   <Avatar>JO</Avatar>
 
                   <div>
-                    <strong>Customer</strong>
+                    <strong>Client</strong>
                     <br />
                     Jollychic
                   </div>

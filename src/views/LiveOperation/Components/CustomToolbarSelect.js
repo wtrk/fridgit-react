@@ -1,52 +1,34 @@
-import React from "react";
-import IconButton from "@material-ui/core/IconButton";
-import Tooltip from "@material-ui/core/Tooltip";
+import React, {useState,useRef,useEffect} from "react";
+import { IconButton, Tooltip, Slide, Dialog } from "@material-ui/core";
 import axios from 'axios';
 import {Delete,Update} from "@material-ui/icons";
+import UpdateStatusForm from "./UpdateStatusForm.js";
 
-const defaultToolbarSelectStyles = {
-  iconButton: {
-  },
-  iconContainer: {
-    marginRight: "24px",
-  },
-  inverseIcon: {
-    transform: "rotate(90deg)",
-  },
-};
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
+
+
 const CustomToolbarSelect = (props) => {
-  
+  const [openUpdateStatusForm,setOpenUpdateStatusForm] = useState(false); //for modal
+  const [dataToUpdate,setDataToUpdate] = useState({});
+
   const handleClickUpdateStatus = () => {
-    const idsToUpdate = props.selectedRows.data.map(row => props.items[row.dataIndex]);
-    console.log(idsToUpdate)
-    idsToUpdate.forEach(async e=>{
-      await axios({
-        method: "put",
-        url: `${process.env.REACT_APP_BASE_URL}/liveOperations/${e._id}`,
-        data: [{
-          status: "in progress",
-          last_status_update: new Date(),
-        }]
-      })
-      .then((response) => {
-        props.setStatusUpdated(props.selectedRows)
-        props.setSelectedRows([]);
-      });
-      await axios({
-        method: "post",
-        url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
-        data: {
-          status: "in progress",
-          user: "User 1",
-          notes: "",
-          operation_number: e.operation_number,
-        },
-      })
-    })
-    // console.log("displayData",props.displayData)
-    props.setSelectedRows([]);
+    setDataToUpdate(
+      props.selectedRows.data.map((row) => props.items[row.dataIndex].operation_number)
+    );
   };
   
+const dataToUpdateValueFirstRun = useRef(true);
+useEffect(()=>{
+  if (dataToUpdateValueFirstRun.current) {
+    dataToUpdateValueFirstRun.current = false;
+  }else{
+    setOpenUpdateStatusForm(true)
+    
+  }
+},[dataToUpdate])
   
   const handleClickDelete = () => {
     const idsToDelete = props.selectedRows.data.map(row => props.displayData[row.index].data[0]); 
@@ -64,18 +46,39 @@ const CustomToolbarSelect = (props) => {
   };
 
   return (
-    <div className="d-flex flex-row-reverse">
-      <Tooltip title={"Delete selected"}>
-        <IconButton onClick={handleClickDelete}>
-          <Delete />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title={"Batch Update Status"}>
-        <IconButton onClick={handleClickUpdateStatus}>
-          <Update />
-        </IconButton>
-      </Tooltip>
-    </div>
+    <>
+      <div className="d-flex flex-row-reverse">
+        <Tooltip title={"Delete selected"}>
+          <IconButton onClick={handleClickDelete}>
+            <Delete />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={"Batch Update Status"}>
+          <IconButton onClick={handleClickUpdateStatus}>
+            <Update />
+          </IconButton>
+        </Tooltip>
+      </div>
+      {/*********************** -Add START- ****************************/}
+      <Dialog
+        maxWidth={"lg"}
+        fullWidth
+        TransitionComponent={Transition}
+        open={openUpdateStatusForm}
+        onClose={() => setOpenUpdateStatusForm(false)}
+      >
+        <div style={{ minHeight: "80vh", overflowX: "hidden" }}>
+          <UpdateStatusForm
+            dataToUpdate={dataToUpdate}
+            items={props.items}
+            setStatusUpdated={props.setStatusUpdated}
+            setSelectedRows={props.setSelectedRows}
+            selectedRows={props.selectedRows}
+            setOpenUpdateStatusForm={setOpenUpdateStatusForm}
+          />
+        </div>
+      </Dialog>
+    </>
   );
 };
 

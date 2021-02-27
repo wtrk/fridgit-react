@@ -25,8 +25,8 @@ import {Autocomplete, Alert} from '@material-ui/lab';
 const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
-    const [cityValue, setCityValue] = useState({}); //table items
-    const [neighbourhoodValue, setNeighbourhoodValue] = useState({}); //table items
+    const [cityValue, setCityValue] = useState({});
+    const [neighbourhoodValue, setNeighbourhoodValue] = useState({});
     const classes = useStyles(); //custom css
     const codeRef = useRef()
     const nameRef = useRef()
@@ -41,7 +41,7 @@ const SubTables = (props) => {
     const [formLocationValues, setFormLocationValues] = useState({
       city_id: "",
       neighbourhood_id: "",
-        mobile: ""
+      mobile: ""
     });
     const [formValues, setFormValues] = useState({
       code: "",
@@ -130,7 +130,6 @@ const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
   }
-  
   if (props.storeId) {
     await axios({
       method: "put",
@@ -280,7 +279,7 @@ const validateInputHandler = (e) => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Cities"
+                  label="City"
                   inputRef={cityRef}
                   onKeyDown={keyPressHandler}
                   onBlur={validateInputHandler}
@@ -305,7 +304,7 @@ const validateInputHandler = (e) => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Neighbourhoods"
+                  label="Neighbourhood"
                   inputRef={neighbourhoodRef}
                   onKeyDown={keyPressHandler}
                   onBlur={validateInputHandler}

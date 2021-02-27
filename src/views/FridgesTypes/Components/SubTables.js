@@ -97,6 +97,11 @@ const handleChangeForm = (e) => {
   const { name, value } = e.target;
   setFormValues({ ...formValues, [name]: value });
 };
+
+useEffect(()=>{
+  formValues.cbm=(formValues.width * formValues.height * formValues.length).toFixed(2)
+},[formValues])
+
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
@@ -295,6 +300,7 @@ const validateInputHandler = (e) => {
               inputRef={cbmRef}
               onKeyDown={keyPressHandler}
               onBlur={validateInputHandler}
+              disabled={true}
               helperText={
                 formErrors.cbm.error ? formErrors.cbm.msg : null
               }

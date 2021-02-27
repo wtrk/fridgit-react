@@ -16,7 +16,7 @@ const TabsOnTopFromStatus = (props) => {
   };
   const tabsTitle = [ 
     // ...new Set(props.items.map((e) => e.status)) ---- get unique status object from items
-    "In Progress","Completed","Failed","On Hold","Assigned","Unassigned","Accepted","Canceled"
+    "Operational","Needs Repair","Needs Test","Damaged","In Store","In Warehouse","Needs Preventive"
   ];
   const handleChangeTabs = (event, newIndex) => {
     let status = document.querySelector(`#full-width-tab-${newIndex}`)

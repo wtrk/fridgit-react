@@ -83,16 +83,15 @@ const LiveOperationAdd = () => {
       label: "Initiation Address",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
+          if(value){
           let cityValue = "-";
-          if (citiesList.filter((e) => e._id == value.city_id)[0]) {
-            cityValue = citiesList.filter((e) => e._id == value.city_id)[0]
-              .name;
-          }
           let neighbourhoodValue = "-";
-          if (neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]) {
-            neighbourhoodValue = neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]
-              .name;
-          }
+            if (citiesList.filter((e) => e._id == value.city_id)[0]) {
+              cityValue = citiesList.filter((e) => e._id == value.city_id)[0].name;
+            }
+            if (neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]) {
+              neighbourhoodValue = neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0].name;
+            }
           return (
             <div style={{ width: 230, display: "flex", alignItems: "center" }}>
               <div className="avatar_circle">
@@ -109,6 +108,7 @@ const LiveOperationAdd = () => {
               </div>
             </div>
           );
+        }
         },
       },
     },
@@ -117,16 +117,15 @@ const LiveOperationAdd = () => {
       label: "Execution Address",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
+          if(value){
           let cityValue = "-";
-          if (citiesList.filter((e) => e._id == value.city_id)[0]) {
-            cityValue = citiesList.filter((e) => e._id == value.city_id)[0]
-              .name;
-          }
           let neighbourhoodValue = "-";
-          if (neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]) {
-            neighbourhoodValue = neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]
-              .name;
-          }
+            if (citiesList.filter((e) => e._id == value.city_id)[0]) {
+              cityValue = citiesList.filter((e) => e._id == value.city_id)[0].name;
+            }
+            if (neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]) {
+              neighbourhoodValue = neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0].name;
+            }
           return (
             <div style={{ width: 230, display: "flex", alignItems: "center" }}>
               <div className="avatar_circle">
@@ -143,6 +142,7 @@ const LiveOperationAdd = () => {
               </div>
             </div>
           );
+        }
         },
       },
     },

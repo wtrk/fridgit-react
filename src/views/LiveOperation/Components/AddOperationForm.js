@@ -15,8 +15,10 @@ import {
   CircularProgress,
   IconButton,
 } from "@material-ui/core";
+import { MuiThemeProvider } from "@material-ui/core/styles";
+import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import Autocomplete from "@material-ui/lab/Autocomplete";
-import { Close, Save,Search} from "@material-ui/icons";
+import { Close, Save, Search, Check} from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import MUIDataTable from "mui-datatables";
 
@@ -49,9 +51,12 @@ const AddOperationForm = (props) => {
   const [citiesList, setCitiesList] = useState({});
   const [warehouseValue, setWarehouseValue] = useState({});
   const [warehousesList, setWarehousesList] = useState({});
+  const [tiersList, setTiersList] = useState({});
   const [cityOut, setCityOut] = useState({});
   const [neighbourhoodOut, setNeighbourhoodOut] = useState({});
-  const [storeValue, setStoreValue] = useState({});
+  const [country, setCountry] = useState({});
+  const [tierOut, setTierOut] = useState({});
+  const [storeValue, setStoreValue] = useState([]);
   const [storesList, setStoresList] = useState({});
   const [fridgeTypeValue, setFridgeTypeValue] = useState({});
   const [fridgeTypesList, setFridgeTypesList] = useState({});
@@ -60,105 +65,99 @@ const AddOperationForm = (props) => {
   const [countriesList, setCountriesList] = useState({});
   const [serviceTypeValue, setServiceTypeValue] = useState({});
   const [serviceTypeList, setServiceTypeList] = useState({});
-  const [prices, setPrices] = useState({});
+  const [prices, setPrices] = useState([]);
   const [allocationRulesList, setAllocationRulesList] = useState({});
+  const [operationsList, setOperationsList] = useState([]);
   const [loadingResult, setLoadingResult] = useState(true);
 
   const [currentDate,setCurrentDate] = useState(new Date()); //table items
   const [operationType, setOperationType] = useState("");
   const [snFilled, setSnFilled] = useState([]);
   const [openSearch, setOpenSearch] = useState(false);
+  const [openPrices, setOpenPrices] = useState(false);
+  const [columnsForPrices, setColumnsForPrices] = useState(false);
   //After Save
   const [selectedSn, setSelectedSn] = useState([]);
-  const [selectedSupplierId, setSelectedSupplierId] = useState([]);
+  const [selectedSupplierId, setSelectedSupplierId] = useState();
+  const [saveClicked, setSaveClicked] = useState(1)
 
-  const optionsOfSnTable = {
+  const optionsForPrices = {
     filter:false,
-    customToolbarSelect: (selectedRows, displayData, setSelectedRows) => {
-      return <IconButton
-          onClick={() => {
-            const selectedRowsTotal=selectedRows.data.map(e=>e.index)
-            selectedRowsTotal.forEach(e=>{
-              setSnFilled(prevSN =>[...prevSN,cabinetsList[e].sn])
-            })
-            setOpenSearch(false)
-          }}
-          style={{marginRight: "24px",height: "48px",display: "block",}}
-        >
-          <Save />
-        </IconButton>
-    },
-    
+    selectableRows: false,
+    rowsPerPage: 100,
+    customFooter: () => ""
   };
-    const handleOpenSearch = () => {
-      setOpenSearch(true)
-      setCabinetsList(
-        cabinetsList.filter((e) => {
-          let showRow = true;
-          snFilled.forEach((sn) => {
-            if (sn == e.sn) {
-              showRow = false;
-            }
-          });
-          return showRow;
-        })
-      );
-    }
-
+  const handleCloseOpenPrices = () => {
+    setSaveClicked(1)
+    setOpenPrices(false)
+  }
     
   useEffect(()=>{
-    const fetchData = async () => {
-      await axios(
-        `${process.env.REACT_APP_BASE_URL}/cities`,
-        {responseType: "json"}
-      ).then((response) => {
-        setCitiesList(response.data)
-      })
-      await axios(
-        `${process.env.REACT_APP_BASE_URL}/warehouses`,
-        {responseType: "json"}
-      ).then((response) => {
-        setWarehousesList(response.data)
-      })
-      await axios(
-        `${process.env.REACT_APP_BASE_URL}/stores`,
-        {responseType: "json"}
-      ).then((response) => {
-        setStoresList(response.data)
-      })
-      await axios(
-        `${process.env.REACT_APP_BASE_URL}/fridgesTypes`,
-        {responseType: "json"}
-      ).then((response) => {
-        setFridgeTypesList(response.data)
-      })
-      await axios(
-        `${process.env.REACT_APP_BASE_URL}/serviceTypes`,
-        {responseType: "json"}
-      ).then((response) => {
-        setServiceTypeList(response.data)
-      })
-      await axios(
-        `${process.env.REACT_APP_BASE_URL}/clients`,
-        {responseType: "json"}
-      ).then((response) => {
-        setClientsList(response.data)
-      })
-      await axios(
-        `${process.env.REACT_APP_BASE_URL}/countries`,
-        {responseType: "json"}
-      ).then((response) => {
-        setCountriesList(response.data)
-      })
-      await axios(
-        `${process.env.REACT_APP_BASE_URL}/allocationRules`,
-        {responseType: "json"}
-      ).then((response) => {
-        setAllocationRulesList(response.data)
-      })
-    };
-    fetchData();
-},[])
+      const fetchData = async () => {
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/tiers`,
+          {responseType: "json"}
+        ).then((response) => {
+          setTiersList(response.data)
+        })
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/cities`,
+          {responseType: "json"}
+        ).then((response) => {
+          setCitiesList(response.data)
+        })
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/warehouses`,
+          {responseType: "json"}
+        ).then((response) => {
+          setWarehousesList(response.data)
+        })
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/stores`,
+          {responseType: "json"}
+        ).then((response) => {
+          setStoresList(response.data)
+        })
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/fridgesTypes`,
+          {responseType: "json"}
+        ).then((response) => {
+          setFridgeTypesList(response.data)
+        })
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/serviceTypes`,
+          {responseType: "json"}
+        ).then((response) => {
+          setServiceTypeList(response.data)
+        })
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/clients`,
+          {responseType: "json"}
+        ).then((response) => {
+          setClientsList(response.data)
+        })
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/countries`,
+          {responseType: "json"}
+        ).then((response) => {
+          setCountriesList(response.data)
+        })
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/allocationRules`,
+          {responseType: "json"}
+        ).then((response) => {
+          setAllocationRulesList(response.data)
+        })
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/operations`,
+          {responseType: "json"}
+        ).then((response) => {
+          setOperationsList(response.data)
+        })
+      };
+      fetchData();
+  },[])
+
 
 const handleChangeTextfield = (e,n) => {
   const { name, value } = e.target;
@@ -174,21 +173,53 @@ const handleChangeAutoComplete = (e, newValue,name) =>{
   }
   if(newValue) setFormValues({ ...formValues, [name]: newValue._id });
 }
+const warehouseValueFirstRun = useRef(true);
+useEffect(()=>{
+  setSaveClicked(1)
+  if (warehouseValueFirstRun.current) {
+    warehouseValueFirstRun.current = false;
+  }else{
+    let cityInId=warehouseValue.location.city_id
+    let neighbourhoodInId=warehouseValue.location.neighbourhood_id
+    if(formValues.operationType === "External Receipt" || formValues.operationType === "Retrieval"){
+      const fetchData = async () => {
+        let cityQuery = await axios(`${process.env.REACT_APP_BASE_URL}/cities/${cityInId}`, {
+          responseType: "json",
+        }).then((response) => {
+          setCountry(countriesList.filter(e=>e._id===response.data.country)[0].name)
+          setCityOut(response.data)
+          return response.data
+        })
+        let neighbourhoodQuery = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods/${neighbourhoodInId}`, {
+          responseType: "json",
+        }).then((response) => {
+          setNeighbourhoodOut(response.data)
+          return response.data
+        })
+
+        // let allocationRulesFiltered=allocationRulesList.filter(e=>{
+        //   return e.cities.filter((c) => c.name === cityQuery.name).length || e.neighbourhoods.filter((c) => c.name === neighbourhoodQuery.name).length
+        // })
+        // setSelectedSupplierId(allocationRulesFiltered ? allocationRulesFiltered[0].supplier_id:"")
+      }
+      fetchData();
+    }
+  }
+},[warehouseValue])
 
 const storeValueFirstRun = useRef(true);
 useEffect(()=>{
+  setSaveClicked(1)
   if (storeValueFirstRun.current) {
     storeValueFirstRun.current = false;
   }else{
     let cityOutId=storeValue.location.city_id
     let neighbourhoodOutId=storeValue.location.neighbourhood_id
-    setFridgeTypeValue({})
-    setServiceTypeValue({})
     const fetchData = async () => {
-
       let cityQuery = await axios(`${process.env.REACT_APP_BASE_URL}/cities/${cityOutId}`, {
         responseType: "json",
       }).then((response) => {
+        setCountry(countriesList.filter(e=>e._id===response.data.country)[0].name)
         setCityOut(response.data)
         return response.data
       })
@@ -208,46 +239,126 @@ useEffect(()=>{
   }
 },[storeValue])
 
-const handleChangeSn = (event, newValue) => {
-  setSnFilled([...newValue]);
-}
-const snValueFirstRun = useRef(true);
+const cityValueFirstRun = useRef(true);
 useEffect(()=>{
-  if (snValueFirstRun.current) {
-    snValueFirstRun.current = false;
+  setSaveClicked(1)
+  if (cityValueFirstRun.current) {
+    cityValueFirstRun.current = false;
   }else{
-    setSelectedSn(
-      cabinetsList.filter((e) => snFilled.includes(e.sn))
-    );
+    const tierObj=tiersList.filter(e=>{
+      let returnBolean=false
+      e.cities.forEach(e=>{
+        if(e.name===cityOut.name) returnBolean=true
+      })
+      return returnBolean
+    })
+    setTierOut(tierObj.length?tierObj[0].name:"")
   }
-},[snFilled])
+},[cityOut])
+
+const handleOpenSearch = () => {
+  setOpenSearch(true)
+  setCabinetsList(
+    cabinetsList.filter((e) => {
+      let showRow = true;
+      if(e.booked) return false
+      snFilled.forEach((sn) => {
+        if (sn == e.sn) showRow = false;
+      });
+      return showRow;
+    })
+  );
+}
+const optionsForSn = {
+  filter:false,
+  customToolbarSelect: (selectedRows, displayData, setSelectedRows) => {
+    return <IconButton
+        onClick={() => {
+          const selectedRowsTotal=selectedRows.data.map(e=>e.index)
+          selectedRowsTotal.forEach(e=>{
+            setSnFilled(prevSN =>[...prevSN,cabinetsList[e].sn])
+            setSelectedSn(prevSelectedSn =>[...prevSelectedSn,...cabinetsList.filter((eSub) => cabinetsList[e].sn.includes(eSub.sn))]);
+          })
+          setOpenSearch(false)
+        }}
+        style={{marginRight: "24px",height: "48px",display: "block",}}
+      >
+        <Save />
+      </IconButton>
+  },
+  textLabels: {
+      body: {
+          noMatch: 'Sorry, there is either no matching fridges to display or the items may already be booked.'
+      },
+  }
+};
+const handleChangeSn = (event, newValue) => {
+  setSnFilled(newValue);
+  setSelectedSn(cabinetsList.filter((e) => newValue.includes(e.sn)));
+}
+
+useEffect(()=>{
+  setSaveClicked(1)
+  const fetchData = async () => {
+      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {responseType: "json"})
+      .then((response) => {
+        if(formValues.operationType === "Retrieval"){
+          return response.data.filter(e=>e.location==="NA")
+        }
+        if(formValues.operationType === "External Receipt"){
+          return response.data.filter(e=>e.location==="store")
+        }
+        if(formValues.operationType === "Deployment"){
+          return response.data.filter(e=>e.location==="warehouse")
+        }
+      })
+      .then((response)=>{
+        setCabinetsList(response);
+      });
+    }
+  fetchData();
+},[formValues.operationType])
 
 
 const cabinetsFirstRun = useRef(true);
 useEffect(()=>{
+  setSaveClicked(1)
   const fetchData = async () => {
     if (cabinetsFirstRun.current) {
       cabinetsFirstRun.current = false;
     }else{
-      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {responseType: "json"}).then((response) => {
-        setCabinetsList(
-          response.data.filter((e) => e.type===fridgeTypeValue._id).map(e => {
-            return {...e, type:fridgeTypeValue.refrigerant_type}
-          })
-        );
-      });
+      if(formValues.operationType === "Deployment"){
+        setCabinetsList(cabinetsList
+          .filter((e) => e.type === fridgeTypeValue._id)
+          .map((e) => {
+            return { ...e, type: fridgeTypeValue.refrigerant_type };
+          }));
+    }
     }
   };
   fetchData();
 },[fridgeTypeValue])
 
 
+// useEffect(()=>{
+//   console.log("cabinetsList",cabinetsList)
+  
+// },[cabinetsList])
+
 useEffect(()=>{
+  setSaveClicked(1)
   const fetchData = async () => {
-      await axios(`${process.env.REACT_APP_BASE_URL}/priceRules/cityOut/${cityOut.name}`, {
+      await axios(`${process.env.REACT_APP_BASE_URL}/priceRules`, {
         responseType: "json",
       }).then((response) => {
-        setPrices(response.data.filter(e => e.service===serviceTypeValue._id)[0])
+        let priceFromOperation=response.data.filter(e=>e.operations.length ? e.operations.map(eSub=>eSub.name).includes(formValues.operationType):true)
+        let priceFromCountry=priceFromOperation.filter(e=>e.countries.length ? e.countries.map(eSub=>eSub.name).includes(country):true)
+        let priceFromTierOut=priceFromCountry.filter(e=>e.tiersOut.length ? e.tiersOut.map(eSub=>eSub.name).includes(tierOut):true)
+        let priceFromCityOut=priceFromTierOut.filter(e=>e.citiesOut.length ? e.citiesOut.map(eSub=>eSub.name).includes(cityOut):true)
+        let priceFromNeighbourhoodsOut=priceFromCityOut.filter(e=>e.neighbourhoodsOut.length ? e.neighbourhoodsOut.map(eSub=>eSub.name).includes(neighbourhoodOut):true)
+
+        setPrices(priceFromNeighbourhoodsOut.filter(e => e.service===serviceTypeValue._id))
+        return priceFromNeighbourhoodsOut.filter(e => e.service===serviceTypeValue._id)
       }).then((response) => {
         setLoadingResult(false)
       });
@@ -257,32 +368,115 @@ useEffect(()=>{
 
 
 
+const pricesFirstRun = useRef(true);
+useEffect(()=>{
+  if (pricesFirstRun.current) {
+    pricesFirstRun.current = false;
+  }else{
+      setColumnsForPrices([
+        {
+          name: "validPrice",
+          label: "Valid Price Rule",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => {
+              return value != 0 ? (
+                <Check className="text-success" />
+              ) : (
+                <Close className="text-danger" />
+              );
+            },
+          },
+        },
+        { name: "sn" },
+        { name: "client_name", label: "Client Name" },
+        { name: "handling_in", label: "Handling In" },
+        { name: "storage", label: "Storage" },
+        {
+          name: "in_house_preventive_maintenance",
+          label: "Inhouse Preventive Maintena",
+        },
+        {
+          name: "corrective_service_in_house",
+          label: "Corrective Service Inhouse",
+        },
+        { name: "cabinet_testing_fees", label: "Cabinet Testing Fees" },
+        { name: "branding_fees", label: "Branding Fees" },
+        { name: "drop", label: "drop" },
+        { name: "transp_cbm", label: "Transp Cbm" },
+        { name: "transp_for_1_unit", label: "Transp For 1 Unit" },
+        { name: "min_charge", label: "Min Charge" },
+        { name: "preventive_maintenance", label: "Preventive Maintenance" },
+        {
+          name: "exchange_corrective_reaction",
+          label: "Exchange Corrective Reaction",
+        },
+        { name: "corrective_reaction", label: "Corrective Reaction",
+        options: {
+          customBodyRender: (value, tableMeta, updateValue) => {
+            if(value==="Total") return <strong>Total</strong>
+            return value
+          },
+        },
+      },
+        {
+          name: "total",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => {
+              if(tableMeta.rowData[15]==="Total"){
+                let sumOfAll = tableMeta.tableData.map(e=>e[16]).filter(e => typeof e === "number").reduce((a,b)=>a+b)
+                return sumOfAll
+              }
+              return value
+            },
+          },
+        },
+      ]);
+    setOpenPrices(true)
+  }
+},[prices])
+
 const handleSaveForm = async () => {
-  let formValuesToSave = selectedSn.map((e) => ({
-    job_number: props.jobNumber,
-    operation_number: "ON" + Math.floor(Math.random() * 100000000) + 1,
-    operation_type: formValues.operationType,
-    sn: e.sn,
-    brand: e.brand,
-    client_id: e.client,
-    client_name: "User 1",
-    initiation_address: {
-      city_id: storeValue.location.city_id,
-      neighbourhood_id: storeValue.location.neighbourhood_id,
-      shop_name: storeValue.name,
-      mobile: storeValue.location.mobile,
+  //let priceFromNeighbourhoodsOut=prices.filter(e=>e.clients.length ? e.clients.map(eSub=>eSub.name).includes(neighbourhoodOut):true)
+  let addresses={}
+  if(formValues.operationType != "External Receipt" && formValues.operationType != "Retrieval"){
+    addresses={initiation_address: {
+      city_id: warehouseValue.location.city_id,
+      neighbourhood_id: warehouseValue.location.neighbourhood_id,
+      shop_name: warehouseValue.name,
+      mobile: warehouseValue.location.mobile,
     },
     execution_address: {
       city_id: storeValue.location.city_id,
       neighbourhood_id: storeValue.location.neighbourhood_id,
       shop_name: storeValue.name,
       mobile: storeValue.location.mobile,
-    },
+    }}
+  }else{
+    addresses={execution_address: {
+      city_id: warehouseValue.location.city_id,
+      neighbourhood_id: warehouseValue.location.neighbourhood_id,
+      shop_name: warehouseValue.name,
+      mobile: warehouseValue.location.mobile,
+    }}
+  }
+  let formValuesToSave = selectedSn.map((e) => {
+    const clientName=clientsList.filter((eSub) => eSub._id == e.client )?clientsList.filter((eSub) => eSub._id == e.client )[0].name:null
+    
+    return {
+    job_number: props.jobNumber,
+    operation_number: "ON" + Math.floor(Math.random() * 100000000) + 1,
+    operation_type: formValues.operationType,
+    sn: e.sn,
+    brand: e.brand,
+    client_id: e.client,
+    client_name: clientName,
+    ...addresses,
     supplier_id: selectedSupplierId,
     status: selectedSupplierId ? "Assigned" : "Unassigned",
     last_status_user: "-",
     last_status_update: currentDate,
-  }));
+  }
+});
   const statusHistoryUnassigned = formValuesToSave.map((e) => ({
     "status":"Unassigned",
     "user":"User 1",
@@ -300,40 +494,69 @@ const handleSaveForm = async () => {
     }
   });
   let statusHistory=[...statusHistoryUnassigned, ...statusHistoryAssigned]
-  
-  const fetchData = async () => {
-    await axios({
-      method: "post",
-      url: `${process.env.REACT_APP_BASE_URL}/liveOperations`,
-      data: formValuesToSave,
-    })
-    .then(function (response) {
-      props.setItemsUpdated(formValuesToSave);
-      props.setOpenDialog(false);
-    })
-    .catch((error) => {
-      console.log(error);
-    });
-    await axios({
-      method: "post",
-      url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
-      data: statusHistory,
-    })
-    
-  
-  selectedSn.forEach((e) => {
-    axios({
-      method: "put",
-      url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e._id}`,
-      data: [{
-        location: operationType==="deployment" ? "warehouse" : "store",
-        location_id: storeValue._id
-      }]
-    })
-  })
 
+  if(saveClicked===1){
+  
+
+    let finalPrices=selectedSn.map((e) => {
+      const clientName=clientsList.filter((eSub) => eSub._id == e.client )?clientsList.filter((eSub) => eSub._id == e.client )[0].name:null
+      const pricesFromClients=prices.filter(e=>e.clients.length ? e.clients.map(eSub=>eSub.name).includes(clientName):true);
+
+      const sumOfValues = Object.values(pricesFromClients[0])
+        .filter((e, i) => i > 3 && typeof e === "number")
+        .reduce((a, b) => a + b, 0);
+      console.log("sumOfValuessumOfValuessumOfValues",sumOfValues)
+      return {
+        validPrice: pricesFromClients.length,
+        sn: e.sn,
+        client_id: e.client,
+        client_name: clientName,
+        ...pricesFromClients[0],
+        total:sumOfValues
+      }
+    })
+    // console.log("finalPrices","finalPrices",finalPrices)
+    finalPrices.push({corrective_reaction:"Total"})
+    console.log("finalPrices",finalPrices)
+    setPrices(finalPrices)
+    setSaveClicked(2)
+  }else{
+    
+    const fetchData = async () => {
+      await axios({
+        method: "post",
+        url: `${process.env.REACT_APP_BASE_URL}/liveOperations`,
+        data: formValuesToSave,
+      })
+      .then(function (response) {
+        props.setItemsUpdated(formValuesToSave);
+        props.setOpenDialog(false);
+        handleCloseOpenPrices()
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+      await axios({
+        method: "post",
+        url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
+        data: statusHistory,
+      })
+      
+    selectedSn.forEach((e) => {
+      axios({
+        method: "put",
+        url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e._id}`,
+        data: [{
+          location: formValues.operationType=="Deployment" ? "store" : "warehouse",
+          location_id: formValues.operationType=="Deployment" ? storeValue._id : warehouseValue._id,
+          booked:true
+        }]
+      })
+    })
+  
+   }
+    fetchData();
   }
-fetchData();
 }
  return (
     <Fragment>
@@ -346,7 +569,7 @@ fetchData();
           <Typography variant="h6" className={classes.title}>
             Add
           </Typography>
-          <div><strong>Date: </strong> <Moment format="DD/MM/YYYY">{currentDate}</Moment></div>
+          <div><strong>Date: </strong> <Moment  format="DD MMM YYYY">{currentDate}</Moment></div>
         </Toolbar>
       </AppBar>
       <Grid
@@ -365,22 +588,15 @@ fetchData();
               value={formValues.operationType || ""}
               onChange={handleChangeTextfield}
             >
-              <MenuItem value="">
-                <em>None</em>
-              </MenuItem>
-              <MenuItem value="Deployment">Deployment</MenuItem>
-              <MenuItem value="Retrieval">Retrieval</MenuItem>
-              <MenuItem value="Transfer">Transfer</MenuItem>
-              <MenuItem value="Exchange">Exchange</MenuItem>
-              <MenuItem value="Corrective">Corrective Maintenance</MenuItem>
-              <MenuItem value="Preventive">Preventive Maintenance</MenuItem>
-              <MenuItem value="Exchange">Exchange</MenuItem>
+              {operationsList.map(e=>
+              <MenuItem value={e.name} key={e._id}>{e.name}</MenuItem>
+              )}
             </Select>
           </FormControl>
         </Grid>
 
         {formValues.operationType &&
-        formValues.operationType != "Corrective" &&
+        formValues.operationType != "External" &&
         formValues.operationType != "Preventive" ? (
           <Grid item xs={12} sm={7}>
             <Autocomplete
@@ -401,7 +617,7 @@ fetchData();
           </Grid>
         ) : null}
 
-        {formValues.warehouse ||
+        {formValues.warehouse && formValues.operationType != "External Receipt" && formValues.operationType != "Retrieval" ||
         formValues.operationType === "Corrective" ||
         formValues.operationType === "Preventive" ? (
           <Grid item xs={12} sm={7}>
@@ -423,7 +639,7 @@ fetchData();
           </Grid>
         ) : null}
 
-        {formValues.store ? (
+        {formValues.store && formValues.operationType != "External Receipt" && formValues.operationType != "Retrieval" ? (
           <Grid item xs={12} sm={7}>
             <Autocomplete
               id="fridgeTypeInput"
@@ -442,7 +658,9 @@ fetchData();
             />
           </Grid>
         ) : null}
-        {formValues.fridgeType ? (
+        {formValues.fridgeType ||
+        formValues.warehouse && formValues.operationType === "External Receipt" ||
+        formValues.warehouse && formValues.operationType === "Retrieval" ? (
           <Grid item xs={12} sm={7} container>
             <Fragment>
               <Grid item xs={10}>
@@ -479,7 +697,9 @@ fetchData();
             </Fragment>
           </Grid>
         ) : null}
-        {formValues.fridgeType ? (
+        {formValues.fridgeType ||
+        formValues.warehouse && formValues.operationType === "External Receipt" ||
+        formValues.warehouse && formValues.operationType === "Retrieval" ? (
           <Grid item xs={12} sm={7}>
             <Autocomplete
               id="serviceTypeInput"
@@ -498,54 +718,7 @@ fetchData();
             />
           </Grid>
         ) : null}
-        {prices ? (
-          <Grid item xs={12} sm={7} container spacing={3}>
-            {!loadingResult ? (
-              <>
-                <Grid item xs={10} className="BillContainer">
-                  <strong>Handler:</strong>
-                </Grid>
-                <Grid item xs={2} className="BillContainer">{prices.handling_in*snFilled.length || ""}$</Grid> {/* multiply by the sn numbers */}
-
-                <Grid item xs={10} className="BillContainer">
-                  <strong>Drop:</strong>
-                </Grid>
-                <Grid item xs={2} className="BillContainer">{prices.drop*snFilled.length || ""}$</Grid>
-
-                <Grid item xs={10} className="BillContainer">
-                  <strong>Transportation:</strong>
-                </Grid>
-                <Grid item xs={2} className="BillContainer">{prices.transp_cbm*snFilled.length || ""}$</Grid>
-                {operationType === "Corrective" ? (
-                  <>
-                  <Grid item xs={10} className="BillContainer">
-                    <strong>Corrective:</strong>
-                  </Grid>
-                <Grid item xs={2} className="BillContainer">{prices.corrective_service_in_house*snFilled.length || ""}$</Grid>
-                  </>
-                ) : null}
-                {operationType === "Preventive" ? (
-                  <>
-                  <Grid item xs={10} className="BillContainer">
-                    <strong>Preventive:</strong>
-                  </Grid>
-                  <Grid item xs={2} className="BillContainer">{prices.preventive_maintenance*snFilled.length || ""}$</Grid>
-                  </>
-                ) : null}
-                <Grid item xs={10} className="BillContainer" style={{ backgroundColor: "#aaa" }}>
-                  <strong>Total:</strong>
-                </Grid>
-                <Grid item xs={2} className="BillContainer" style={{ backgroundColor: "#aaa" }}>
-                  <strong>
-                    {prices.handling_in*snFilled.length + prices.drop*snFilled.length+prices.transp_cbm*snFilled.length}
-                    $</strong>
-                </Grid>
-              </>
-            ) : (
-              <CircularProgress size={30} className="m-auto" />
-            )}
-          </Grid>
-        ) : null}
+        {/*saveClicked===2*/}
 
         {formValues.serviceType ? (
           <Grid item xs={12} sm={7} className="clientTables">
@@ -557,7 +730,7 @@ fetchData();
               onClick={handleSaveForm}
               startIcon={<Save />}
             >
-              Save
+              Submit
             </Button>
             <Button
               variant="outlined"
@@ -597,9 +770,49 @@ fetchData();
               { name: "prev_status" },
               { name: "finance" }
             ]}
-            options={optionsOfSnTable}
+            options={optionsForSn}
           />
         </Dialog>
+        {saveClicked===2?
+        <Dialog
+          maxWidth={"xl"}
+          fullWidth
+          open={openPrices}
+          onClose={handleCloseOpenPrices}
+        >
+        <MuiThemeProvider theme={pricesDataTableTheme}>
+          <MUIDataTable
+          className="pricesDataTable"
+            title="Prices"
+            data={prices}
+            columns={columnsForPrices}
+            options={optionsForPrices}
+          />
+          </MuiThemeProvider>
+          <div className="clientTables mx-5 my-3">
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              className="btn btn--save"
+              onClick={handleSaveForm}
+              startIcon={<Save />}
+            >
+              Save
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="large"
+              className="btn btn--save"
+              onClick={handleCloseOpenPrices}
+              startIcon={<Close />}
+            >
+              Close
+            </Button>
+          </div>
+        </Dialog>
+        :null}
       </div>
     </Fragment>
   );

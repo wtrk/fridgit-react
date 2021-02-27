@@ -37,6 +37,7 @@ const AllocationRule = () => {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
+        setItemsBackup(response.data)
         return setIsloading(false)
       });
     };
@@ -118,40 +119,42 @@ const AllocationRule = () => {
   };
   const handleCloseAddForm = () => setOpenAddForm(false)
 
-
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
-    if(itemsBackup.length===0) setItemsBackup(items)
-    setSearchValue(newValue)
-    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+    if(newValue.length===0) setItems(itemsBackup); else{
+      let valueToSearch=[]
+      newValue.forEach(newValueEntry=>{
+        valueToSearch.push(...itemsBackup.filter((e,i) => {
+          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
+            if (e.name.toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+          }
+        }))
+      })
+      setItems(valueToSearch)
+    }
   }
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
-        id="tags-filled"
-        options={items || {}}
-        value={searchValue || {}}
-        getOptionLabel={(option) => option.name || ""}
-        onChange={handleChangeSearch}
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="filled"
-            label=""
-            placeholder="Search by Name"
-          />
-        )}
-      />
+    <Autocomplete
+      multiple
+      freeSolo
+      limitTags={3}
+      id="tags-standard"
+      options={[]}
+      getOptionLabel={(option) => option}
+      onChange={handleChangeSearch}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="standard"
+          placeholder="Search Data"
+          label="Filter by Name"
+        />
+      )}
+    />
 
       {!isLoading ? (
         <MuiThemeProvider theme={datatableTheme}>

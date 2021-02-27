@@ -38,6 +38,7 @@ import {
   Grid,
 } from "@material-ui/core";
 import TabsOnTopFromStatus from "components/CustomComponents/TabsOnTopFromStatus.js";
+import TabsOnTop from "./Components/TabsOnTop.js";
 import "./Cabinets.css";
 
 
@@ -70,7 +71,7 @@ const Cabinet = () => {
   const classes = useStyles(); //custom css
   const [isLoading, setIsloading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
-  const [cabinetsId, setCabinetID] = useState(); //modal title
+  const [cabinetId, setCabinetId] = useState(); //modal title
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
   const [items, setItems] = useState([]); //table items
@@ -80,6 +81,7 @@ const Cabinet = () => {
   const [searchValue, setSearchValue] = useState({});
   const [citiesList, setCitiesList] = useState([]);
   const [storesList, setStoresList] = useState([]);
+  const [warehousesList, setWarehousesList] = useState([]);
   const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
   const [clientsList, setClientsList] = useState([]);
   const [fridgesTypesList, setFridgesTypesList] = useState([]);
@@ -112,6 +114,12 @@ const Cabinet = () => {
         setStoresList(response.data)
         return response.data
       });
+      const warehouses = await axios(`${process.env.REACT_APP_BASE_URL}/warehouses`, {
+        responseType: "json",
+      }).then((response) => {
+        setWarehousesList(response.data)
+        return response.data
+      });
       const fridgesTypesList = await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`, {
         responseType: "json",
       }).then((response) => {
@@ -122,6 +130,7 @@ const Cabinet = () => {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
+        setItemsBackup(response.data)
         return setIsloading(false)
       });
     };
@@ -208,7 +217,7 @@ const Cabinet = () => {
                 <strong>Status</strong>: Needs Repair
               </p>
               <p>
-                <strong>Lacation</strong>: Bekaa - CHAFIC JAMIL FOR GENERAL
+                <strong>Location</strong>: Bekaa - CHAFIC JAMIL FOR GENERAL
                 TRADING
               </p>
             </Grid>
@@ -243,9 +252,11 @@ const Cabinet = () => {
   const handleClickDialogItemTabs = (DialogItemTabSelected) => {
     setDialogItemTab(DialogItemTabSelected);
   };
-  const handleClickOnItem = () => {
+  const handleClickOnItem = (title,cabinetId) => {
     setDialogItemTab(1);
     setOpenDialogItem(true);
+    setCabinetId(cabinetId);
+    setFormTitle(title);
   };
   const handleCloseDialogItem = () => {
     setOpenDialogItem(false);
@@ -263,9 +274,13 @@ const Cabinet = () => {
       options: {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
+          let typeValue = "-"
+          if(fridgesTypesList.filter(e=> e._id===value)[0]){
+            typeValue = fridgesTypesList.filter((e) => e._id == value )[0].refrigerant_type;
+          }
           return (
             <div>
-              <a onClick={handleClickOnItem}>
+              <a onClick={() => handleClickOnItem("Edit Cabinet - "+typeValue,tableMeta.rowData[0])}>
                 {value}
               </a>
             </div>
@@ -344,6 +359,9 @@ const Cabinet = () => {
       label: "Finance $"
     },
     {
+      name: "location"
+    },
+    {
       name: "location_id",
       label: "location",
       options: {
@@ -351,15 +369,28 @@ const Cabinet = () => {
           let cityValue = "-"
           let neighbourhoodValue = "-"
           let mobileValue = "-"
-          if(storesList.filter(e=> e._id==value)[0]){
-            let locationValue = storesList.filter(e=> e._id==value)[0].location;
-            if(citiesList.filter(e=> e._id==locationValue.city_id)[0]){
-              cityValue = citiesList.filter(e=> e._id==locationValue.city_id)[0].name;
+          if(tableMeta.rowData[10]==="store"){
+            if(storesList.filter(e=> e._id==value)[0]){
+              let locationValue = storesList.filter(e=> e._id==value)[0].location;
+              if(citiesList.filter(e=> e._id==locationValue.city_id)[0]){
+                cityValue = citiesList.filter(e=> e._id==locationValue.city_id)[0].name;
+              }
+              if(neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0]){
+                neighbourhoodValue = neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0].name;
+              }
+              mobileValue=locationValue.mobile
             }
-            if(neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0]){
-              neighbourhoodValue = neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0].name;
+          }else if(tableMeta.rowData[10]==="warehouse"){
+            if(warehousesList.filter(e=> e._id==value)[0]){
+              let locationValue = warehousesList.filter(e=> e._id==value)[0].location;
+              if(citiesList.filter(e=> e._id==locationValue.city_id)[0]){
+                cityValue = citiesList.filter(e=> e._id==locationValue.city_id)[0].name;
+              }
+              if(neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0]){
+                neighbourhoodValue = neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0].name;
+              }
+              mobileValue=locationValue.mobile
             }
-            mobileValue=locationValue.mobile
           }
           return <div style={{ width: 200 }}>
             <strong>City</strong>: {cityValue}
@@ -433,9 +464,9 @@ const Cabinet = () => {
     setFilterDialog(true)
   };
 
-  const handleAdd = (title, cabinetsId) => {
+  const handleAdd = (title, cabinetId) => {
     setOpenAddForm(true);
-    setCabinetID(cabinetsId);
+    setCabinetId(cabinetId);
     setFormTitle(title);
   };
   const handleCloseAddForm = () => setOpenAddForm(false)
@@ -454,46 +485,52 @@ const Cabinet = () => {
     setOpenDialog2(true);
     setmodal_Title(modal_Title);
   };
+  
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
-    if(itemsBackup.length===0) setItemsBackup(items)
-    setSearchValue(newValue)
-    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+    if(newValue.length===0) setItems(itemsBackup); else{
+      let valueToSearch=[]
+      newValue.forEach(newValueEntry=>{
+        valueToSearch.push(...itemsBackup.filter((e,i) => {
+          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
+            if (e.sn.toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+          }
+        }))
+      })
+      setItems(valueToSearch)
+    }
   }
   //Search component ---------------END--------------
+
   return (
     <>
-      <TabsOnTopFromStatus
+      <TabsOnTop
         items={items}
         setItemsFiltered={setItemsFiltered}
         tabIndex={tabIndex}
         setTabIndex={setTabIndex}
       />
       <Container maxWidth="xl" style={{ paddingTop: "4rem" }}>
-        <Autocomplete
-          id="tags-filled"
-          options={items || {}}
-          value={searchValue || {}}
-          getOptionLabel={(option) => option.sn || ""}
-          onChange={handleChangeSearch}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                variant="outlined"
-                label={option}
-                {...getTagProps({ index })}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="filled"
-              label=""
-              placeholder="Search by Sn"
-            />
-          )}
-        />
+
+      <Autocomplete
+        multiple
+        freeSolo
+        limitTags={3}
+        id="tags-standard"
+        options={[]}
+        getOptionLabel={(option) => option}
+        onChange={handleChangeSearch}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            variant="standard"
+            placeholder="Search Data"
+            label="Filter by SN"
+          />
+        )}
+      />
 
         {!isLoading ? (
           <MuiThemeProvider theme={datatableThemeInTabsPage}>
@@ -554,7 +591,7 @@ const Cabinet = () => {
                     <Avatar>JO</Avatar>
 
                     <div>
-                      <strong>Customer</strong>
+                      <strong>Client</strong>
                       <br />
                       Jollychic
                     </div>
@@ -600,7 +637,7 @@ const Cabinet = () => {
                   id="Edit"
                   className="ceeh__tabsCont--btn"
                   onClick={() => {
-                    handleClickOpenDialog2("1", "Edit");
+                    handleAdd(formTitle,cabinetId)
                   }}
                 >
                   Edit
@@ -632,7 +669,7 @@ const Cabinet = () => {
             <SubTables
               title={formTitle}
               handleClose={handleCloseAddForm}
-              cabinetId={cabinetsId}
+              cabinetId={cabinetId}
               citiesList={citiesList}
               neighbourhoodsList={neighbourhoodsList}
               clientsList={clientsList}

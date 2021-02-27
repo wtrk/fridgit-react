@@ -30,13 +30,28 @@ const Warehouse = () => {
   const [items, setItems] = useState([]); //table items
   const [itemsBackup, setItemsBackup] = useState([]);
   const [searchValue, setSearchValue] = useState({});
+  const [citiesList, setCitiesList] = useState([]);
+  const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
+      const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
+        responseType: "json",
+      }).then((response) => {
+        setCitiesList(response.data)
+        return response.data
+      });
+      const neighbourhoods = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
+        responseType: "json",
+      }).then((response) => {
+        setNeighbourhoodsList(response.data)
+        return response.data
+      });
       await axios(`${process.env.REACT_APP_BASE_URL}/warehouses`, {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
+        setItemsBackup(response.data)
         return setIsloading(false)
       });
     };
@@ -71,6 +86,21 @@ const Warehouse = () => {
     },
     {
       name: "name",
+    },
+    {
+      name: "location",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => (
+          <div style={{ width: 200 }}>
+          <strong>City</strong>: {value ? citiesList.filter(e=> e._id==value.city_id)[0].name : "-"}
+          <br />
+            <strong>Neighbourhood</strong>: {value ? neighbourhoodsList.filter(e=> e._id==value.neighbourhood_id)[0].name : "-"}
+            <br />
+            <strong>Mobile</strong>: {value ? value.mobile : "-"}
+            <br />
+          </div>
+        ),
+      }
     }
   ];
 
@@ -115,37 +145,39 @@ const Warehouse = () => {
   };
   const handleCloseAddForm = () => setOpenAddForm(false)
 
-
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
-    if(itemsBackup.length===0) setItemsBackup(items)
-    setSearchValue(newValue)
-    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+    if(newValue.length===0) setItems(itemsBackup); else{
+      let valueToSearch=[]
+      newValue.forEach(newValueEntry=>{
+        valueToSearch.push(...itemsBackup.filter((e,i) => {
+          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
+            if (e.name.toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+          }
+        }))
+      })
+      setItems(valueToSearch)
+    }
   }
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
-        id="tags-filled"
-        options={items || {}}
-        value={searchValue || {}}
-        getOptionLabel={(option) => option.name || ""}
+    <Autocomplete
+        multiple
+        freeSolo
+        limitTags={3}
+        id="tags-standard"
+        options={[]}
+        getOptionLabel={(option) => option}
         onChange={handleChangeSearch}
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
         renderInput={(params) => (
           <TextField
             {...params}
-            variant="filled"
-            label=""
-            placeholder="Search by Name"
+            variant="standard"
+            placeholder="Search Data"
+            label="Filter by Name"
           />
         )}
       />
@@ -174,6 +206,8 @@ const Warehouse = () => {
             title={formTitle}
             handleClose={handleCloseAddForm}
             warehouseId={warehouseId}
+            citiesList={citiesList}
+            neighbourhoodsList={neighbourhoodsList}
           />
         </Dialog>
         {/*********************** FILTER start ****************************/}

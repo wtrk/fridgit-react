@@ -12,7 +12,7 @@ import {
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
-import CustomToolbar from "CustomToolbar";
+import moment from "react-moment";
 import {Alert,Autocomplete} from '@material-ui/lab';
 import MUIDataTable from "mui-datatables";
 import GroupAllNested from "./GroupAllNested.js";
@@ -43,10 +43,12 @@ const SubTables = (props) => {
     const [citiesOut, setCitiesOut] = useState([]);
     const [neighbourhoodsOut, setNeighbourhoodsOut] = useState([]);
     const [tiersOut, setTiersOut] = useState([]);
+    const [operations, setOperations] = useState([]);
 
     const classes = useStyles(); //custom css
     const priorityRef = useRef()
     const nameRef = useRef()
+    const promise_dayRef = useRef()
     const serviceRef = useRef()
     const handling_inRef = useRef()
     const storageRef = useRef()
@@ -65,6 +67,7 @@ const SubTables = (props) => {
     const [formValues, setFormValues] = useState({
       priority: "",
       name: "",
+      promise_day: "",
       service: "",
       handling_in: "",
       storage: "",
@@ -83,6 +86,7 @@ const SubTables = (props) => {
     const [formErrors, setFormErrors] = useState({
       priority: {error:false,msg:""},
       name: {error:false,msg:""},
+      promise_day: {error:false,msg:""},
       service: {error:false,msg:""},
       handling_in: {error:false,msg:""},
       storage: {error:false,msg:""},
@@ -117,6 +121,7 @@ const SubTables = (props) => {
             setCitiesOut(response.citiesOut);
             setNeighbourhoodsOut(response.neighbourhoodsOut);
             setTiersOut(response.tiersOut);
+            setOperations(response.operations);
             setServiceTypeValue(props.serviceTypesList.filter(e=> e._id==response.service)[0])
 
           });
@@ -158,13 +163,18 @@ const SubTables = (props) => {
   useEffect(()=>{
     setFormValues({ ...formValues,tiersOut })
   },[tiersOut])
+  
+  useEffect(()=>{
+    setFormValues({ ...formValues,operations })
+  },[operations])
 
   const keyPressHandler = (e) => {
     const { keyCode, target } = e
     if(keyCode===13){
       switch (target.name){
         case "priority": nameRef.current.focus();break;
-        case "name": serviceRef.current.focus();break;
+        case "name": promise_dayRef.current.focus();break;
+        case "promise_day": serviceRef.current.focus();break;
         case "service": handling_inRef.current.focus();break;
         case "handling_in": storageRef.current.focus();break;
         case "storage": in_house_preventive_maintenanceRef.current.focus();break;
@@ -220,6 +230,7 @@ const handleOnSubmit = async () => {
       setOpenAlertSuccess(true);
       setFormValues({
         name: "",
+        promise_day: "",
         priority: "",
         service: "",
         handling_in: "",
@@ -304,6 +315,21 @@ const validateInputHandler = (e) => {
                 onBlur={validateInputHandler}
                 helperText={formErrors.name.error ? formErrors.name.msg : null}
                 error={formErrors.name.error}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                id="promise_dayInput"
+                label="Promise Day"
+                name="promise_day"
+                onChange={handleChangeForm}
+                fullWidth
+                value={formValues.promise_day || ""}
+                inputRef={promise_dayRef}
+                onKeyDown={keyPressHandler}
+                onBlur={validateInputHandler}
+                helperText={formErrors.promise_day.error ? formErrors.promise_day.msg : null}
+                error={formErrors.promise_day.error}
               />
             </Grid>
 
@@ -592,6 +618,7 @@ const validateInputHandler = (e) => {
                 neighbourhoodsOut,
                 tiersIn,
                 tiersOut,
+                operations,
               }}
               setArrayNames={{
                 setClients,
@@ -602,6 +629,7 @@ const validateInputHandler = (e) => {
                 setNeighbourhoodsOut,
                 setTiersIn,
                 setTiersOut,
+                setOperations,
               }}
             />
             <Grid item xs={12} className="clientTables">

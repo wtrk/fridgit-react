@@ -75,19 +75,19 @@ export default function FullWidthTabs() {
       const users = await axios(`${process.env.REACT_APP_BASE_URL}/users`, {
         responseType: "json",
       }).then((response) => {
-        setItems(
-          response.data.map((e) => {
-            const userProfileItem= userProfile.filter(userProfileData=> e.profile_id===userProfileData._id)[0]
-            return ({
-              id: e._id,
-              name: e.username,
-              profile: userProfileItem ? userProfileItem.name : "",
-              mobile: e.mobile,
-              email:e.email,
-              joinedDate:e.createdAt
-            });
-          })
-        );
+        let itemsDb=response.data.map((e) => {
+          const userProfileItem= userProfile.filter(userProfileData=> e.profile_id===userProfileData._id)[0]
+          return ({
+            id: e._id,
+            name: e.username,
+            profile: userProfileItem ? userProfileItem.name : "",
+            mobile: e.mobile,
+            email:e.email,
+            joinedDate:e.createdAt
+          });
+        })
+        setItems(itemsDb);
+        setItemsBackup(itemsDb)
         return setIsloading(false)
       });
       const userType = await axios(`${process.env.REACT_APP_BASE_URL}/userType`, {
@@ -142,7 +142,7 @@ export default function FullWidthTabs() {
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
-            <Moment format="DD/MM/YYYY">{value}</Moment>
+            <Moment  format="DD MMM YYYY">{value}</Moment>
           );
         },
       },
@@ -189,36 +189,38 @@ export default function FullWidthTabs() {
     setOpen(false);
   };
   //Search component ---------------START--------------
-  const [searchValue, setSearchValue] = useState({});
   const handleChangeSearch = (e, newValue) => {
-    if(itemsBackup.length===0) setItemsBackup(items)
-    setSearchValue(newValue)
-    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+    if(newValue.length===0) setItems(itemsBackup); else{
+      let valueToSearch=[]
+      newValue.forEach(newValueEntry=>{
+        valueToSearch.push(...itemsBackup.filter((e,i) => {
+          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
+            if (e.name.toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+          }
+        }))
+      })
+      setItems(valueToSearch)
+    }
   }
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
-        id="tags-filled"
-        options={items || {}}
-        value={searchValue || {}}
-        getOptionLabel={(option) => option.name || ""}
+    <Autocomplete
+        multiple
+        freeSolo
+        limitTags={3}
+        id="tags-standard"
+        options={[]}
+        getOptionLabel={(option) => option}
         onChange={handleChangeSearch}
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
         renderInput={(params) => (
           <TextField
             {...params}
-            variant="filled"
-            label=""
-            placeholder="Search by Name"
+            variant="standard"
+            placeholder="Search Data"
+            label="Filter by Name"
           />
         )}
       />

@@ -1,4 +1,4 @@
-import React, { useState,Fragment } from "react";
+import React, { useState,Fragment, useEffect } from "react";
 import {
   Typography,
   Button,
@@ -15,8 +15,10 @@ import {
   TimelineDot,
   TimelineOppositeContent,
 } from "@material-ui/lab";
+import Moment from "react-moment";
 import { makeStyles} from "@material-ui/core/styles";
 import { Close} from "@material-ui/icons";
+import axios from 'axios';
 
 import "react-dropzone-uploader/dist/styles.css";
 import fridgeDummy from "assets/img/fridge-1.jpg";
@@ -26,88 +28,73 @@ import "../LiveOperation.css";
 
 
 const useStyles = makeStyles((theme) => ({
-    appBar: {
-      position: "relative",
-    },
-    title: {
-      marginLeft: theme.spacing(2),
-      flex: 1,
-    },
-    formControl: {
-      minWidth: "100%",
-    },
-  
     root_avatar: {
       display: "flex",
       "& > *": {
         margin: theme.spacing(1),
       },
     },
-    root_modal: {
-      margin: 0,
-      padding: theme.spacing(2),
-    },
   }));
 
 const OperationDialog = (props) => {
     const classes = useStyles(); //custom css
+    const [dialogItemTab, setDialogItemTab] = useState(1);
+    const [liveOperationsList, setLiveOperationsList] = useState([]);
+    const [historyList, setHistoryList] = useState([]);
+    const [clientsName, setClientsName] = useState();
     
+    useEffect(() => {
+      const fetchData = async () => {
+        const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/${props.operationId}`, {
+          responseType: "json",
+        }).then((response) => {
+          setLiveOperationsList(response.data)
+          return response.data
+        });
+        const history = await axios(`${process.env.REACT_APP_BASE_URL}/operations/history/${props.operationId}`, {
+          responseType: "json",
+        }).then((response) => {
+          setHistoryList(response.data)
+          return response.data
+        });
+      };
+      fetchData();
+    }, []);
+    
+    useEffect(() => {
+      const fetchData = async () => {
+        const client = await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
+          responseType: "json",
+        }).then((response) => {
+          if("response.data",response.data.filter((e) => e._id == liveOperationsList.client_id).length){
+            setClientsName(response.data.filter((e) => e._id == liveOperationsList.client_id)[0].name)
+            return response.data
+          }
+        });
+      };
+      fetchData();
+    }, [liveOperationsList]);
   /**************** -OnClickItemDialog START- **************/
-  const [dialogItemTab, setDialogItemTab] = useState(1);
   const DialogTabsContent = (props) => {
     if (props.tab === 1) {
       return (
-        <Timeline align="alternate">
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography>Created</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography color="textSecondary">01/01/2020 09:30 am</Typography>
-            </TimelineContent>
-          </TimelineItem>
-
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">10/08/2020 10:00 am</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Client approved</Typography>
-            </TimelineContent>
-          </TimelineItem>
-
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography>Completed</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography color="textSecondary">01/10/2020 12:00 am</Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">10/10/2020 9:00 am</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Admin approved</Typography>
-            </TimelineContent>
-          </TimelineItem>
+        <Timeline align="left">
+          {historyList
+            ? historyList.map((e) => (
+                <TimelineItem key={e._id}>
+                  <TimelineOppositeContent>
+                    <Typography>{e.status}</Typography>
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot />
+                    <TimelineConnector />
+                  </TimelineSeparator>
+                  <TimelineContent>
+                  <Moment  format="DD MMM YYYY">{e.createdAt}</Moment>
+                  </TimelineContent>
+                </TimelineItem>
+              ))
+            : null}
         </Timeline>
       );
     } else if (props.tab === 2) {
@@ -228,86 +215,84 @@ const OperationDialog = (props) => {
 
   return (
     <Fragment>
-
-<DialogContent dividers className="entryEditHeader">
-            <Grid container>
-              <Grid item xs={4}>
-                <div className={classes.root_avatar}>
-                  <Avatar>JO</Avatar>
-
-                  <div>
-                    <strong>Customer</strong>
-                    <br />
-                    Jollychic
+      <DialogContent dividers className="entryEditHeader">
+        <Grid container>
+          <Grid item xs={4}>
+            <div className={classes.root_avatar}>
+            {clientsName ? (
+                  <div className="avatar_circle">
+                    {clientsName.substring(0, 2)}
                   </div>
-                </div>
-              </Grid>
+                ) : null}
 
-              <Grid item xs={4}>
-                <strong>Sn:</strong> 18GE43250
+              <div>
+                <strong>Client</strong>
                 <br />
-                <strong>Status:</strong> Operational
-              </Grid>
-
-              <Grid item xs={4}>
-                <strong>Branding:</strong> Walls
-                <br />
-                <strong>Type:</strong> Walls
-              </Grid>
-            </Grid>
-            <div className="entryEditHeader__tabsCont">
-              <Button
-                className={
-                  "ceeh__tabsCont--btn " +
-                  (dialogItemTab === 1 ? "selected" : "")
-                }
-                onClick={() => {
-                  setDialogItemTab(1);
-                }}
-              >
-                History
-              </Button>
-              <Button
-                className={
-                  "ceeh__tabsCont--btn " +
-                  (dialogItemTab === 2 ? "selected" : "")
-                }
-                onClick={() => {
-                  setDialogItemTab(2);
-                }}
-              >
-                Info
-              </Button>
-              <Button
-                className={
-                  "ceeh__tabsCont--btn " +
-                  (dialogItemTab === 3 ? "selected" : "")
-                }
-                onClick={() => {
-                  setDialogItemTab(3);
-                }}
-              >
-                Financial History
-              </Button>
+                {clientsName}
+              </div>
             </div>
-          </DialogContent>
-          <DialogContent dividers>
-            <DialogTabsContent tab={dialogItemTab} />
-          </DialogContent>
-          <DialogActions>
-            <Button
-              variant="outlined"
-              color="primary"
-              size="large"
-              className="btn btn--save"
-              onClick={() => props.setOpenDialog(false)}
-              startIcon={<Close />}
-            >
-              Close
-            </Button>
-          </DialogActions>
-        
-        
+          </Grid>
+
+          <Grid item xs={4}>
+            <strong>Sn:</strong> {liveOperationsList.sn}
+            <br />
+            <strong>Status:</strong> {liveOperationsList.status}
+          </Grid>
+
+          <Grid item xs={4}>
+            <strong>Branding:</strong> {liveOperationsList.brand}
+            <br />
+            <strong>Type:</strong> {liveOperationsList.operation_type}
+          </Grid>
+        </Grid>
+        <div className="entryEditHeader__tabsCont">
+          <Button
+            className={
+              "ceeh__tabsCont--btn " + (dialogItemTab === 1 ? "selected" : "")
+            }
+            onClick={() => {
+              setDialogItemTab(1);
+            }}
+          >
+            History
+          </Button>
+          <Button
+            className={
+              "ceeh__tabsCont--btn " + (dialogItemTab === 2 ? "selected" : "")
+            }
+            onClick={() => {
+              setDialogItemTab(2);
+            }}
+          >
+            Info
+          </Button>
+          <Button
+            className={
+              "ceeh__tabsCont--btn " + (dialogItemTab === 3 ? "selected" : "")
+            }
+            onClick={() => {
+              setDialogItemTab(3);
+            }}
+          >
+            Financial History
+          </Button>
+        </div>
+      </DialogContent>
+      <DialogContent dividers>
+        <DialogTabsContent tab={dialogItemTab} />
+      </DialogContent>
+      <DialogActions>
+        <Button
+          variant="outlined"
+          color="primary"
+          size="large"
+          className="btn btn--save"
+          onClick={() => props.setOpenDialog(false)}
+          startIcon={<Close />}
+        >
+          Close
+        </Button>
+      </DialogActions>
     </Fragment>
   );
 };

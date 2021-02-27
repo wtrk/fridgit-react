@@ -263,16 +263,16 @@ const validateInputHandler = (e) => {
             />
           </Grid>
             <Grid item xs={12}>
-            <NestedTable arrayName={cities} setArrayName={setCities} title="cities" dbTable="cities" />
+            <NestedTable arrayName={cities} setArrayName={setCities} title="Cities" dbTable="cities" />
           </Grid>
           <Grid item xs={12}>
-            <NestedTable arrayName={neighbourhoods} setArrayName={setNeighbourhoods} title="neighbourhoods" dbTable="neighbourhoods" />
+            <NestedTable arrayName={neighbourhoods} setArrayName={setNeighbourhoods} title="Neighbourhoods" dbTable="neighbourhoods" />
           </Grid>
           <Grid item xs={12}>
-            <NestedTable arrayName={clients} setArrayName={setClients} title="clients" dbTable="clients" />
+            <NestedTable arrayName={clients} setArrayName={setClients} title="Clients" dbTable="clients" />
           </Grid>
           <Grid item xs={12}>
-            <NestedTable arrayName={operations} setArrayName={setOperations} title="operations" dbTable="operations" />
+            <NestedTable arrayName={operations} setArrayName={setOperations} title="Operations" dbTable="operations" />
           </Grid>
           
           <Grid item xs={12} className="clientTables">

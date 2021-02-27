@@ -1026,7 +1026,7 @@ const ClientsList = () => {
                   <Avatar>JO</Avatar>
 
                   <div>
-                    <strong>Customer</strong>
+                    <strong>Client</strong>
                     <br />
                     Jollychic
                   </div>

@@ -24,6 +24,8 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const ClientsList = () => {
   const [isLoading, setIsloading] = useState(true);
   const [items, setItems] = useState([]); //table items
+  const [itemsBackup, setItemsBackup] = useState([]);
+  const [searchValue, setSearchValue] = useState({});
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [openDetails, setOpenDetails] = useState(false);
   const [clientDetailsTitle, setClientDetailsTitle] = useState("");
@@ -34,6 +36,7 @@ const ClientsList = () => {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
+        setItemsBackup(response.data)
         return setIsloading(false)
       });
     };
@@ -112,40 +115,41 @@ const ClientsList = () => {
     setOpenAddForm(false);
   };
   //Search component ---------------START--------------
-  const [itemsBackup, setItemsBackup] = useState([]);
-  const [searchValue, setSearchValue] = useState({});
   const handleChangeSearch = (e, newValue) => {
-    if(itemsBackup.length===0) setItemsBackup(items)
-    setSearchValue(newValue)
-    if(newValue===null) setItems(itemsBackup); else setItems([newValue])
+    if(newValue.length===0) setItems(itemsBackup); else{
+      let valueToSearch=[]
+      newValue.forEach(newValueEntry=>{
+        valueToSearch.push(...itemsBackup.filter((e,i) => {
+          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
+            if (e.name.toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+          } 
+        }))
+      })
+      setItems(valueToSearch)
+    }
   }
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
-        id="tags-filled"
-        options={items || {}}
-        value={searchValue || {}}
-        getOptionLabel={(option) => option.name || ""}
-        onChange={handleChangeSearch}
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip
-              variant="outlined"
-              label={option}
-              {...getTagProps({ index })}
-            />
-          ))
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="filled"
-            label=""
-            placeholder="Search by Name"
-          />
-        )}
-      />
+    <Autocomplete
+      multiple
+      freeSolo
+      limitTags={3}
+      id="tags-standard"
+      options={[]}
+      getOptionLabel={(option) => option}
+      onChange={handleChangeSearch}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="standard"
+          placeholder="Search Data"
+          label="Filter by Company Name"
+        />
+      )}
+    />
 
       {!isLoading ? (
         <MuiThemeProvider theme={datatableTheme}>
