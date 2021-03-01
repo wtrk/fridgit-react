@@ -1,4 +1,4 @@
-import React, { useState,Fragment } from "react";
+import React, { useState,Fragment, useEffect }  from "react";
 import {
   Typography,
   Button,
@@ -15,8 +15,10 @@ import {
   TimelineDot,
   TimelineOppositeContent,
 } from "@material-ui/lab";
+import Moment from "react-moment";
 import { makeStyles} from "@material-ui/core/styles";
 import { Close} from "@material-ui/icons";
+import axios from 'axios';
 
 import "react-dropzone-uploader/dist/styles.css";
 import fridgeDummy from "assets/img/fridge-1.jpg";
@@ -51,63 +53,41 @@ const useStyles = makeStyles((theme) => ({
 
 const SnDialog = (props) => {
     const classes = useStyles(); //custom css
+    const [liveOperationsList, setLiveOperationsList] = useState([]);
     
+    useEffect(() => {
+      const fetchData = async () => {
+        const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${props.snId}`, {
+          responseType: "json",
+        }).then((response) => {
+          setLiveOperationsList(response.data)
+          return response.data
+        });
+      };
+      fetchData();
+    }, []);
   /**************** -OnClickItemDialog START- **************/
   const [dialogItemTab, setDialogItemTab] = useState(1);
   const DialogTabsContent = (props) => {
     if (props.tab === 1) {
       return (
-        <Timeline align="right">
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography>Created</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography color="textSecondary">01/01/2020 09:30 am</Typography>
-            </TimelineContent>
-          </TimelineItem>
-
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">10/08/2020 10:00 am</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Client approved</Typography>
-            </TimelineContent>
-          </TimelineItem>
-
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography>Completed</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography color="textSecondary">01/10/2020 12:00 am</Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">10/10/2020 9:00 am</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Admin approved</Typography>
-            </TimelineContent>
-          </TimelineItem>
+        <Timeline align="left">
+          {liveOperationsList
+            ? liveOperationsList.map((e) => (
+              <TimelineItem key={e._id} style={{minHeight:50}}>
+              <TimelineOppositeContent>
+                    <Typography>{e.operation_type} ({e.operation_number})</Typography>
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot />
+                    <TimelineConnector />
+                  </TimelineSeparator>
+                  <TimelineContent>
+                  <Moment format="DD MMM YYYY - HH:mm">{e.createdAt}</Moment>
+                  </TimelineContent>
+                </TimelineItem>
+              ))
+            : null}
         </Timeline>
       );
     } else if (props.tab === 2) {

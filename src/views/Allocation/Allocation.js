@@ -29,7 +29,7 @@ const AllocationRule = () => {
   const [filterDialog,setFilterDialog] = useState(false)
   const [items, setItems] = useState([]); //table items
   const [itemsBackup, setItemsBackup] = useState([]);
-  const [searchValue, setSearchValue] = useState({});
+  const [suppliersList, setSuppliersList] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,6 +43,18 @@ const AllocationRule = () => {
     };
     fetchData();
   }, [openAddForm]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+    const suppliers = await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
+      responseType: "json",
+    }).then((response) => {
+      setSuppliersList(response.data)
+      return response.data
+    })
+  };
+  fetchData();
+  }, []);
 
   const columns = [
     {
@@ -75,6 +87,14 @@ const AllocationRule = () => {
     },
     {
       name: "name"
+    },
+    {
+      name: "supplier_id",
+      label: "Supplier",
+      options: {
+      customBodyRender: (value, tableMeta, updateValue) => {
+        return suppliersList.filter(e=>e._id===value)[0] ? suppliersList.filter(e=>e._id===value)[0].name: ""
+      }}
     }
   ];
 

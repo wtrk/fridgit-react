@@ -68,6 +68,7 @@ const AddOperationForm = (props) => {
   const [prices, setPrices] = useState([]);
   const [allocationRulesList, setAllocationRulesList] = useState({});
   const [operationsList, setOperationsList] = useState([]);
+  const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
   const [loadingResult, setLoadingResult] = useState(true);
 
   const [currentDate,setCurrentDate] = useState(new Date()); //table items
@@ -143,16 +144,16 @@ const AddOperationForm = (props) => {
           setCountriesList(response.data)
         })
         await axios(
-          `${process.env.REACT_APP_BASE_URL}/allocationRules`,
-          {responseType: "json"}
-        ).then((response) => {
-          setAllocationRulesList(response.data)
-        })
-        await axios(
           `${process.env.REACT_APP_BASE_URL}/operations`,
           {responseType: "json"}
         ).then((response) => {
           setOperationsList(response.data)
+        })
+        await axios(
+          `${process.env.REACT_APP_BASE_URL}/neighbourhoods`,
+          {responseType: "json"}
+        ).then((response) => {
+          setNeighbourhoodsList(response.data)
         })
       };
       fetchData();
@@ -197,15 +198,17 @@ useEffect(()=>{
           return response.data
         })
 
-        // let allocationRulesFiltered=allocationRulesList.filter(e=>{
+        // console.log("allocationRulesList",allocationRulesList)
+        // setAllocationRulesList(allocationRulesList.filter(e=>{
         //   return e.cities.filter((c) => c.name === cityQuery.name).length || e.neighbourhoods.filter((c) => c.name === neighbourhoodQuery.name).length
-        // })
-        // setSelectedSupplierId(allocationRulesFiltered ? allocationRulesFiltered[0].supplier_id:"")
+        // }))
+        //setSelectedSupplierId(allocationRulesFiltered ? allocationRulesFiltered[0].supplier_id:"")
       }
       fetchData();
     }
   }
 },[warehouseValue])
+
 
 const storeValueFirstRun = useRef(true);
 useEffect(()=>{
@@ -230,10 +233,10 @@ useEffect(()=>{
         return response.data
       })
 
-      let allocationRulesFiltered=allocationRulesList.filter(e=>{
-        return e.cities.filter((c) => c.name === cityQuery.name).length || e.neighbourhoods.filter((c) => c.name === neighbourhoodQuery.name).length
-      })
-      setSelectedSupplierId(allocationRulesFiltered ? allocationRulesFiltered[0].supplier_id:"")
+      // let allocationRulesFiltered=allocationRulesList.filter(e=>{
+      //   return e.cities.filter((c) => c.name === cityQuery.name).length || e.neighbourhoods.filter((c) => c.name === neighbourhoodQuery.name).length
+      // })
+      // setSelectedSupplierId(allocationRulesFiltered ? allocationRulesFiltered[0].supplier_id:"")
     }
     fetchData();
   }
@@ -258,6 +261,7 @@ useEffect(()=>{
 
 const handleOpenSearch = () => {
   setOpenSearch(true)
+  console.log("cabinetsList",cabinetsList)
   setCabinetsList(
     cabinetsList.filter((e) => {
       let showRow = true;
@@ -303,10 +307,10 @@ useEffect(()=>{
       await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {responseType: "json"})
       .then((response) => {
         if(formValues.operationType === "Retrieval"){
-          return response.data.filter(e=>e.location==="NA")
+          return response.data.filter(e=>e.location==="store")
         }
         if(formValues.operationType === "External Receipt"){
-          return response.data.filter(e=>e.location==="store")
+          return response.data.filter(e=>e.location==="NA")
         }
         if(formValues.operationType === "Deployment"){
           return response.data.filter(e=>e.location==="warehouse")
@@ -340,10 +344,6 @@ useEffect(()=>{
 },[fridgeTypeValue])
 
 
-// useEffect(()=>{
-//   console.log("cabinetsList",cabinetsList)
-  
-// },[cabinetsList])
 
 useEffect(()=>{
   setSaveClicked(1)
@@ -354,14 +354,25 @@ useEffect(()=>{
         let priceFromOperation=response.data.filter(e=>e.operations.length ? e.operations.map(eSub=>eSub.name).includes(formValues.operationType):true)
         let priceFromCountry=priceFromOperation.filter(e=>e.countries.length ? e.countries.map(eSub=>eSub.name).includes(country):true)
         let priceFromTierOut=priceFromCountry.filter(e=>e.tiersOut.length ? e.tiersOut.map(eSub=>eSub.name).includes(tierOut):true)
-        let priceFromCityOut=priceFromTierOut.filter(e=>e.citiesOut.length ? e.citiesOut.map(eSub=>eSub.name).includes(cityOut):true)
-        let priceFromNeighbourhoodsOut=priceFromCityOut.filter(e=>e.neighbourhoodsOut.length ? e.neighbourhoodsOut.map(eSub=>eSub.name).includes(neighbourhoodOut):true)
+        let priceFromCityOut=priceFromTierOut.filter(e=>e.citiesOut.length ? e.citiesOut.map(eSub=>eSub.name).includes(cityOut.name):true)
+        let priceFromNeighbourhoodsOut=priceFromCityOut.filter(e=>e.neighbourhoodsOut.length ? e.neighbourhoodsOut.map(eSub=>eSub.name).includes(neighbourhoodOut.name):true)
 
-        setPrices(priceFromNeighbourhoodsOut.filter(e => e.service===serviceTypeValue._id))
         return priceFromNeighbourhoodsOut.filter(e => e.service===serviceTypeValue._id)
       }).then((response) => {
+        setPrices(response)
         setLoadingResult(false)
       });
+      await axios(`${process.env.REACT_APP_BASE_URL}/allocationRules`,
+        {responseType: "json"
+      }).then((response) => {
+        let allocationFromOperation=response.data.filter(e=>e.operations.length ? e.operations.map(eSub=>eSub.name).includes(formValues.operationType):true)
+        let allocationFromTier=allocationFromOperation.filter(e=>e.tiers.length ? e.tiers.map(eSub=>eSub.name).includes(tierOut):true)
+        let allocationFromCity=allocationFromTier.filter(e=>e.cities.length ? e.cities.map(eSub=>eSub.name).includes(cityOut.name):true)
+        let allocationFromNeighbourhoods=allocationFromCity.filter(e=>e.neighbourhoods.length ? e.neighbourhoods.map(eSub=>eSub.name).includes(neighbourhoodOut.name):true)
+        setAllocationRulesList(allocationFromNeighbourhoods)
+      })
+
+
     }
   fetchData();
 },[serviceTypeValue])
@@ -379,6 +390,9 @@ useEffect(()=>{
           label: "Valid Price Rule",
           options: {
             customBodyRender: (value, tableMeta, updateValue) => {
+              if(tableMeta.rowData[15]==="Total"){
+                return ""
+              }
               return value != 0 ? (
                 <Check className="text-success" />
               ) : (
@@ -423,7 +437,9 @@ useEffect(()=>{
           options: {
             customBodyRender: (value, tableMeta, updateValue) => {
               if(tableMeta.rowData[15]==="Total"){
-                let sumOfAll = tableMeta.tableData.map(e=>e[16]).filter(e => typeof e === "number").reduce((a,b)=>a+b)
+                let allNumbers = tableMeta.tableData.map(e=>e[16]).filter(e => typeof e === "number")
+                console.log("allNumbers",allNumbers)
+                let sumOfAll = allNumbers.length ? allNumbers.reduce((a,b)=>a+b):0;
                 return sumOfAll
               }
               return value
@@ -461,7 +477,7 @@ const handleSaveForm = async () => {
   }
   let formValuesToSave = selectedSn.map((e) => {
     const clientName=clientsList.filter((eSub) => eSub._id == e.client )?clientsList.filter((eSub) => eSub._id == e.client )[0].name:null
-    
+    const allocationRulesFromClients=allocationRulesList.filter(e=>e.clients.length ? e.clients.map(eSub=>eSub.name).includes(clientName):true);
     return {
     job_number: props.jobNumber,
     operation_number: "ON" + Math.floor(Math.random() * 100000000) + 1,
@@ -471,8 +487,8 @@ const handleSaveForm = async () => {
     client_id: e.client,
     client_name: clientName,
     ...addresses,
-    supplier_id: selectedSupplierId,
-    status: selectedSupplierId ? "Assigned" : "Unassigned",
+    supplier_id: allocationRulesFromClients[0] ? allocationRulesFromClients[0].supplier_id : "",
+    status: allocationRulesFromClients[0] ? "Assigned" : "Unassigned",
     last_status_user: "-",
     last_status_update: currentDate,
   }
@@ -494,6 +510,7 @@ const handleSaveForm = async () => {
     }
   });
   let statusHistory=[...statusHistoryUnassigned, ...statusHistoryAssigned]
+  console.log("formValuesToSave",statusHistory)
 
   if(saveClicked===1){
   
@@ -505,7 +522,6 @@ const handleSaveForm = async () => {
       const sumOfValues = Object.values(pricesFromClients[0])
         .filter((e, i) => i > 3 && typeof e === "number")
         .reduce((a, b) => a + b, 0);
-      console.log("sumOfValuessumOfValuessumOfValues",sumOfValues)
       return {
         validPrice: pricesFromClients.length,
         sn: e.sn,
@@ -536,6 +552,9 @@ const handleSaveForm = async () => {
       .catch((error) => {
         console.log(error);
       });
+      
+
+
       await axios({
         method: "post",
         url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
@@ -569,7 +588,7 @@ const handleSaveForm = async () => {
           <Typography variant="h6" className={classes.title}>
             Add
           </Typography>
-          <div><strong>Date: </strong> <Moment  format="DD MMM YYYY">{currentDate}</Moment></div>
+          <div><strong>Date: </strong> <Moment format="DD MMM YYYY - HH:mm">{currentDate}</Moment></div>
         </Toolbar>
       </AppBar>
       <Grid
@@ -758,9 +777,25 @@ const handleSaveForm = async () => {
             title="Operation"
             data={cabinetsList}
             columns={[
+              {
+                name: "_id",
+                options: {
+                  display: false,
+                }
+              },
               { name: "sn" },
               { name: "sn2" },
-              { name: "type"},
+              { name: "type",
+                options: {
+                  customBodyRender: (value, tableMeta, updateValue) => {
+                    let typeValue = "-"
+                    if(fridgeTypesList.filter(e=> e._id===value)[0]){
+                      typeValue = fridgeTypesList.filter((e) => e._id == value )[0].refrigerant_type;
+                    }
+                    return typeValue;
+                  },
+                },
+              },
               { name: "client",
                 options: {
                   customBodyRender: (value, tableMeta, updateValue) => 
@@ -768,7 +803,52 @@ const handleSaveForm = async () => {
                 }
               },
               { name: "prev_status" },
-              { name: "finance" }
+              { name: "finance" },
+              {
+                name: "location"
+              },
+              {
+                name: "location_id",
+                label: "location",
+                options: {
+                  customBodyRender: (value, tableMeta, updateValue) => {
+                    let cityValue = "-"
+                    let neighbourhoodValue = "-"
+                    let mobileValue = "-"
+                    if(tableMeta.rowData[8]==="store"){
+                      if(storesList.filter(e=> e._id==value)[0]){
+                        let locationValue = storesList.filter(e=> e._id==value)[0].location;
+                        if(citiesList.filter(e=> e._id==locationValue.city_id)[0]){
+                          cityValue = citiesList.filter(e=> e._id==locationValue.city_id)[0].name;
+                        }
+                        if(neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0]){
+                          neighbourhoodValue = neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0].name;
+                        }
+                        mobileValue=locationValue.mobile
+                      }
+                    }else if(tableMeta.rowData[8]==="warehouse"){
+                      if(warehousesList.filter(e=> e._id==value)[0]){
+                        let locationValue = warehousesList.filter(e=> e._id==value)[0].location;
+                        if(citiesList.filter(e=> e._id==locationValue.city_id)[0]){
+                          cityValue = citiesList.filter(e=> e._id==locationValue.city_id)[0].name;
+                        }
+                        if(neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0]){
+                          neighbourhoodValue = neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0].name;
+                        }
+                        mobileValue=locationValue.mobile
+                      }
+                    }
+                    return <div style={{ width: 200 }}>
+                      <strong>City</strong>: {cityValue}
+                      <br />
+                      <strong>Neighbourhood</strong>: {neighbourhoodValue}
+                      <br />
+                      <strong>Mobile</strong>: {mobileValue}
+                      <br />
+                    </div>
+                  }
+                }
+              },
             ]}
             options={optionsForSn}
           />

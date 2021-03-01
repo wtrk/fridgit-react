@@ -37,7 +37,7 @@ import {
   Typography,
   Grid,
 } from "@material-ui/core";
-import TabsOnTopFromStatus from "components/CustomComponents/TabsOnTopFromStatus.js";
+import Moment from "react-moment";
 import TabsOnTop from "./Components/TabsOnTop.js";
 import "./Cabinets.css";
 
@@ -88,6 +88,8 @@ const Cabinet = () => {
   const [modal_Title, setmodal_Title] = useState("Add"); //modal title
   const [itemsFiltered, setItemsFiltered] = useState(); //tabs items
   const [tabIndex, setTabIndex] = useState(0);
+  const [liveOperationsList, setLiveOperationsList] = useState([]);
+  const [snId,setSnId] = useState();
   useEffect(() => {
     const fetchData = async () => {
       const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
@@ -140,60 +142,40 @@ const Cabinet = () => {
   /**************** -OnClickItemDialog START- **************/
   const [dialogItemTab, setDialogItemTab] = useState(1);
   const DialogTabsContent = (props) => {
+    
+    useEffect(() => {
+      const fetchData = async () => {
+        const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${props.snId}`, {
+          responseType: "json",
+        }).then((response) => {
+          setLiveOperationsList(response.data)
+          return response.data
+        });
+      };
+      fetchData();
+    }, []);
+
     if (props.tab === 1) {
       return (
-        <Timeline align="alternate">
-          <TimelineItem>
+        <Timeline align="left">
+        {liveOperationsList
+          ? liveOperationsList.map((e) => (
+            <TimelineItem key={e._id} style={{minHeight:50}}>
             <TimelineOppositeContent>
-              <Typography>External Receipt</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography color="textSecondary">01/01/2020 09:30 am</Typography>
-            </TimelineContent>
-          </TimelineItem>
+                  <Typography>{e.operation_type} ({e.operation_number})</Typography>
+                </TimelineOppositeContent>
+                <TimelineSeparator>
+                  <TimelineDot />
+                  <TimelineConnector />
+                </TimelineSeparator>
+                <TimelineContent>
+                <Moment format="DD MMM YYYY - HH:mm">{e.createdAt}</Moment>
+                </TimelineContent>
+              </TimelineItem>
+            ))
+          : null}
+      </Timeline>
 
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">10/08/2020 10:00 am</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Deployment</Typography>
-            </TimelineContent>
-          </TimelineItem>
-
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography>Retrieval</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography color="textSecondary">01/10/2020 12:00 am</Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">10/10/2020 9:00 am</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Deployment</Typography>
-            </TimelineContent>
-          </TimelineItem>
-        </Timeline>
       );
     } else if (props.tab === 2) {
       return (
@@ -252,9 +234,10 @@ const Cabinet = () => {
   const handleClickDialogItemTabs = (DialogItemTabSelected) => {
     setDialogItemTab(DialogItemTabSelected);
   };
-  const handleClickOnItem = (title,cabinetId) => {
+  const handleClickOnItem = (title,cabinetId,snId) => {
     setDialogItemTab(1);
     setOpenDialogItem(true);
+    setSnId(snId);
     setCabinetId(cabinetId);
     setFormTitle(title);
   };
@@ -280,7 +263,7 @@ const Cabinet = () => {
           }
           return (
             <div>
-              <a onClick={() => handleClickOnItem("Edit Cabinet - "+typeValue,tableMeta.rowData[0])}>
+              <a onClick={() => handleClickOnItem("Edit Cabinet - "+typeValue,tableMeta.rowData[0], value)}>
                 {value}
               </a>
             </div>
@@ -299,17 +282,7 @@ const Cabinet = () => {
           if(fridgesTypesList.filter(e=> e._id===value)[0]){
             typeValue = fridgesTypesList.filter((e) => e._id == value )[0].refrigerant_type;
           }
-          return (
-            <div>
-              <a
-                onClick={() => {
-                  handleAdd("Edit Cabinet - "+typeValue,tableMeta.rowData[0]);
-                }}
-              >
-                {typeValue}
-              </a>
-            </div>
-          );
+          return typeValue;
         },
       },
     },
@@ -645,7 +618,7 @@ const Cabinet = () => {
               </div>
             </DialogContent>
             <DialogContent dividers>
-              <DialogTabsContent tab={dialogItemTab} />
+              <DialogTabsContent tab={dialogItemTab} snId={snId} />
             </DialogContent>
             <DialogActions>
               <Button

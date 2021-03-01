@@ -39,12 +39,14 @@ const [items, setItems] = useState([]); //table items
 const [itemsFiltered,setItemsFiltered] = useState(); //table items
 const [filterDialog,setFilterDialog] = useState(false);
 const [openSnDialog,setOpenSnDialog] = useState(false);
+const [snId,setSnId] = useState();
 const [citiesList, setCitiesList] = useState([]);
 const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
 const [clientsList, setClientsList] = useState([]);
 const [suppliersList, setSuppliersList] = useState([]);
 const [openOperationDialog,setOpenOperationDialog] = useState(false);
 const [operationId,setOperationId] = useState();
+const [supplierName,setSupplierName] = useState("");
 const [itemsBackup, setItemsBackup] = useState([]); //Search
 const [statusUpdated, setStatusUpdated] = useState([]); //Status Updated
 
@@ -106,7 +108,7 @@ useEffect(() => {
       label: "Creation Date",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
-          return <Moment  format="DD MMM YYYY">{value}</Moment>;
+          return <Moment format="DD MMM YYYY - HH:mm">{value}</Moment>;
         },
       },
     },
@@ -115,9 +117,14 @@ useEffect(() => {
       label: "Operation #",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
+          let supplierName=""
+          if (tableMeta.rowData[10]) {
+            let supplierValue = suppliersList.filter((e) => e._id == tableMeta.rowData[10]);
+            if(supplierValue.length) supplierName = supplierValue[0].name
+          }
           return (
             <div>
-              <a onClick={()=>handleOpenOperationDialog(tableMeta.rowData[0])}>{value}</a>
+              <a onClick={()=>handleOpenOperationDialog(tableMeta.rowData[0],supplierName)}>{value}</a>
             </div>
           );
         },
@@ -130,7 +137,7 @@ useEffect(() => {
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
             <div>
-              <a onClick={() => setOpenSnDialog(true)}>{value}</a>
+              <a onClick={()=>handleOpenSnDialog(value)}>{value}</a>
             </div>
           );
         },
@@ -273,7 +280,7 @@ useEffect(() => {
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
           if (value) {
-            return <Moment  format="DD MMM YYYY">{value}</Moment>;
+            return <Moment format="DD MMM YYYY - HH:mm">{value}</Moment>;
           }
         },
       },
@@ -295,9 +302,14 @@ useEffect(() => {
      return  <CustomToolbarSelect setStatusUpdated={setStatusUpdated} selectedRows={selectedRows} displayData={displayData} setSelectedRows={setSelectedRows} setItems={setItems} items={items}  />
     }
   };
-  const handleOpenOperationDialog = (id)=>{
+  const handleOpenOperationDialog = (id,supplierName)=>{
     setOpenOperationDialog(true)
     setOperationId(id)
+    setSupplierName(supplierName)
+  }
+  const handleOpenSnDialog = (id)=>{
+    setOpenSnDialog(true)
+    setSnId(id)
   }
   const handleOpenAddDialog = () => {
     //setOpenAddDialog(true);
@@ -385,7 +397,7 @@ useEffect(() => {
           open={openOperationDialog}
           onClose={() => setOpenOperationDialog(false)}
         >
-          <OperationDialog setOpenDialog={setOpenOperationDialog} operationId={operationId} />
+          <OperationDialog setOpenDialog={setOpenOperationDialog} operationId={operationId} supplierName={supplierName} />
         </Dialog>
 
         {/*********************** -Sn Dialog START- ****************************/}
@@ -396,7 +408,7 @@ useEffect(() => {
           open={openSnDialog}
           onClose={() => setOpenSnDialog(false)}
         >
-          <SnDialog setOpenDialog={setOpenSnDialog} />
+          <SnDialog setOpenDialog={setOpenSnDialog} snId={snId} />
         </Dialog>
 
         {/*********************** -FILTER START- ****************************/}

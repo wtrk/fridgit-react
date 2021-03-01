@@ -345,7 +345,7 @@ const ClientsList = () => {
               <Grid item xs={4}>
                 <div style={{ lineHeight: "3rem" }}>
                   <strong>Date: </strong>
-                  <Moment  format="DD MMM YYYY">{selectedDate}</Moment>
+                  <Moment format="DD MMM YYYY - HH:mm">{selectedDate}</Moment>
                 </div>
               </Grid>
             </Grid>

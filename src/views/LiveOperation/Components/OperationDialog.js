@@ -51,7 +51,13 @@ const OperationDialog = (props) => {
           setLiveOperationsList(response.data)
           return response.data
         });
-        const history = await axios(`${process.env.REACT_APP_BASE_URL}/operations/history/${props.operationId}`, {
+      };
+      fetchData();
+    }, []);
+    
+    useEffect(() => {
+      const fetchData = async () => {
+        const history = await axios(`${process.env.REACT_APP_BASE_URL}/operations/history/${liveOperationsList.operation_number}`, {
           responseType: "json",
         }).then((response) => {
           setHistoryList(response.data)
@@ -59,7 +65,7 @@ const OperationDialog = (props) => {
         });
       };
       fetchData();
-    }, []);
+    }, [liveOperationsList]);
     
     useEffect(() => {
       const fetchData = async () => {
@@ -79,18 +85,19 @@ const OperationDialog = (props) => {
     if (props.tab === 1) {
       return (
         <Timeline align="left">
+          {console.log("props",props)}
           {historyList
             ? historyList.map((e) => (
-                <TimelineItem key={e._id}>
+                <TimelineItem key={e._id} style={{minHeight:50}}>
                   <TimelineOppositeContent>
-                    <Typography>{e.status}</Typography>
+                    {(e.status==="Assigned") ? <Typography>{e.status} to {props.supplierName}</Typography>:<Typography>{e.status}</Typography>}
                   </TimelineOppositeContent>
                   <TimelineSeparator>
                     <TimelineDot />
                     <TimelineConnector />
                   </TimelineSeparator>
                   <TimelineContent>
-                  <Moment  format="DD MMM YYYY">{e.createdAt}</Moment>
+                  <Moment format="DD MMM YYYY - HH:mm">{e.createdAt}</Moment>
                   </TimelineContent>
                 </TimelineItem>
               ))
@@ -279,7 +286,7 @@ const OperationDialog = (props) => {
         </div>
       </DialogContent>
       <DialogContent dividers>
-        <DialogTabsContent tab={dialogItemTab} />
+        <DialogTabsContent tab={dialogItemTab} supplierName={props.supplierName} />
       </DialogContent>
       <DialogActions>
         <Button

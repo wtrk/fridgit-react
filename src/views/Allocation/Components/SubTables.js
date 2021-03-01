@@ -34,6 +34,7 @@ const SubTables = (props) => {
     const [cities, setCities] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [neighbourhoods, setNeighbourhoods] = useState([]);
+    const [tiers, setTiers] = useState([]);
     const [clients, setClients] = useState([]);
     const [operations, setOperations] = useState([]);
     const classes = useStyles(); //custom css
@@ -76,13 +77,15 @@ const SubTables = (props) => {
           }).then((response)=>{
             setCities(response.cities);
             setNeighbourhoods(response.neighbourhoods);
+            setTiers(response.tiers);
             setClients(response.clients);
             setOperations(response.operations);
             setSupplierValue(suppliers.filter(e=> e._id==response.supplier_id)[0])
             setIsLoading(false);
             codeRef.current.focus()
           });
-        }
+        }else{
+          setIsLoading(false);}
       };
       fetchData();
   },[])
@@ -93,6 +96,9 @@ const SubTables = (props) => {
   useEffect(()=>{
     setFormValues({ ...formValues,neighbourhoods })
   },[neighbourhoods])
+  useEffect(()=>{
+    setFormValues({ ...formValues,tiers })
+  },[tiers])
   useEffect(()=>{
     setFormValues({ ...formValues,clients })
   },[clients])
@@ -267,6 +273,9 @@ const validateInputHandler = (e) => {
           </Grid>
           <Grid item xs={12}>
             <NestedTable arrayName={neighbourhoods} setArrayName={setNeighbourhoods} title="Neighbourhoods" dbTable="neighbourhoods" />
+          </Grid>
+          <Grid item xs={12}>
+            <NestedTable arrayName={tiers} setArrayName={setTiers} title="Tiers" dbTable="tiers" />
           </Grid>
           <Grid item xs={12}>
             <NestedTable arrayName={clients} setArrayName={setClients} title="Clients" dbTable="clients" />

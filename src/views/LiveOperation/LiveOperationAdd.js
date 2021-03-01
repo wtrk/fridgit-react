@@ -5,14 +5,15 @@ import {
   Slide,
   TextField,
   Chip,
-  Dialog,
+  Dialog,Button
 } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 import axios from 'axios';
+import { ArrowBackIosOutlined } from "@material-ui/icons";
 
 import MUIDataTable from "mui-datatables";
-import {datatableTheme} from "assets/css/datatable-theme.js";
+import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
 import AddOperationForm from "./Components/AddOperationForm.js";
 // Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
 const top100Films = [];
@@ -208,7 +209,7 @@ const LiveOperationAdd = () => {
         )}
       />
 
-      <MuiThemeProvider theme={datatableTheme}>
+      <MuiThemeProvider theme={datatableThemeInTabsPage}>
         <MUIDataTable
           title=""
           data={items}
@@ -216,6 +217,18 @@ const LiveOperationAdd = () => {
           options={options}
         />
       </MuiThemeProvider>
+              <div className="d-flex justify-content-end my-2">
+              <Button
+                variant="outlined"
+                color="primary"
+                size="large"
+                className="btn btn--save"
+                href="#admin/LiveOperation"
+                startIcon={<ArrowBackIosOutlined />}
+              >
+                Back
+              </Button>
+              </div>
 
       <div>
           

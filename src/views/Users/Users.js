@@ -142,7 +142,7 @@ export default function FullWidthTabs() {
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
           return (
-            <Moment  format="DD MMM YYYY">{value}</Moment>
+            <Moment format="DD MMM YYYY - HH:mm">{value}</Moment>
           );
         },
       },
