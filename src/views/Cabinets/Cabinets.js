@@ -89,7 +89,6 @@ const Cabinet = () => {
   const [itemsFiltered, setItemsFiltered] = useState(); //tabs items
   const [tabIndex, setTabIndex] = useState(0);
   const [liveOperationsList, setLiveOperationsList] = useState([]);
-  const [snId,setSnId] = useState();
   useEffect(() => {
     const fetchData = async () => {
       const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
@@ -140,20 +139,21 @@ const Cabinet = () => {
   }, [openAddForm]);
 
   /**************** -OnClickItemDialog START- **************/
+    
+  useEffect(() => {
+    const fetchData = async () => {
+      const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${cabinetId}`, {
+        responseType: "json",
+      }).then((response) => {
+        setLiveOperationsList(response.data)
+        return response.data
+      });
+    };
+    fetchData();
+  }, [cabinetId]);
+
   const [dialogItemTab, setDialogItemTab] = useState(1);
   const DialogTabsContent = (props) => {
-    
-    useEffect(() => {
-      const fetchData = async () => {
-        const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${props.snId}`, {
-          responseType: "json",
-        }).then((response) => {
-          setLiveOperationsList(response.data)
-          return response.data
-        });
-      };
-      fetchData();
-    }, []);
 
     if (props.tab === 1) {
       return (
@@ -234,10 +234,9 @@ const Cabinet = () => {
   const handleClickDialogItemTabs = (DialogItemTabSelected) => {
     setDialogItemTab(DialogItemTabSelected);
   };
-  const handleClickOnItem = (title,cabinetId,snId) => {
+  const handleClickOnItem = (title,cabinetId) => {
     setDialogItemTab(1);
     setOpenDialogItem(true);
-    setSnId(snId);
     setCabinetId(cabinetId);
     setFormTitle(title);
   };
@@ -263,7 +262,7 @@ const Cabinet = () => {
           }
           return (
             <div>
-              <a onClick={() => handleClickOnItem("Edit Cabinet - "+typeValue,tableMeta.rowData[0], value)}>
+              <a onClick={() => handleClickOnItem("Edit Cabinet - "+typeValue,tableMeta.rowData[0])}>
                 {value}
               </a>
             </div>
@@ -615,10 +614,10 @@ const Cabinet = () => {
                 >
                   Edit
                 </Button>
-              </div>
+              </div> 
             </DialogContent>
             <DialogContent dividers>
-              <DialogTabsContent tab={dialogItemTab} snId={snId} />
+              <DialogTabsContent tab={dialogItemTab} />
             </DialogContent>
             <DialogActions>
               <Button
@@ -643,10 +642,8 @@ const Cabinet = () => {
               title={formTitle}
               handleClose={handleCloseAddForm}
               cabinetId={cabinetId}
-              citiesList={citiesList}
-              neighbourhoodsList={neighbourhoodsList}
-              clientsList={clientsList}
               fridgesTypesList={fridgesTypesList}
+              clientsList={clientsList}
             />
           </Dialog>
           {/*********************** FILTER start ****************************/}

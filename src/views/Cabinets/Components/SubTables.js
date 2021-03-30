@@ -110,7 +110,7 @@ const handleOnSubmit = async () => {
   }
   if (props.cabinetId) {
     const liveOperationBySn = await axios(
-      `${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${formValues.sn}`,{responseType: "json"}
+      `${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${props.cabinetId}`,{responseType: "json"}
     ).then((response) => response.data)
     if(liveOperationBySn.length || oldIsNew===formValues.is_new){
       formValues.is_new=formValues.oldIsNew;

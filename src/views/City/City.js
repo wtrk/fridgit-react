@@ -138,7 +138,7 @@ const City = () => {
       );
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
-      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex].id); // array of all ids to to be deleted
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/cities/${idsToDelete}`, {
           responseType: "json",
         }).then((response) => {

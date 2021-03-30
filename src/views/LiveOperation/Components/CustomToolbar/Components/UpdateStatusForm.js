@@ -33,7 +33,8 @@ const UpdateStatusForm = (props) => {
     const classes = useStyles(); //custom css
     const [formValues,setFormValues] = useState({status: ""});
     const [operationNumberValue, setOperationNumberValue] = useState([]);
-    const [saveForm, setSaveForm] = useState(false);
+    const [suppliersList, setSuppliersList] = useState([]);
+    const [supplierValue, setSupplierValue] = useState({});
     const [reportArray, setReportArray] = useState([]);
     const [saveClicked, setSaveClicked] = useState(1)
     const statusList = ["In Progress","Completed","Failed","On Hold","Assigned","Unassigned","Accepted","Canceled"];
@@ -49,6 +50,22 @@ const UpdateStatusForm = (props) => {
     useEffect(()=>{
         setOperationNumberValue(props.dataToUpdate);
     },[])
+    
+    useEffect(()=>{
+        const fetchData = async () => {
+          const suppliers = await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
+            responseType: "json",
+          }).then((response) => {
+            setSuppliersList(response.data)
+            return response.data
+          });
+        };
+        fetchData();
+    },[])
+    const handleChangeSupplier = (e, newValue) =>{
+      setSupplierValue(newValue)
+      if(newValue) setFormValues({ ...formValues, supplier_id: newValue._id });
+    }
     const handleChangeSn = (event,newValue) => {
         setOperationNumberValue(newValue);
         setSaveClicked(1)
@@ -82,6 +99,9 @@ const UpdateStatusForm = (props) => {
             }))
             setSaveClicked(2)
         }else{
+          if(formValues.status==="assigned"){
+
+          }
           let idsToUpdate=reportArray.filter(e=>{
               return e.previous_status!="Completed" && e.previous_status!="Canceled"
           })
@@ -91,7 +111,9 @@ const UpdateStatusForm = (props) => {
                     url: `${process.env.REACT_APP_BASE_URL}/liveOperations/${e._id}`,
                     data: [{
                     status: formValues.status,
+                    supplier_id: formValues.status==="Unassigned" ? "" : formValues.supplier_id,
                     last_status_update: new Date(),
+                    
                     }]
                 })
                 .then((response) => {
@@ -134,7 +156,7 @@ const UpdateStatusForm = (props) => {
           </Toolbar>
         </AppBar>
         <Grid container spacing={3} justify="center" alignContent="center">
-          <Grid item xs={12} sm={7}>
+          <Grid item xs={11}>
             <Autocomplete
               multiple
               freeSolo
@@ -149,7 +171,7 @@ const UpdateStatusForm = (props) => {
               )}
             />
           </Grid>
-          <Grid item xs={12} sm={7}>
+          <Grid item xs={11}>
             <FormControl className={classes.formControl}>
               <InputLabel id="statusLabel">Status</InputLabel>
               <Select
@@ -170,8 +192,29 @@ const UpdateStatusForm = (props) => {
               </Select>
             </FormControl>
           </Grid>
+          {formValues.status==="Assigned"?
+          <Grid item xs={11}>
+            <Autocomplete
+              id="SupplierInput"
+              options={suppliersList || {}}
+              value={supplierValue || {}}
+              getOptionLabel={(option) => {
+                return Object.keys(option).length!==0 ? option.name : "";
+              }}
+              fullWidth
+              onChange={handleChangeSupplier}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Supplier"
+                />
+              )}
+            />
+          </Grid>
+          :null}
+
           {reportArray.length && saveClicked!=1?
-          <Grid item xs={12} sm={7}>
+          <Grid item xs={11}>
           <table className="table table-bordered mt-3">
             <thead>
                 <tr>
@@ -199,7 +242,7 @@ const UpdateStatusForm = (props) => {
           </Grid>
           :null}
           
-          <Grid item xs={12} sm={7} className="clientTables">
+          <Grid item xs={11} className="clientTables">
             <Button
               variant="contained"
               color="primary"

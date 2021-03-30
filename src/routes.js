@@ -22,6 +22,7 @@ import {
   Dashboard,
   DynamicFeed,
   Person,
+  LocalMall,
   LibraryBooks,
   AttachMoney,
   LocalAtmOutlined,
@@ -32,11 +33,17 @@ import {
   GroupAdd,
   Kitchen,
   GroupWork,
+  LineStyle,
+  Compare,
+  Pageview,
+  CallToAction,
   Apps,
   Public,
   LocationCity,
   AccountBalance,
   Store,
+  FindReplace,
+  SettingsApplications,
 } from "@material-ui/icons";
 
 // core components/views for Admin layout
@@ -60,7 +67,12 @@ import ServiceType from "views/ServiceType/ServiceType.js";
 import FridgesTypes from "views/FridgesTypes/FridgesTypes.js";
 import LiveOperation from "views/LiveOperation/LiveOperation.js";
 import LiveOperationAdd from "views/LiveOperation/LiveOperationAdd.js";
+import Pdf from "views/LiveOperation/Components/CustomToolbar/Components/Pdf.js";
 import Warehouse from "views/Warehouse/Warehouse.js";
+import SpareParts from "views/SpareParts/SpareParts.js";
+import PreventiveAction from "views/PreventiveAction/PreventiveAction.js";
+import CorrectiveInspections from "views/CorrectiveInspections/CorrectiveInspections.js";
+import CorrectiveActions from "views/CorrectiveActions/CorrectiveActions.js";
 import Stores from "views/Stores/Stores.js";
 
 import Supplier from "views/Supplier/Supplier.js";
@@ -112,7 +124,7 @@ const switchRoutes = (
             e.component = Cabinets;
             break;
           case "Clients":
-            e.icon = Person;
+            e.icon = LocalMall;
             e.component = ClientsList;
             break;
           case "Cabinets":
@@ -135,7 +147,6 @@ const switchRoutes = (
             e.icon = AccountBox;
             e.component = Supplier;
             break;
-
           case "Warehouse":
             e.icon = GroupWork;
             e.component = Warehouse;
@@ -153,24 +164,44 @@ const switchRoutes = (
             e.component = Neighbourhood;
             break;
           case "Allocation Rules":
-            e.icon = Apps;
+            e.icon = LineStyle;
             e.component = Allocation;
             break;
           case "Tier":
-            e.icon = Apps;
+            e.icon = FindReplace;
             e.component = Tier;
             break;
-          case "ServiceType":
-            e.icon = Apps;
+          case "Service Type":
+            e.icon = SettingsApplications;
             e.component = ServiceType;
             break;
-          case "FridgesTypes":
+          case "Fridges Types":
             e.icon = Apps;
             e.component = FridgesTypes;
+            break;
+          case "Spare Parts":
+            e.icon = Compare;
+            e.component = SpareParts;
+            break;
+            case "Preventive Actions":
+              e.icon = Compare;
+              e.component = PreventiveAction;
+              break;
+          case "Corrective Inspections":
+            e.icon = Pageview;
+            e.component = CorrectiveInspections;
+            break;
+          case "Corrective Actions":
+            e.icon = CallToAction;
+            e.component = CorrectiveActions;
             break;
           case "Price Rules":
             e.icon = Notifications;
             e.component = Price_rules;
+            break;
+          case "Pdf":
+            e.icon = Dashboard;
+            e.component = Pdf;
             break;
           default:
             e.icon = Dashboard;

@@ -98,7 +98,7 @@ export const pricesDataTableTheme = createMuiTheme({
     MUIDataTableHeadCell: {
       toolButton: {
         minWidth: "100px",
-        margin: "10px 20px",
+        margin: "10px 10px",
       },
       data:{
         textTransform: "capitalize"
@@ -107,8 +107,13 @@ export const pricesDataTableTheme = createMuiTheme({
     MUIDataTableBodyCell: {
       root: {
         minWidth: "100px",
-        margin: "5px 20px",
+        margin: "5px 10px",
       },
-    }
+    },
+      MUIDataTable: {
+        responsiveBase: {
+          position: "static !important",
+        }
+      },
   },
 });

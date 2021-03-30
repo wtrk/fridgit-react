@@ -5,9 +5,11 @@ import {
   Dialog,
   Slide,
   TextField,
-  Chip,
   CircularProgress,
-  Typography,
+  Button,
+  DialogActions,
+  DialogContent,
+  DialogContentText
 } from "@material-ui/core";
 import { makeStyles, MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
@@ -16,11 +18,12 @@ import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
+import DeleteItems from "./Components/DeleteItems.js";
 import axios from 'axios';
 
 
 
-// Top 100 films as rated by IMDb neighbourhoods. http://www.imdb.com/chart/top
+// Top 100 films as rated by IMDb preventiveActions. http://www.imdb.com/chart/top
 const top100Films = [];
 
 
@@ -44,25 +47,31 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const Neighbourhood = () => {
+const PreventiveAction = () => {
   const classes = useStyles(); //custom css
   const [isLoading, setIsloading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
-  const [neighbourhoodId, setNeighbourhoodID] = useState(); //modal title
-  const [citiesList, setCitiesList] = useState([]);
+  const [preventiveActionId, setPreventiveActionID] = useState(); //modal title
+  const [countriesList, setCountriesList] = useState([]);
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
   const [itemsBackup, setItemsBackup] = useState([]);
+  const [agreeToDelete, setAgreeToDelete] = useState({
+    open:false,
+    idToDelete:"",
+    confirmDeletion:false
+  });
+
   const [items, setItems] = useState([]); //table items
   useEffect(() => {
     const fetchData = async () => {
-      const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
+      const countries = await axios(`${process.env.REACT_APP_BASE_URL}/countries`, {
         responseType: "json",
       }).then((response) => {
-        setCitiesList(response.data)
+        setCountriesList(response.data)
         return response.data
       });
-      await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
+      await axios(`${process.env.REACT_APP_BASE_URL}/preventiveActions`, {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
@@ -71,7 +80,7 @@ const Neighbourhood = () => {
       });
     };
     fetchData();
-  }, [openAddForm]);
+  }, [openAddForm,agreeToDelete]);
 
   const columns = [
     {
@@ -81,7 +90,8 @@ const Neighbourhood = () => {
       }
     },
     {
-      name: "code",
+      name: "name",
+      label: "description",
       options: {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
@@ -89,7 +99,7 @@ const Neighbourhood = () => {
             <div>
               <a
                 onClick={() => {
-                  handleAdd("Edit Neighbourhood - "+tableMeta.rowData[2],tableMeta.rowData[0]);
+                  handleAdd("Edit PreventiveAction - "+tableMeta.rowData[2],tableMeta.rowData[0]);
                 }}
               >
                 {value}
@@ -100,22 +110,23 @@ const Neighbourhood = () => {
       },
     },
     {
-      name: "name"
+      name: "nameAr",
+      label: "arabic description"
     },
     {
-      name: "city_id",
-      label: "City",
-      options: {
-        customBodyRender: (value, tableMeta, updateValue) => {
-          let cityValue = "-"
-          if(citiesList.filter(e=> e._id==value)[0]){
-            cityValue = citiesList.filter(e=> e._id==value)[0].name;
-          }
-
-          return cityValue
-        }
-      },
-    }
+      name: "category"
+    },
+    {
+      name: "categoryAr",
+      label: "arabic category"
+    },
+    {
+      name: "subCategory"
+    },
+    {
+      name: "subCategoryAr",
+      label: "arabic subCategory"
+    },
   ];
 
   const options = {
@@ -128,19 +139,19 @@ const Neighbourhood = () => {
       return (
         <CustomToolbar
           listener={() => {
-            handleAdd("Add New Neighbourhood");
+            handleAdd("Add New PreventiveAction");
           }}
           handleFilter={handleFilter}
         />
       );
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
-      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
-        axios.delete(`${process.env.REACT_APP_BASE_URL}/neighbourhoods/${idsToDelete}`, {
-          responseType: "json",
-        }).then((response) => {
-          console.log("deleted")
-        });
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id);
+      setAgreeToDelete({
+        open:true,
+        idToDelete:idsToDelete,
+        confirmDeletion:false
+      })
     },
     textLabels: {
         body: {
@@ -148,18 +159,21 @@ const Neighbourhood = () => {
         },
     },
   };
+
+
   const handleFilter = () => {
     setFilterDialog(true)
   };
 
-  const handleAdd = (title, neighbourhoodId) => {
+  const handleAdd = (title, preventiveActionId) => {
     setOpenAddForm(true);
-    setNeighbourhoodID(neighbourhoodId);
+    setPreventiveActionID(preventiveActionId);
     setFormTitle(title);
   };
 
 
   const handleCloseAddForm = () => setOpenAddForm(false)
+
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
     if(newValue.length===0) setItems(itemsBackup); else{
@@ -176,26 +190,49 @@ const Neighbourhood = () => {
       setItems(valueToSearch)
     }
   }
+  
+  // const handleConfirmToDelete = () =>{
+  //     setAgreeToDelete({
+  //       ...agreeToDelete,
+  //       confirmDeletion:true
+  //     }) 
+  // }
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     if(agreeToDelete.confirmDeletion===true&&agreeToDelete.open===true){
+  //       await axios.delete(`${process.env.REACT_APP_BASE_URL}/preventiveActions/${agreeToDelete.idToDelete}`, {
+  //           responseType: "json",
+  //         }).then((response) => {
+  //           setAgreeToDelete({
+  //             ...agreeToDelete,
+  //             open:false
+  //           }) 
+  //         });
+  //     }
+  //   };
+  //   fetchData();
+  // }, [agreeToDelete]);
+  
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
-        multiple
-        freeSolo
-        limitTags={3}
-        id="tags-standard"
-        options={[]}
-        getOptionLabel={(option) => option}
-        onChange={handleChangeSearch}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            variant="standard"
-            placeholder="Search Data"
-            label="Filter by Name"
-          />
-        )}
-      />
+    <Autocomplete
+      multiple
+      freeSolo
+      limitTags={3}
+      id="tags-standard"
+      options={[]}
+      getOptionLabel={(option) => option}
+      onChange={handleChangeSearch}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="standard"
+          placeholder="Search Data"
+          label="Filter by Name"
+        />
+      )}
+    />
 
       {!isLoading ? (
         <MuiThemeProvider theme={datatableTheme}>
@@ -220,8 +257,7 @@ const Neighbourhood = () => {
           <SubTables
             title={formTitle}
             handleClose={handleCloseAddForm}
-            neighbourhoodId={neighbourhoodId}
-            citiesList={citiesList}
+            preventiveActionId={preventiveActionId}
           />
         </Dialog>
         {/*********************** FILTER start ****************************/}
@@ -234,8 +270,11 @@ const Neighbourhood = () => {
         >
           <FilterComponent setOpenDialog={setFilterDialog} />
         </Dialog>
+        <Dialog open={agreeToDelete["open"]} onClose={()=>setAgreeToDelete(false)}>
+          <DeleteItems setAgreeToDelete={setAgreeToDelete} agreeToDelete={agreeToDelete} table="preventiveActions" />
+        </Dialog>
       </div>
     </Container>
   );
 }
-export default Neighbourhood
+export default PreventiveAction

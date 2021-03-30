@@ -21,7 +21,7 @@ const NestedTable = (props) => {
     const { keyCode, target } = e
     if(keyCode===13){
       setValueSelected("")
-      props.setArrayName([...props.arrayName.filter(e=>e.name!==""), { name: target.value }]);
+      if(newValue) props.setArrayName([...props.arrayName.filter(e=>e.name!==""), { name: target.value }]);
     }
   }
 

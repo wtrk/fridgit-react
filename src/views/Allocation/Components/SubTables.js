@@ -29,8 +29,8 @@ import NestedTable from "./NestedTable.js";
 const SubTables = (props) => {
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
-    const [suppliersList, setSuppliersList] = useState([]); //table items
-    const [supplierValue, setSupplierValue] = useState({}); //table items
+    const [suppliersList, setSuppliersList] = useState([]);
+    const [supplierValue, setSupplierValue] = useState({});
     const [cities, setCities] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [neighbourhoods, setNeighbourhoods] = useState([]);

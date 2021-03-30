@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState,useEffect,useRef } from "react";
 import CustomToolbar from "../../CustomToolbar";
 import {
   Container,
@@ -25,10 +25,13 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const LiveOperationAdd = () => {
   const [items, setItems] = useState(); //table items
   const [itemsUpdated, setItemsUpdated] = useState(); //table items
+  const [financialToSave, setFinancialToSave] = useState(); //table items
+  const [pricesToUse, setPricesToUse] = useState(); //table items
   const [openAddDialog,setOpenAddDialog] = useState(false); //for modal
   const [citiesList, setCitiesList] = useState([]);
   const [suppliersList, setSuppliersList] = useState([]);
   const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
+  const [cabinetsList, setCabinetsList] = useState([]);
   const [jobNumber, setJobNumber] = useState();
 
   useEffect(() => {
@@ -52,6 +55,12 @@ const LiveOperationAdd = () => {
         setNeighbourhoodsList(response.data)
         return response.data
       });
+      const cabinet = await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {
+        responseType: "json",
+      }).then((response) => {
+        setCabinetsList(response.data)
+        return response.data
+      });
     };
     fetchData();
   }, []);
@@ -65,7 +74,15 @@ const LiveOperationAdd = () => {
     { name: "job_number", label: "Job #" },
     { name: "operation_number", label: "Operation #" },
     { name: "operation_type", label: "Operation Type" },
-    { name: "sn" },
+    { name: "sn",
+    options: {
+      customBodyRender: (value, tableMeta, updateValue) => {
+        if (value) {
+          let snValue = cabinetsList.filter((e) => e._id == value);
+          return snValue.length ? snValue[0].sn : "-";
+        }
+      },
+    },},
     { name: "brand" },
     {
       name: "supplier_id",
@@ -162,7 +179,7 @@ const LiveOperationAdd = () => {
         }).then((response) => {
           console.log("deleted")
         });
-    },
+    }
   };
   const handleOpenAddDialog = () => {
     setOpenAddDialog(true);
@@ -171,16 +188,57 @@ const LiveOperationAdd = () => {
 
 
 
-    useEffect(()=>{  
-      const fetchData = async () => {
+  const cabinetsFirstRun = useRef(true);
+  useEffect(()=>{
+    const fetchData = async () => {
+      if (cabinetsFirstRun.current) {
+        cabinetsFirstRun.current = false;
+      }else{
+        await axios({
+          method: "post",
+          url: `${process.env.REACT_APP_BASE_URL}/financial`,
+          data: itemsUpdated.map(e=> {
+            return {
+              sn: e.sn,
+              operation_number: e.operation_number,
+              job_number: e.job_number,
+              promise_day: pricesToUse[0].promise_day,
+              handling_in: pricesToUse[0].handling_in,
+              storage: pricesToUse[0].storage,
+              in_house_preventive_maintenance: pricesToUse[0].in_house_preventive_maintenance,
+              corrective_service_in_house: pricesToUse[0].corrective_service_in_house,
+              cabinet_testing_fees: pricesToUse[0].cabinet_testing_fees,
+              branding_fees: pricesToUse[0].branding_fees,
+              drop: pricesToUse[0].drop,
+              transp_cbm: pricesToUse[0].transp_cbm,
+              transp_for_1_unit: pricesToUse[0].transp_for_1_unit,
+              min_charge: pricesToUse[0].min_charge,
+              preventive_maintenance: pricesToUse[0].preventive_maintenance,
+              exchange_corrective_reaction: pricesToUse[0].exchange_corrective_reaction,
+              corrective_reaction: pricesToUse[0].corrective_reaction,
+              total: pricesToUse[0].total
+            }
+          }),
+        })
+    
         const itemsByJobNumber = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/byJobNumber/${jobNumber}`, {
           responseType: "json",
         }).then((response) => {
           setItems(response.data)
         });  
-      };
-      fetchData();
-      },[itemsUpdated])
+
+      }
+    };
+    fetchData();
+  },[itemsUpdated])
+
+
+    // useEffect(()=>{  
+    //   const fetchData = async () => {
+
+    //   };
+    //   fetchData();
+    //   },[itemsUpdated])
 
   return (
     <Container maxWidth="xl">
@@ -234,14 +292,14 @@ const LiveOperationAdd = () => {
           
         {/*********************** -Add START- ****************************/}
         <Dialog
-          maxWidth={"lg"}
+          maxWidth={"md"}
           fullWidth
           TransitionComponent={Transition}
           open={openAddDialog}
           onClose={() => setOpenAddDialog(false)}
         >
           <div style={{minHeight:"80vh",overflowX:"hidden"}}>
-          <AddOperationForm setOpenDialog={setOpenAddDialog} jobNumber={jobNumber} setItemsUpdated={setItemsUpdated}  />
+          <AddOperationForm setOpenDialog={setOpenAddDialog} jobNumber={jobNumber} setItemsUpdated={setItemsUpdated} setPricesToUse={setPricesToUse}  />
           </div>
         </Dialog>
 

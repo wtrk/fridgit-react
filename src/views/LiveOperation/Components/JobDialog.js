@@ -6,19 +6,9 @@ import {
   Avatar,
   DialogActions, DialogContent,TableFooter, TableCell, TableRow
 } from "@material-ui/core";
-import {
-  Timeline,
-  TimelineItem,
-  TimelineSeparator,
-  TimelineConnector,
-  TimelineContent,
-  TimelineDot,
-  TimelineOppositeContent,
-} from "@material-ui/lab";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import MUIDataTable from "mui-datatables";
 import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
-import Moment from "react-moment";
 import { makeStyles} from "@material-ui/core/styles";
 import { Close} from "@material-ui/icons";
 import axios from 'axios';
@@ -39,11 +29,10 @@ const useStyles = makeStyles((theme) => ({
     },
   }));
 
-const OperationDialog = (props) => {
+const JobDialog = (props) => {
     const classes = useStyles(); //custom css
     const [dialogItemTab, setDialogItemTab] = useState(1);
     const [liveOperationsList, setLiveOperationsList] = useState([]);
-    const [historyList, setHistoryList] = useState([]);
     const [financialList, setFinancialList] = useState([]);
     const [clientsName, setClientsName] = useState();
     let columnsForPrices = [
@@ -67,20 +56,28 @@ const OperationDialog = (props) => {
       { name: "spare" },
       { name: "total" }
     ]
-    const optionsForPrices = {
-      filter:false,
-      selectableRows: false,
-      rowsPerPage: 100,
-      customFooter: () => {
-        return (
-          <div class="d-flex justify-content-end px-5 py-3"><strong>Total</strong>: {(financialList.length > 1)?financialList.reduce((a,b)=>a.total+b.total):financialList[0].total}</div>
-        );
-      }
-    };
     
+  const optionsForPrices = {
+    filter:false,
+    selectableRows: false,
+    rowsPerPage: 100,
+    customFooter: () => {
+      return (
+        <div class="d-flex justify-content-end px-5 py-3"><strong>Total</strong>: {(financialList.length > 1)?financialList.reduce((a,b)=>a.total+b.total):financialList[0].total}</div>
+        );
+    }
+  };
+
+
     useEffect(() => {
       const fetchData = async () => {
-        const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/${props.operationId}`, {
+        const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/byJobNumber/${props.jobNumber}`, {
+          responseType: "json",
+        }).then((response) => {
+          setFinancialList(response.data)
+          return response.data
+        });
+        const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/byJobNumber/${props.jobNumber}`, {
           responseType: "json",
         }).then((response) => {
           setLiveOperationsList(response.data)
@@ -92,30 +89,14 @@ const OperationDialog = (props) => {
     
     useEffect(() => {
       const fetchData = async () => {
-        const history = await axios(`${process.env.REACT_APP_BASE_URL}/operations/history/${liveOperationsList.operation_number}`, {
-          responseType: "json",
-        }).then((response) => {
-          setHistoryList(response.data)
-          return response.data
-        });
-        const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${liveOperationsList.operation_number}`, {
-          responseType: "json",
-        }).then((response) => {
-          setFinancialList(response.data)
-          return response.data
-        });
-      };
-      fetchData();
-    }, [liveOperationsList]);
-    
-    useEffect(() => {
-      const fetchData = async () => {
         const client = await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
           responseType: "json",
         }).then((response) => {
-          if("response.data",response.data.filter((e) => e._id == liveOperationsList.client_id).length){
-            setClientsName(response.data.filter((e) => e._id == liveOperationsList.client_id)[0].name)
-            return response.data
+          if(liveOperationsList.length) {
+            if("response.data",response.data.filter((e) => e._id == liveOperationsList[0].client_id).length){
+              setClientsName(response.data.filter((e) => e._id == liveOperationsList[0].client_id)[0].name)
+              return response.data
+            }
           }
         });
       };
@@ -124,27 +105,6 @@ const OperationDialog = (props) => {
   /**************** -OnClickItemDialog START- **************/
   const DialogTabsContent = (props) => {
     if (props.tab === 1) {
-      return (
-        <Timeline align="left">
-          {historyList
-            ? historyList.map((e) => (
-                <TimelineItem key={e._id} style={{minHeight:50}}>
-                  <TimelineOppositeContent>
-                    {(e.status==="Assigned") ? <Typography>{e.status} to {props.supplierName}</Typography>:<Typography>{e.status}</Typography>}
-                  </TimelineOppositeContent>
-                  <TimelineSeparator>
-                    <TimelineDot />
-                    <TimelineConnector />
-                  </TimelineSeparator>
-                  <TimelineContent>
-                  <Moment format="DD MMM YYYY - HH:mm">{e.createdAt}</Moment>
-                  </TimelineContent>
-                </TimelineItem>
-              ))
-            : null}
-        </Timeline>
-      );
-    } else if (props.tab === 2) {
       return (
         <Grid container className="infoTabContainer" spacing={3}>
           <Grid item container xs={12} md={6} spacing={2}>
@@ -199,7 +159,7 @@ const OperationDialog = (props) => {
           </Grid>
         </Grid>
       );
-    } else if (props.tab === 3) {
+    } else if (props.tab === 2) {
       return (
         <MuiThemeProvider theme={pricesDataTableTheme}>
         <MUIDataTable
@@ -235,18 +195,6 @@ const OperationDialog = (props) => {
               </div>
             </div>
           </Grid>
-
-          <Grid item xs={4}>
-            <strong>Sn:</strong> {liveOperationsList.sn}
-            <br />
-            <strong>Status:</strong> {liveOperationsList.status}
-          </Grid>
-
-          <Grid item xs={4}>
-            <strong>Branding:</strong> {liveOperationsList.brand}
-            <br />
-            <strong>Type:</strong> {liveOperationsList.operation_type}
-          </Grid>
         </Grid>
         <div className="entryEditHeader__tabsCont">
           <Button
@@ -257,7 +205,7 @@ const OperationDialog = (props) => {
               setDialogItemTab(1);
             }}
           >
-            History
+            Info
           </Button>
           <Button
             className={
@@ -265,16 +213,6 @@ const OperationDialog = (props) => {
             }
             onClick={() => {
               setDialogItemTab(2);
-            }}
-          >
-            Info
-          </Button>
-          <Button
-            className={
-              "ceeh__tabsCont--btn " + (dialogItemTab === 3 ? "selected" : "")
-            }
-            onClick={() => {
-              setDialogItemTab(3);
             }}
           >
             Financial History
@@ -300,4 +238,4 @@ const OperationDialog = (props) => {
   );
 };
 
-export default OperationDialog;
+export default JobDialog;

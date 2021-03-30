@@ -165,7 +165,7 @@ export default function FullWidthTabs() {
       );
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
-      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex].id); // array of all ids to to be deleted
+      const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/users/${idsToDelete}`, {
           responseType: "json",
         }).then((response) => {
@@ -253,6 +253,8 @@ export default function FullWidthTabs() {
             userId={userId}
           />
         </Dialog>
+      
+
       </div>
     </Container>
   );

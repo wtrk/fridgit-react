@@ -3,6 +3,8 @@ import { TextField, CircularProgress } from "@material-ui/core";
 import {Autocomplete} from '@material-ui/lab';
 import CustomToolbar from "CustomToolbar";
 import MUIDataTable from "mui-datatables";
+import { MuiThemeProvider } from "@material-ui/core/styles";
+import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import axios from 'axios';
 
 const NestedTable = (props) => {
@@ -10,12 +12,14 @@ const NestedTable = (props) => {
   const [dataList, setDataList] = useState([]);
 
   const add1Row = () => {
-    props.setArrayName([...props.arrayName, { name: "" }]);
+    if(props.arrayName) props.setArrayName([...props.arrayName, { name: "" }]);
+    else props.setArrayName([{ name: "" }]);
   };
     const handleChange = (e, newValue) =>{
+      newValue["quantity"]=1
+      console.log("newValue",newValue)
       setValueSelected([])
-      if(newValue) props.setArrayName([...props.arrayName.filter(e=>e.name!==""), newValue ]);
-
+      if(newValue) props.setArrayName([...props.arrayName.filter(e=>e.name!==""), newValue]);
     }
   
   useEffect(()=>{
@@ -33,7 +37,16 @@ const NestedTable = (props) => {
   },[])
 
 
+  
+  const handleChangeQuantity = (e) =>{
+    const { name, value } = e.target;
+    props.setArrayName(props.arrayName.map(eSub=>{
+      if(eSub.name===name) eSub.quantity=value
+      return eSub
+    }))
+  }
   return (
+    <MuiThemeProvider theme={pricesDataTableTheme}>
     <MUIDataTable
       data={props.arrayName}
       title={props.title}
@@ -72,9 +85,27 @@ const NestedTable = (props) => {
             },
           },
         },
+        {name:"category"},
+        {name:"quantity",
+        options: {
+          customBodyRender: (value, tableMeta, updateValue) => {
+            return <TextField
+            id="quantity"
+            type="number"
+            name={tableMeta.rowData[0]}
+            value={value}
+            onChange={handleChangeQuantity}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          },
+        }},
       ]}
       options={{
         filter: false,
+        rowsPerPage: 100,
+        customFooter: () => "",
         customToolbar: () => {
           return <CustomToolbar listener={add1Row} />;
         },
@@ -90,6 +121,7 @@ const NestedTable = (props) => {
         },
       }}
     />
+    </MuiThemeProvider>
   );
 };
 

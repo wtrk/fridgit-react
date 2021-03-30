@@ -247,46 +247,6 @@ const validateInputHandler = (e) => {
           <Grid item xs={12}>
             <NestedTable arrayName={tierCity} setArrayName={setTierCity} title="TierCities" dbTable="cities" />
           </Grid>
-          {/* <Grid item xs={12} >
-            <MUIDataTable
-              title="TierCity"
-              data={tierCity}
-              columns={[
-                {
-                  name: "name",
-                  label: "Name",
-                  options: {
-                    filter: false,
-                    customBodyRender: (value, tableMeta, updateValue) => {
-                      if (value == "") {
-                        return (
-                          <div>
-                            <TextField
-                              id="tierCityInput"
-                              label="Add new tier city"
-                              onChange={handleChangeTierCityInput}
-                              onKeyDown={keyPressTierCityHandler}
-                              fullWidth
-                              value={tierCitySelect || ""}
-                              name="tierCitySelect"
-                            />
-                          </div>
-                        );
-                      } else {
-                        return <div>{value}</div>;
-                      }
-                    },
-                  },
-                },
-              ]}
-              options={{
-                filter: false,
-                customToolbar: () => {
-                  return <CustomToolbar listener={add1RowInTierCity} />;
-                }
-              }}
-            />
-          </Grid> */}
 
           <Grid item xs={12} className="clientTables">
             <Button

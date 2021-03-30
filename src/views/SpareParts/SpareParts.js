@@ -5,11 +5,9 @@ import {
   Dialog,
   Slide,
   TextField,
-  Chip,
   CircularProgress,
-  Typography,
 } from "@material-ui/core";
-import { makeStyles, MuiThemeProvider } from "@material-ui/core/styles";
+import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
@@ -18,56 +16,27 @@ import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import axios from 'axios';
 
-
-
-// Top 100 films as rated by IMDb neighbourhoods. http://www.imdb.com/chart/top
-const top100Films = [];
-
-
-const useStyles = makeStyles((theme) => ({
-  appBar: {
-    position: "relative",
-  },
-  title: {
-    marginLeft: theme.spacing(2),
-    flex: 1,
-  },
-  root: {
-    backgroundColor: theme.palette.background.paper,
-  },
-  formControl: {
-    minWidth: "100%",
-  },
-}));
-
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const Neighbourhood = () => {
-  const classes = useStyles(); //custom css
+const SpareParts = () => {
   const [isLoading, setIsloading] = useState(true);
+  const [items, setItems] = useState([]); //table items
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
-  const [neighbourhoodId, setNeighbourhoodID] = useState(); //modal title
-  const [citiesList, setCitiesList] = useState([]);
+  const [sparePartsId, setSparePartsID] = useState(); //modal title
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
   const [itemsBackup, setItemsBackup] = useState([]);
-  const [items, setItems] = useState([]); //table items
+
   useEffect(() => {
     const fetchData = async () => {
-      const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
-        responseType: "json",
-      }).then((response) => {
-        setCitiesList(response.data)
-        return response.data
-      });
-      await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
+      await axios(`${process.env.REACT_APP_BASE_URL}/spareParts`, {
         responseType: "json",
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
-        return setIsloading(false);
+        return setIsloading(false)
       });
     };
     fetchData();
@@ -78,10 +47,10 @@ const Neighbourhood = () => {
       name: "_id",
       options: {
         display: false,
-      }
+      },
     },
     {
-      name: "code",
+      name: "name",
       options: {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
@@ -89,7 +58,10 @@ const Neighbourhood = () => {
             <div>
               <a
                 onClick={() => {
-                  handleAdd("Edit Neighbourhood - "+tableMeta.rowData[2],tableMeta.rowData[0]);
+                  handleAdd(
+                    "Edit Spare Parts - " + tableMeta.rowData[2],
+                    tableMeta.rowData[0]
+                  );
                 }}
               >
                 {value}
@@ -99,36 +71,23 @@ const Neighbourhood = () => {
         },
       },
     },
-    {
-      name: "name"
-    },
-    {
-      name: "city_id",
-      label: "City",
-      options: {
-        customBodyRender: (value, tableMeta, updateValue) => {
-          let cityValue = "-"
-          if(citiesList.filter(e=> e._id==value)[0]){
-            cityValue = citiesList.filter(e=> e._id==value)[0].name;
-          }
-
-          return cityValue
-        }
-      },
-    }
+    { name: "nameAr", label: "Name Arabic" },
+    { name: "category" },
+    { name: "categoryAr", label: "Category Arabic" },
+    { name: "price" },
   ];
 
   const options = {
     filter: false,
     onRowsDelete: null,
-    selectToolbarPlacement: "replace",
     rowsPerPage: 20,
     rowsPerPageOptions: [20, 50, 100],
+    selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
         <CustomToolbar
           listener={() => {
-            handleAdd("Add New Neighbourhood");
+            handleAdd("Add New Spare Parts");
           }}
           handleFilter={handleFilter}
         />
@@ -136,7 +95,7 @@ const Neighbourhood = () => {
     },
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
-        axios.delete(`${process.env.REACT_APP_BASE_URL}/neighbourhoods/${idsToDelete}`, {
+        axios.delete(`${process.env.REACT_APP_BASE_URL}/spareParts/${idsToDelete}`, {
           responseType: "json",
         }).then((response) => {
           console.log("deleted")
@@ -152,14 +111,13 @@ const Neighbourhood = () => {
     setFilterDialog(true)
   };
 
-  const handleAdd = (title, neighbourhoodId) => {
+  const handleAdd = (title, sparePartsId) => {
     setOpenAddForm(true);
-    setNeighbourhoodID(neighbourhoodId);
+    setSparePartsID(sparePartsId);
     setFormTitle(title);
   };
-
-
   const handleCloseAddForm = () => setOpenAddForm(false)
+
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
     if(newValue.length===0) setItems(itemsBackup); else{
@@ -179,7 +137,7 @@ const Neighbourhood = () => {
   //Search component ---------------END--------------
   return (
     <Container maxWidth="xl">
-      <Autocomplete
+    <Autocomplete
         multiple
         freeSolo
         limitTags={3}
@@ -220,8 +178,7 @@ const Neighbourhood = () => {
           <SubTables
             title={formTitle}
             handleClose={handleCloseAddForm}
-            neighbourhoodId={neighbourhoodId}
-            citiesList={citiesList}
+            sparePartsId={sparePartsId}
           />
         </Dialog>
         {/*********************** FILTER start ****************************/}
@@ -238,4 +195,4 @@ const Neighbourhood = () => {
     </Container>
   );
 }
-export default Neighbourhood
+export default SpareParts

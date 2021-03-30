@@ -14,7 +14,7 @@ const NestedTable = (props) => {
   };
     const handleChange = (e, newValue) =>{
       setValueSelected([])
-      props.setArrayName([...props.arrayName.filter(e=>e.name!==""), newValue ]);
+      if(newValue) props.setArrayName([...props.arrayName.filter(e=>e.name!==""), newValue ]);
 
     }
   

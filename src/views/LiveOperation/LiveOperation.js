@@ -22,7 +22,8 @@ import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import TabsOnTop from "./Components/TabsOnTop.js";
 import SnDialog from "./Components/SnDialog.js";
 import OperationDialog from "./Components/OperationDialog.js";
-import CustomToolbarSelect from "./Components/CustomToolbarSelect.js";
+import JobDialog from "./Components/JobDialog.js";
+import CustomToolbarSelect from "./Components/CustomToolbar/CustomToolbarSelect.js";
 
 // Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
 const top100Films = [];
@@ -44,8 +45,11 @@ const [citiesList, setCitiesList] = useState([]);
 const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
 const [clientsList, setClientsList] = useState([]);
 const [suppliersList, setSuppliersList] = useState([]);
+const [cabinetsList, setCabinetsList] = useState([]);
 const [openOperationDialog,setOpenOperationDialog] = useState(false);
+const [openJobDialog,setOpenJobDialog] = useState(false);
 const [operationId,setOperationId] = useState();
+const [jobNumber,setJobNumber] = useState();
 const [supplierName,setSupplierName] = useState("");
 const [itemsBackup, setItemsBackup] = useState([]); //Search
 const [statusUpdated, setStatusUpdated] = useState([]); //Status Updated
@@ -76,6 +80,12 @@ useEffect(() => {
       setSuppliersList(response.data)
       return response.data
     });
+    const cabinet = await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {
+      responseType: "json",
+    }).then((response) => {
+      setCabinetsList(response.data)
+      return response.data
+    });
   };
   fetchData();
 }, []);
@@ -102,7 +112,32 @@ useEffect(() => {
         display: false,
       },
     },
-    { name: "job_number", label: "Job #" },
+    {
+      name: "job_number",
+      label: "Job #",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let supplierName = "";
+          if (tableMeta.rowData[10]) {
+            let supplierValue = suppliersList.filter(
+              (e) => e._id == tableMeta.rowData[10]
+            );
+            if (supplierValue.length) supplierName = supplierValue[0].name;
+          }
+          return (
+            <div>
+              <a
+                onClick={() =>
+                  handleOpenJobDialog(value, supplierName)
+                }
+              >
+                {value}
+              </a>
+            </div>
+          );
+        },
+      },
+    },
     {
       name: "createdAt",
       label: "Creation Date",
@@ -117,32 +152,41 @@ useEffect(() => {
       label: "Operation #",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
-          let supplierName=""
+          let supplierName = "";
           if (tableMeta.rowData[10]) {
-            let supplierValue = suppliersList.filter((e) => e._id == tableMeta.rowData[10]);
-            if(supplierValue.length) supplierName = supplierValue[0].name
+            let supplierValue = suppliersList.filter(
+              (e) => e._id == tableMeta.rowData[10]
+            );
+            if (supplierValue.length) supplierName = supplierValue[0].name;
           }
           return (
             <div>
-              <a onClick={()=>handleOpenOperationDialog(tableMeta.rowData[0],supplierName)}>{value}</a>
+              <a
+                onClick={() =>
+                  handleOpenOperationDialog(tableMeta.rowData[0], supplierName)
+                }
+              >
+                {value}
+              </a>
             </div>
           );
         },
       },
     },
     { name: "operation_type", label: "Operation Type" },
-    {
-      name: "sn",
-      options: {
-        customBodyRender: (value, tableMeta, updateValue) => {
+    { name: "sn",
+    options: {
+      customBodyRender: (value, tableMeta, updateValue) => {
+        if (value) {
+          let snValue = cabinetsList.filter((e) => e._id == value);
           return (
             <div>
-              <a onClick={()=>handleOpenSnDialog(value)}>{value}</a>
+              <a onClick={() => handleOpenSnDialog(value)}>{snValue.length ? snValue[0].sn : "-"}</a>
             </div>
           );
-        },
+        }
       },
-    },
+    },},
     {
       name: "brand",
       options: {
@@ -307,6 +351,11 @@ useEffect(() => {
     setOperationId(id)
     setSupplierName(supplierName)
   }
+  const handleOpenJobDialog = (id,supplierName)=>{
+    setOpenJobDialog(true)
+    setJobNumber(id)
+    setSupplierName(supplierName)
+  }
   const handleOpenSnDialog = (id)=>{
     setOpenSnDialog(true)
     setSnId(id)
@@ -389,7 +438,7 @@ useEffect(() => {
 
       </Container>
       <div>
-        {/*********************** -Operation Dialog START- ****************************/}
+        {/*********************** -Job Dialog START- ****************************/}
         <Dialog
           maxWidth={"xl"}
           fullWidth
@@ -398,6 +447,16 @@ useEffect(() => {
           onClose={() => setOpenOperationDialog(false)}
         >
           <OperationDialog setOpenDialog={setOpenOperationDialog} operationId={operationId} supplierName={supplierName} />
+        </Dialog>
+        {/*********************** -Operation Dialog START- ****************************/}
+        <Dialog
+          maxWidth={"xl"}
+          fullWidth
+          TransitionComponent={Transition}
+          open={openJobDialog}
+          onClose={() => setOpenJobDialog(false)}
+        >
+          <JobDialog setOpenDialog={setOpenJobDialog} jobNumber={jobNumber} supplierName={supplierName} />
         </Dialog>
 
         {/*********************** -Sn Dialog START- ****************************/}

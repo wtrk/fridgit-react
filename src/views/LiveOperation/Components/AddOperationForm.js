@@ -27,16 +27,9 @@ import "../LiveOperation.css";
 import axios from 'axios';
 
 const useStyles = makeStyles((theme) => ({
-    appBar: {
-      position: "relative",
-    },
-    title: {
-      marginLeft: theme.spacing(2),
-      flex: 1,
-    },
-  formControl: {
-    minWidth: "100%",
-  }
+    appBar: {position: "relative",marginBottom:20},
+    title: {marginLeft: theme.spacing(2),flex: 1,},
+  formControl: {minWidth: "100%",}
 }));
 
 const AddOperationForm = (props) => {
@@ -73,6 +66,7 @@ const AddOperationForm = (props) => {
 
   const [currentDate,setCurrentDate] = useState(new Date()); //table items
   const [operationType, setOperationType] = useState("");
+  const [financialToSave, setFinancialToSave] = useState([]);
   const [snFilled, setSnFilled] = useState([]);
   const [openSearch, setOpenSearch] = useState(false);
   const [openPrices, setOpenPrices] = useState(false);
@@ -267,6 +261,7 @@ const handleOpenSearch = () => {
       let showRow = true;
       if(e.booked) return false
       snFilled.forEach((sn) => {
+        //change Sn
         if (sn == e.sn) showRow = false;
       });
       return showRow;
@@ -280,8 +275,9 @@ const optionsForSn = {
         onClick={() => {
           const selectedRowsTotal=selectedRows.data.map(e=>e.index)
           selectedRowsTotal.forEach(e=>{
+            //change Sn
             setSnFilled(prevSN =>[...prevSN,cabinetsList[e].sn])
-            setSelectedSn(prevSelectedSn =>[...prevSelectedSn,...cabinetsList.filter((eSub) => cabinetsList[e].sn.includes(eSub.sn))]);
+            setSelectedSn(prevSelectedSn =>[...prevSelectedSn,...cabinetsList.filter((eSub) => cabinetsList[e]._id.includes(eSub._id))]);
           })
           setOpenSearch(false)
         }}
@@ -297,8 +293,9 @@ const optionsForSn = {
   }
 };
 const handleChangeSn = (event, newValue) => {
+  //change Sn
   setSnFilled(newValue);
-  setSelectedSn(cabinetsList.filter((e) => newValue.includes(e.sn)));
+  setSelectedSn(cabinetsList.filter((e) => newValue.includes(e.id)));
 }
 
 useEffect(()=>{
@@ -306,14 +303,15 @@ useEffect(()=>{
   const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {responseType: "json"})
       .then((response) => {
-        if(formValues.operationType === "Retrieval"){
+        const op=formValues.operationType
+        if(op === "Retrieval"){
           return response.data.filter(e=>e.location==="store")
-        }
-        if(formValues.operationType === "External Receipt"){
+        }else if(op === "External Receipt"){
           return response.data.filter(e=>e.location==="NA")
-        }
-        if(formValues.operationType === "Deployment"){
+        }else if(op === "Deployment"){
           return response.data.filter(e=>e.location==="warehouse")
+        }else if(op === "Corrective Maintenance" || op === "Preventive Maintenance"){
+          return response.data
         }
       })
       .then((response)=>{
@@ -345,9 +343,13 @@ useEffect(()=>{
 
 
 
+const serviceTypeFirstRun = useRef(true);
 useEffect(()=>{
   setSaveClicked(1)
   const fetchData = async () => {
+    if (serviceTypeFirstRun.current) {
+      serviceTypeFirstRun.current = false;
+    }else{
       await axios(`${process.env.REACT_APP_BASE_URL}/priceRules`, {
         responseType: "json",
       }).then((response) => {
@@ -356,7 +358,6 @@ useEffect(()=>{
         let priceFromTierOut=priceFromCountry.filter(e=>e.tiersOut.length ? e.tiersOut.map(eSub=>eSub.name).includes(tierOut):true)
         let priceFromCityOut=priceFromTierOut.filter(e=>e.citiesOut.length ? e.citiesOut.map(eSub=>eSub.name).includes(cityOut.name):true)
         let priceFromNeighbourhoodsOut=priceFromCityOut.filter(e=>e.neighbourhoodsOut.length ? e.neighbourhoodsOut.map(eSub=>eSub.name).includes(neighbourhoodOut.name):true)
-
         return priceFromNeighbourhoodsOut.filter(e => e.service===serviceTypeValue._id)
       }).then((response) => {
         setPrices(response)
@@ -372,7 +373,7 @@ useEffect(()=>{
         setAllocationRulesList(allocationFromNeighbourhoods)
       })
 
-
+    }
     }
   fetchData();
 },[serviceTypeValue])
@@ -438,7 +439,6 @@ useEffect(()=>{
             customBodyRender: (value, tableMeta, updateValue) => {
               if(tableMeta.rowData[15]==="Total"){
                 let allNumbers = tableMeta.tableData.map(e=>e[16]).filter(e => typeof e === "number")
-                console.log("allNumbers",allNumbers)
                 let sumOfAll = allNumbers.length ? allNumbers.reduce((a,b)=>a+b):0;
                 return sumOfAll
               }
@@ -448,13 +448,22 @@ useEffect(()=>{
         },
       ]);
     setOpenPrices(true)
+
+    props.setPricesToUse(prices) 
   }
 },[prices])
 
 const handleSaveForm = async () => {
   //let priceFromNeighbourhoodsOut=prices.filter(e=>e.clients.length ? e.clients.map(eSub=>eSub.name).includes(neighbourhoodOut):true)
   let addresses={}
-  if(formValues.operationType != "External Receipt" && formValues.operationType != "Retrieval"){
+  if(formValues.operationType === "External Receipt" || formValues.operationType === "Retrieval"){
+    addresses={execution_address: {
+      city_id: warehouseValue.location.city_id,
+      neighbourhood_id: warehouseValue.location.neighbourhood_id,
+      shop_name: warehouseValue.name,
+      mobile: warehouseValue.location.mobile,
+    }}
+  }else if(formValues.operationType === "Transfer" || formValues.operationType === "Deployment" || formValues.operationType === "Exchange"){
     addresses={initiation_address: {
       city_id: warehouseValue.location.city_id,
       neighbourhood_id: warehouseValue.location.neighbourhood_id,
@@ -467,13 +476,6 @@ const handleSaveForm = async () => {
       shop_name: storeValue.name,
       mobile: storeValue.location.mobile,
     }}
-  }else{
-    addresses={execution_address: {
-      city_id: warehouseValue.location.city_id,
-      neighbourhood_id: warehouseValue.location.neighbourhood_id,
-      shop_name: warehouseValue.name,
-      mobile: warehouseValue.location.mobile,
-    }}
   }
   let formValuesToSave = selectedSn.map((e) => {
     const clientName=clientsList.filter((eSub) => eSub._id == e.client )?clientsList.filter((eSub) => eSub._id == e.client )[0].name:null
@@ -482,7 +484,7 @@ const handleSaveForm = async () => {
     job_number: props.jobNumber,
     operation_number: "ON" + Math.floor(Math.random() * 100000000) + 1,
     operation_type: formValues.operationType,
-    sn: e.sn,
+    sn: e._id,
     brand: e.brand,
     client_id: e.client,
     client_name: clientName,
@@ -493,6 +495,7 @@ const handleSaveForm = async () => {
     last_status_update: currentDate,
   }
 });
+
   const statusHistoryUnassigned = formValuesToSave.map((e) => ({
     "status":"Unassigned",
     "user":"User 1",
@@ -510,11 +513,8 @@ const handleSaveForm = async () => {
     }
   });
   let statusHistory=[...statusHistoryUnassigned, ...statusHistoryAssigned]
-  console.log("formValuesToSave",statusHistory)
 
   if(saveClicked===1){
-  
-
     let finalPrices=selectedSn.map((e) => {
       const clientName=clientsList.filter((eSub) => eSub._id == e.client )?clientsList.filter((eSub) => eSub._id == e.client )[0].name:null
       const pricesFromClients=prices.filter(e=>e.clients.length ? e.clients.map(eSub=>eSub.name).includes(clientName):true);
@@ -531,14 +531,16 @@ const handleSaveForm = async () => {
         total:sumOfValues
       }
     })
-    // console.log("finalPrices","finalPrices",finalPrices)
     finalPrices.push({corrective_reaction:"Total"})
-    console.log("finalPrices",finalPrices)
     setPrices(finalPrices)
     setSaveClicked(2)
   }else{
-    
     const fetchData = async () => {
+      await axios({
+        method: "post",
+        url: `${process.env.REACT_APP_BASE_URL}/financial`,
+        data: financialToSave,
+      })
       await axios({
         method: "post",
         url: `${process.env.REACT_APP_BASE_URL}/liveOperations`,
@@ -561,13 +563,22 @@ const handleSaveForm = async () => {
         data: statusHistory,
       })
       
+      let locationToDb="NA"
+      let locationIdToDb="NA"
+      if(formValues.operationType=="Deployment"){
+        locationToDb="store"
+        locationIdToDb=storeValue._id
+      }else if(formValues.operationType === "External Receipt" || formValues.operationType === "Retrieval"){
+        locationToDb="warehouse"
+        locationIdToDb=warehouseValue._id
+      }
     selectedSn.forEach((e) => {
       axios({
         method: "put",
         url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e._id}`,
         data: [{
-          location: formValues.operationType=="Deployment" ? "store" : "warehouse",
-          location_id: formValues.operationType=="Deployment" ? storeValue._id : warehouseValue._id,
+          location: locationToDb,
+          location_id: locationIdToDb,
           booked:true
         }]
       })
@@ -597,7 +608,7 @@ const handleSaveForm = async () => {
         justify="center"
         alignContent="center"
       >
-        <Grid item xs={12} sm={7}>
+        <Grid item xs={11}>
           <FormControl className={classes.formControl}>
             <InputLabel id="initiationAddressLabel">Operation Type</InputLabel>
             <Select
@@ -615,9 +626,10 @@ const handleSaveForm = async () => {
         </Grid>
 
         {formValues.operationType &&
-        formValues.operationType != "External" &&
-        formValues.operationType != "Preventive" ? (
-          <Grid item xs={12} sm={7}>
+        formValues.operationType != "External Receipt" &&
+        formValues.operationType != "Preventive Maintenance" &&
+        formValues.operationType != "Corrective Maintenance" ? (
+          <Grid item xs={11}>
             <Autocomplete
               id="WarehouseInput"
               options={warehousesList || {}}
@@ -636,10 +648,9 @@ const handleSaveForm = async () => {
           </Grid>
         ) : null}
 
-        {formValues.warehouse && formValues.operationType != "External Receipt" && formValues.operationType != "Retrieval" ||
-        formValues.operationType === "Corrective" ||
-        formValues.operationType === "Preventive" ? (
-          <Grid item xs={12} sm={7}>
+        {formValues.warehouse && 
+        formValues.operationType != "External Receipt" && formValues.operationType != "Retrieval" ? (
+          <Grid item xs={11}>
             <Autocomplete
               id="storeInput"
               options={storesList || {}}
@@ -658,8 +669,8 @@ const handleSaveForm = async () => {
           </Grid>
         ) : null}
 
-        {formValues.store && formValues.operationType != "External Receipt" && formValues.operationType != "Retrieval" ? (
-          <Grid item xs={12} sm={7}>
+        {formValues.store ? (
+          <Grid item xs={11}>
             <Autocomplete
               id="fridgeTypeInput"
               options={fridgeTypesList || {}}
@@ -679,8 +690,10 @@ const handleSaveForm = async () => {
         ) : null}
         {formValues.fridgeType ||
         formValues.warehouse && formValues.operationType === "External Receipt" ||
-        formValues.warehouse && formValues.operationType === "Retrieval" ? (
-          <Grid item xs={12} sm={7} container>
+        formValues.warehouse && formValues.operationType === "Retrieval" ||
+        formValues.operationType === "Preventive Maintenance" ||
+        formValues.operationType === "Corrective Maintenance" ? (
+          <Grid item xs={11} container>
             <Fragment>
               <Grid item xs={10}>
                 <Autocomplete
@@ -717,9 +730,11 @@ const handleSaveForm = async () => {
           </Grid>
         ) : null}
         {formValues.fridgeType ||
+         selectedSn.length && formValues.operationType === "Preventive Maintenance" ||
+         selectedSn.length && formValues.operationType === "Corrective Maintenance" ||
         formValues.warehouse && formValues.operationType === "External Receipt" ||
         formValues.warehouse && formValues.operationType === "Retrieval" ? (
-          <Grid item xs={12} sm={7}>
+          <Grid item xs={11}>
             <Autocomplete
               id="serviceTypeInput"
               options={serviceTypeList || {}}
@@ -740,7 +755,7 @@ const handleSaveForm = async () => {
         {/*saveClicked===2*/}
 
         {formValues.serviceType ? (
-          <Grid item xs={12} sm={7} className="clientTables">
+          <Grid item xs={11} className="clientTables">
             <Button
               variant="contained"
               color="primary"

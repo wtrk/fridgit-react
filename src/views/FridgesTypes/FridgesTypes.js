@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import CustomToolbar from "../../CustomToolbar";
 import {
   Container,
@@ -15,6 +15,7 @@ import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
+import Preventive from "./Components/Preventive.js";
 import axios from 'axios';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -24,12 +25,14 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const FridgesType = () => {
   const [isLoading, setIsloading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
+  const [openAddPreventive, setOpenAddPreventive] = useState(false); //for modal
   const [fridgesTypeId, setFridgesTypeID] = useState(); //modal title
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
   const [items, setItems] = useState([]); //table items
   const [itemsBackup, setItemsBackup] = useState([]);
-  const [searchValue, setSearchValue] = useState({});
+  const [preventivesChosen, setPreventivesChosen] = useState({});
+  const [refreshData, setRefreshData] = useState([]);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -42,7 +45,31 @@ const FridgesType = () => {
       });
     };
     fetchData();
-  }, [openAddForm]);
+  }, [refreshData]);
+
+
+  const preventivesChosenFirstRun = useRef(true);
+  useEffect(() => {
+    const fetchData = async () => {
+      if (preventivesChosenFirstRun.current) {
+        preventivesChosenFirstRun.current = false;
+      }else{
+        await axios({
+          method: "put",
+          url: `${process.env.REACT_APP_BASE_URL}/fridgesTypes/${fridgesTypeId}`,
+          data: [{
+            preventive: preventivesChosen,
+          }]
+        }).then((response)=>{
+          setRefreshData(response.data)
+          
+        })
+      }
+    };
+    fetchData();
+  }, [preventivesChosen]);
+
+
 
   const columns = [
     {
@@ -91,7 +118,23 @@ const FridgesType = () => {
       label: "CBM",
     },
     {
-      name: "preventive"
+      name: "preventive",
+      options: {
+        filter: false,
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return (
+            <div>
+              <a
+                onClick={() => {
+                  handleOpenPreventive(tableMeta.rowData[2],tableMeta.rowData[0],value);
+                }}
+              >
+                {value.length}
+              </a>
+            </div>
+          );
+        },
+      },
     }
   ];
 
@@ -134,6 +177,13 @@ const FridgesType = () => {
     setFridgesTypeID(fridgesTypeId);
     setFormTitle(title);
   };
+  const handleOpenPreventive = (title, fridgesTypeId,value) => {
+    setOpenAddPreventive(true);
+    setFridgesTypeID(fridgesTypeId);
+    setFormTitle(title);
+    setPreventivesChosen(value);
+  }
+  const handleCloseAddPreventive = () => setOpenAddPreventive(false)
 
   const handleCloseAddForm = () => setOpenAddForm(false)
 
@@ -195,6 +245,21 @@ const FridgesType = () => {
             title={formTitle}
             handleClose={handleCloseAddForm}
             fridgesTypeId={fridgesTypeId}
+          />
+        </Dialog>
+        <Dialog
+          fullScreen
+          open={openAddPreventive}
+          onClose={handleCloseAddPreventive}
+          TransitionComponent={Transition}
+        >
+          <Preventive
+            title={formTitle}
+            handleClose={handleCloseAddPreventive}
+            fridgesTypeId={fridgesTypeId}
+            preventivesChosen={preventivesChosen}
+            setPreventivesChosen={setPreventivesChosen}
+            setIsloading={setIsloading}
           />
         </Dialog>
         {/*********************** FILTER start ****************************/}

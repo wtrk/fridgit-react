@@ -37,7 +37,6 @@ const SubTables = (props) => {
     const widthRef = useRef()
     const heightRef = useRef()
     const cbmRef = useRef()
-    const preventiveRef = useRef()
     const submitRef = useRef()
     const [formValues, setFormValues] = useState({
       refrigerant_type: "",
@@ -47,7 +46,6 @@ const SubTables = (props) => {
       width: "",
       height: "",
       cbm: "",
-      preventive: "",
     });
     const [formErrors, setFormErrors] = useState({
       refrigerant_type: {error:false,msg:""},
@@ -56,8 +54,7 @@ const SubTables = (props) => {
       length: {error:false,msg:""},
       width: {error:false,msg:""},
       height: {error:false,msg:""},
-      cbm: {error:false,msg:""},
-      preventive: {error:false,msg:""}
+      cbm: {error:false,msg:""}
     });
     
   useEffect(()=>{
@@ -83,12 +80,11 @@ const SubTables = (props) => {
       switch (target.name){
         case "refrigerant_type": codeRef.current.focus();break;
         case "code": nameRef.current.focus();break;
-        case "name": submitRef.current.focus();break;
-        case "length": submitRef.current.focus();break;
-        case "width": submitRef.current.focus();break;
-        case "height": submitRef.current.focus();break;
+        case "name": lengthRef.current.focus();break;
+        case "length": widthRef.current.focus();break;
+        case "width": heightRef.current.focus();break;
+        case "height": cbmRef.current.focus();break;
         case "cbm": submitRef.current.focus();break;
-        case "preventive": submitRef.current.focus();break;
         default: refrigerant_typeRef.current.focus();
       }
     }
@@ -135,8 +131,7 @@ const handleOnSubmit = async () => {
                 length: "",
                 width: "",
                 height: "",
-                cbm: "",
-                preventive: ""
+                cbm: ""
                });
                props.handleClose()
              })
@@ -308,23 +303,6 @@ const validateInputHandler = (e) => {
             />
           </Grid>
           <Grid item xs={12} sm={2}></Grid>
-          <Grid item xs={12} sm={5}>
-            <TextField
-              id="preventiveInput"
-              label="Preventive"
-              name="preventive"
-              onChange={handleChangeForm}
-              fullWidth
-              value={formValues.preventive || ""}
-              inputRef={preventiveRef}
-              onKeyDown={keyPressHandler}
-              onBlur={validateInputHandler}
-              helperText={
-                formErrors.preventive.error ? formErrors.preventive.msg : null
-              }
-              error={formErrors.preventive.error}
-            />
-          </Grid>
           
           
           

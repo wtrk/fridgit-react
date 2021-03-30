@@ -16,6 +16,9 @@ import {
   TimelineOppositeContent,
 } from "@material-ui/lab";
 import Moment from "react-moment";
+import { MuiThemeProvider } from "@material-ui/core/styles";
+import MUIDataTable from "mui-datatables";
+import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import { makeStyles} from "@material-ui/core/styles";
 import { Close} from "@material-ui/icons";
 import axios from 'axios';
@@ -54,6 +57,39 @@ const useStyles = makeStyles((theme) => ({
 const SnDialog = (props) => {
     const classes = useStyles(); //custom css
     const [liveOperationsList, setLiveOperationsList] = useState([]);
+    const [financialList, setFinancialList] = useState([]);
+    let columnsForPrices = [
+      { name: "job_number" },
+      { name: "operation_number" },
+      { name: "branding_fees" },
+      { name: "cabinet_testing_fees" },
+      { name: "corrective_reaction" },
+      { name: "corrective_service_in_house" },
+      { name: "drop" },
+      { name: "exchange_corrective_reaction" },
+      { name: "min_charge" },
+      { name: "handling_in" },
+      { name: "in_house_preventive_maintenance" },
+      { name: "preventive_maintenance" },
+      { name: "promise_day" },
+      { name: "storage" },
+      { name: "transp_cbm" },
+      { name: "transp_for_1_unit" },
+      { name: "labor" },
+      { name: "spare" },
+      { name: "total" }
+    ]
+    
+    const optionsForPrices = {
+      filter:false,
+      selectableRows: false,
+      rowsPerPage: 100,
+      customFooter: () => {
+        return (
+          <div class="d-flex justify-content-end px-5 py-3"><strong>Total</strong>: {(financialList.length > 1)?financialList.reduce((a,b)=>a.total+b.total):financialList[0].total}</div>
+        );
+      }
+    };
     
     useEffect(() => {
       const fetchData = async () => {
@@ -61,6 +97,12 @@ const SnDialog = (props) => {
           responseType: "json",
         }).then((response) => {
           setLiveOperationsList(response.data)
+          return response.data
+        });
+        const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/bySn/${props.snId}`, {
+          responseType: "json",
+        }).then((response) => {
+          setFinancialList(response.data)
           return response.data
         });
       };
@@ -147,58 +189,14 @@ const SnDialog = (props) => {
       );
     } else if (props.tab === 3) {
       return (
-        <Timeline align="alternate">
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography>Created</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography color="textSecondary">01/01/2020 09:30 am</Typography>
-            </TimelineContent>
-          </TimelineItem>
-
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">10/08/2020 10:00 am</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Client approved</Typography>
-            </TimelineContent>
-          </TimelineItem>
-
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography>Completed</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography color="textSecondary">01/10/2020 12:00 am</Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">10/10/2020 9:00 am</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Admin approved</Typography>
-            </TimelineContent>
-          </TimelineItem>
-        </Timeline>
+        <MuiThemeProvider theme={pricesDataTableTheme}>
+        <MUIDataTable
+          title="Financial"
+          data={financialList}
+          columns={columnsForPrices}
+          options={optionsForPrices}
+        />
+        </MuiThemeProvider>
       );
     }
   };
@@ -208,7 +206,6 @@ const SnDialog = (props) => {
 
   return (
     <Fragment>
-
         <DialogContent dividers className="entryEditHeader">
             <Grid container>
               <Grid item xs={4}>
