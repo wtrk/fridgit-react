@@ -9,7 +9,7 @@ import {
   Collapse,
 } from "@material-ui/core";
 import axios from 'axios';
-import { Close,Save } from "@material-ui/icons";
+import { Close,Save,Publish } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import Alert from '@material-ui/lab/Alert';
 
@@ -56,6 +56,37 @@ const SubTables = (props) => {
       height: {error:false,msg:""},
       cbm: {error:false,msg:""}
     });
+    const [image, setImage] = useState({ preview: "", file: "" });
+  
+    const handleChangeImg = e => {
+      if (e.target.files.length) {
+        setImage({
+          preview: URL.createObjectURL(e.target.files[0]),
+          file: e.target.files[0]
+        });
+      }
+    };
+  
+    const handleUploadImg = async e => {
+    const formData = new FormData();
+    formData.append("file",image.file);
+  
+    for (const [key, value] of Object.entries(formErrors)) {
+        if(value.error===true) return setOpenAlertError(true);
+    }
+      await axios({
+        method: "put",
+        url: `${process.env.REACT_APP_BASE_URL}/fridgesTypes/img/${props.fridgesTypeId}`,
+        data: formData,
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+        .then(function (response) {
+          setOpenAlertSuccess(true);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+  }
     
   useEffect(()=>{
     refrigerant_typeRef.current.focus()
@@ -162,11 +193,6 @@ const validateInputHandler = (e) => {
           </Typography>
         </Toolbar>
       </AppBar>
-      <Collapse in={openAlertSuccess}>
-        <Alert severity="success" onClick={() => setOpenAlertSuccess(false)}>
-          The fridgesType is successfully created
-        </Alert>
-      </Collapse>
       <Collapse in={openAlertError}>
         <Alert severity="error" onClick={() => setOpenAlertError(false)}>
           Please validate the Form and submit it again
@@ -176,7 +202,46 @@ const validateInputHandler = (e) => {
 
       <div style={{ padding: "10px 30px" }}>
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={5}>
+          
+          <Grid item xs={12} sm={3}>
+                {openAlertSuccess?
+                  <div className="alert alert-success" role="alert">
+                    The Image was successfully updated
+                  </div>
+                :null}
+                {!image.preview ? (
+                  <label htmlFor="upload-button" style={{width:"100%"}}>
+                  {formValues.photo ? (
+                    <img src={require("assets/uploads/clients/"+formValues.photo)} alt="" style={{width:"100%"}} className="mb-4" /> 
+                  ):(
+                    <h5 className="text-center">Click here to upload a photo</h5>
+                  )}
+                </label>
+                ) : (
+                  <>
+                <label htmlFor="upload-button" style={{width:"100%"}}><img src={image.preview} alt="" style={{width:"100%"}} /></label>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="large"
+                  className="btn btn--save float-right"
+                  onClick={handleUploadImg}
+                  startIcon={<Publish />}
+                >
+                  Upload
+                </Button>
+                </>
+                )}
+                <input
+                  type="file"
+                  id="upload-button"
+                  style={{ display: "none" }}
+                  onChange={handleChangeImg}
+                />
+              </Grid>
+            
+          <Grid item container xs={12} sm={9} spacing={3}> 
+          <Grid item xs={12} sm={6}>
             <TextField
               id="refrigerant_typeInput"
               label="Refrigerant type"
@@ -193,8 +258,7 @@ const validateInputHandler = (e) => {
               error={formErrors.refrigerant_type.error}
             />
           </Grid>
-          <Grid item xs={12} sm={2}></Grid>
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={6}>
             <TextField
               id="codeInput"
               label="Code"
@@ -212,7 +276,7 @@ const validateInputHandler = (e) => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={6}>
             <TextField
               id="nameInput"
               label="Name"
@@ -229,8 +293,7 @@ const validateInputHandler = (e) => {
               error={formErrors.name.error}
             />
           </Grid>
-          <Grid item xs={12} sm={2}></Grid>
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={6}>
             <TextField
               id="lengthInput"
               label="Length"
@@ -248,7 +311,7 @@ const validateInputHandler = (e) => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={6}>
             <TextField
               id="widthInput"
               label="Width"
@@ -265,8 +328,7 @@ const validateInputHandler = (e) => {
               error={formErrors.width.error}
             />
           </Grid>
-          <Grid item xs={12} sm={2}></Grid>
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={6}>
             <TextField
               id="heightInput"
               label="Height"
@@ -284,7 +346,7 @@ const validateInputHandler = (e) => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={5}>
+          <Grid item xs={12} sm={6}>
             <TextField
               id="cbmInput"
               label="CBM"
@@ -302,8 +364,7 @@ const validateInputHandler = (e) => {
               error={formErrors.cbm.error}
             />
           </Grid>
-          <Grid item xs={12} sm={2}></Grid>
-          
+          </Grid> 
           
           
           <Grid item xs={12} className="clientTables">

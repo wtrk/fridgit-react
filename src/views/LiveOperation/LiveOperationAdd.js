@@ -25,7 +25,6 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const LiveOperationAdd = () => {
   const [items, setItems] = useState(); //table items
   const [itemsUpdated, setItemsUpdated] = useState(); //table items
-  const [financialToSave, setFinancialToSave] = useState(); //table items
   const [pricesToUse, setPricesToUse] = useState(); //table items
   const [openAddDialog,setOpenAddDialog] = useState(false); //for modal
   const [citiesList, setCitiesList] = useState([]);
@@ -210,9 +209,7 @@ const LiveOperationAdd = () => {
               cabinet_testing_fees: pricesToUse[0].cabinet_testing_fees,
               branding_fees: pricesToUse[0].branding_fees,
               drop: pricesToUse[0].drop,
-              transp_cbm: pricesToUse[0].transp_cbm,
-              transp_for_1_unit: pricesToUse[0].transp_for_1_unit,
-              min_charge: pricesToUse[0].min_charge,
+              transportation_fees: pricesToUse[0].transportation_fees,
               preventive_maintenance: pricesToUse[0].preventive_maintenance,
               exchange_corrective_reaction: pricesToUse[0].exchange_corrective_reaction,
               corrective_reaction: pricesToUse[0].corrective_reaction,

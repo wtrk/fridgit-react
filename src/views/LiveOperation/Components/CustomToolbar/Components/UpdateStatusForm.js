@@ -133,7 +133,7 @@ const UpdateStatusForm = (props) => {
                 if(formValues.status==="Completed" || formValues.status==="Canceled"){
                   axios({
                     method: "put",
-                    url: `${process.env.REACT_APP_BASE_URL}/cabinets/bySn/${e.sn}`,
+                    url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e.sn}`,
                     data: [{
                       booked:false
                     }]

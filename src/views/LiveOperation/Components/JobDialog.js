@@ -44,14 +44,12 @@ const JobDialog = (props) => {
       { name: "corrective_service_in_house" },
       { name: "drop" },
       { name: "exchange_corrective_reaction" },
-      { name: "min_charge" },
       { name: "handling_in" },
       { name: "in_house_preventive_maintenance" },
       { name: "preventive_maintenance" },
       { name: "promise_day" },
       { name: "storage" },
-      { name: "transp_cbm" },
-      { name: "transp_for_1_unit" },
+      { name: "transportation_fees" },
       { name: "labor" },
       { name: "spare" },
       { name: "total" }
@@ -63,7 +61,7 @@ const JobDialog = (props) => {
     rowsPerPage: 100,
     customFooter: () => {
       return (
-        <div class="d-flex justify-content-end px-5 py-3"><strong>Total</strong>: {(financialList.length > 1)?financialList.reduce((a,b)=>a.total+b.total):financialList[0].total}</div>
+        <div className="d-flex justify-content-end px-5 py-3"><strong>Total</strong>: {(financialList.length > 1)?financialList.reduce((a,b)=>a.total+b.total):financialList[0].total}</div>
         );
     }
   };

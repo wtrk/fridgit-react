@@ -66,14 +66,13 @@ const AddOperationForm = (props) => {
 
   const [currentDate,setCurrentDate] = useState(new Date()); //table items
   const [operationType, setOperationType] = useState("");
-  const [financialToSave, setFinancialToSave] = useState([]);
   const [snFilled, setSnFilled] = useState([]);
   const [openSearch, setOpenSearch] = useState(false);
   const [openPrices, setOpenPrices] = useState(false);
   const [columnsForPrices, setColumnsForPrices] = useState(false);
   //After Save
   const [selectedSn, setSelectedSn] = useState([]);
-  const [selectedSupplierId, setSelectedSupplierId] = useState();
+  const [transfortationFees, setTransfortationFees] = useState(0);
   const [saveClicked, setSaveClicked] = useState(1)
 
   const optionsForPrices = {
@@ -191,12 +190,6 @@ useEffect(()=>{
           setNeighbourhoodOut(response.data)
           return response.data
         })
-
-        // console.log("allocationRulesList",allocationRulesList)
-        // setAllocationRulesList(allocationRulesList.filter(e=>{
-        //   return e.cities.filter((c) => c.name === cityQuery.name).length || e.neighbourhoods.filter((c) => c.name === neighbourhoodQuery.name).length
-        // }))
-        //setSelectedSupplierId(allocationRulesFiltered ? allocationRulesFiltered[0].supplier_id:"")
       }
       fetchData();
     }
@@ -210,9 +203,9 @@ useEffect(()=>{
   if (storeValueFirstRun.current) {
     storeValueFirstRun.current = false;
   }else{
-    let cityOutId=storeValue.location.city_id
-    let neighbourhoodOutId=storeValue.location.neighbourhood_id
     const fetchData = async () => {
+      let cityOutId=storeValue.location.city_id
+      let neighbourhoodOutId=storeValue.location.neighbourhood_id
       let cityQuery = await axios(`${process.env.REACT_APP_BASE_URL}/cities/${cityOutId}`, {
         responseType: "json",
       }).then((response) => {
@@ -226,11 +219,6 @@ useEffect(()=>{
         setNeighbourhoodOut(response.data)
         return response.data
       })
-
-      // let allocationRulesFiltered=allocationRulesList.filter(e=>{
-      //   return e.cities.filter((c) => c.name === cityQuery.name).length || e.neighbourhoods.filter((c) => c.name === neighbourhoodQuery.name).length
-      // })
-      // setSelectedSupplierId(allocationRulesFiltered ? allocationRulesFiltered[0].supplier_id:"")
     }
     fetchData();
   }
@@ -254,8 +242,8 @@ useEffect(()=>{
 },[cityOut])
 
 const handleOpenSearch = () => {
+
   setOpenSearch(true)
-  console.log("cabinetsList",cabinetsList)
   setCabinetsList(
     cabinetsList.filter((e) => {
       let showRow = true;
@@ -307,11 +295,13 @@ useEffect(()=>{
         if(op === "Retrieval"){
           return response.data.filter(e=>e.location==="store")
         }else if(op === "External Receipt"){
-          return response.data.filter(e=>e.location==="NA")
+          return response.data.filter(e=>e.location=="NA")
         }else if(op === "Deployment"){
           return response.data.filter(e=>e.location==="warehouse")
         }else if(op === "Corrective Maintenance" || op === "Preventive Maintenance"){
-          return response.data
+          return response.data.filter(e=>{
+          return e.location!="NA"
+        })
         }
       })
       .then((response)=>{
@@ -329,13 +319,13 @@ useEffect(()=>{
     if (cabinetsFirstRun.current) {
       cabinetsFirstRun.current = false;
     }else{
-      if(formValues.operationType === "Deployment"){
+      if(fridgeTypeValue){
         setCabinetsList(cabinetsList
           .filter((e) => e.type === fridgeTypeValue._id)
           .map((e) => {
             return { ...e, type: fridgeTypeValue.refrigerant_type };
           }));
-    }
+      }
     }
   };
   fetchData();
@@ -353,13 +343,22 @@ useEffect(()=>{
       await axios(`${process.env.REACT_APP_BASE_URL}/priceRules`, {
         responseType: "json",
       }).then((response) => {
+        //console.log("response",response.data)
         let priceFromOperation=response.data.filter(e=>e.operations.length ? e.operations.map(eSub=>eSub.name).includes(formValues.operationType):true)
+        //console.log("priceFromOperation",priceFromOperation)
         let priceFromCountry=priceFromOperation.filter(e=>e.countries.length ? e.countries.map(eSub=>eSub.name).includes(country):true)
+        //console.log("priceFromCountry",priceFromCountry)
         let priceFromTierOut=priceFromCountry.filter(e=>e.tiersOut.length ? e.tiersOut.map(eSub=>eSub.name).includes(tierOut):true)
+        //console.log("priceFromTierOut",priceFromTierOut)
         let priceFromCityOut=priceFromTierOut.filter(e=>e.citiesOut.length ? e.citiesOut.map(eSub=>eSub.name).includes(cityOut.name):true)
+        //console.log("priceFromCityOut",priceFromCityOut)
         let priceFromNeighbourhoodsOut=priceFromCityOut.filter(e=>e.neighbourhoodsOut.length ? e.neighbourhoodsOut.map(eSub=>eSub.name).includes(neighbourhoodOut.name):true)
+        
+        //console.log("priceFromNeighbourhoodsOut",priceFromNeighbourhoodsOut)
+        
         return priceFromNeighbourhoodsOut.filter(e => e.service===serviceTypeValue._id)
       }).then((response) => {
+        //console.log("response",response)
         setPrices(response)
         setLoadingResult(false)
       });
@@ -391,8 +390,8 @@ useEffect(()=>{
           label: "Valid Price Rule",
           options: {
             customBodyRender: (value, tableMeta, updateValue) => {
-              if(tableMeta.rowData[15]==="Total"){
-                return ""
+              if (tableMeta.rowData[13] === "Total") {
+                return "";
               }
               return value != 0 ? (
                 <Check className="text-success" />
@@ -402,7 +401,17 @@ useEffect(()=>{
             },
           },
         },
-        { name: "sn" },
+        {
+          name: "sn",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => {
+              if (value) {
+                let snValue = cabinetsList.filter((e) => e._id == value);
+                return snValue.length ? snValue[0].sn : "-"
+              }
+            },
+          },
+        },
         { name: "client_name", label: "Client Name" },
         { name: "handling_in", label: "Handling In" },
         { name: "storage", label: "Storage" },
@@ -417,32 +426,36 @@ useEffect(()=>{
         { name: "cabinet_testing_fees", label: "Cabinet Testing Fees" },
         { name: "branding_fees", label: "Branding Fees" },
         { name: "drop", label: "drop" },
-        { name: "transp_cbm", label: "Transp Cbm" },
-        { name: "transp_for_1_unit", label: "Transp For 1 Unit" },
-        { name: "min_charge", label: "Min Charge" },
+        { name: "transportation_fees", label: "Transportation Fees" },
         { name: "preventive_maintenance", label: "Preventive Maintenance" },
         {
           name: "exchange_corrective_reaction",
           label: "Exchange Corrective Reaction",
         },
-        { name: "corrective_reaction", label: "Corrective Reaction",
-        options: {
-          customBodyRender: (value, tableMeta, updateValue) => {
-            if(value==="Total") return <strong>Total</strong>
-            return value
+        {
+          name: "corrective_reaction",
+          label: "Corrective Reaction",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => {
+              if (value === "Total") return <strong>Total</strong>;
+              return value;
+            },
           },
         },
-      },
         {
           name: "total",
           options: {
             customBodyRender: (value, tableMeta, updateValue) => {
-              if(tableMeta.rowData[15]==="Total"){
-                let allNumbers = tableMeta.tableData.map(e=>e[16]).filter(e => typeof e === "number")
-                let sumOfAll = allNumbers.length ? allNumbers.reduce((a,b)=>a+b):0;
-                return sumOfAll
+              if (tableMeta.rowData[13] === "Total") {
+                let allNumbers = tableMeta.tableData
+                  .map((e) => e[16])
+                  .filter((e) => typeof e === "number");
+                let sumOfAll = allNumbers.length
+                  ? allNumbers.reduce((a, b) => a + b)
+                  : 0;
+                return sumOfAll;
               }
-              return value
+              return value;
             },
           },
         },
@@ -478,8 +491,28 @@ const handleSaveForm = async () => {
     }}
   }
   let formValuesToSave = selectedSn.map((e) => {
+    if(formValues.operationType === "Preventive Maintenance" || formValues.operationType === "Corrective Maintenance"){
+      let getShop=(e.location==="warehouse")?warehousesList.filter(eSub=> eSub._id===e.location_id)[0]:storesList.filter(eSub=> eSub._id===e.location_id)[0]
+
+        addresses = {
+          initiation_address: {
+            city_id: getShop.location.city_id,
+            neighbourhood_id: getShop.location.neighbourhood_id,
+            shop_name: getShop.name,
+            mobile: getShop.location.mobile,
+          },
+        };
+    }
     const clientName=clientsList.filter((eSub) => eSub._id == e.client )?clientsList.filter((eSub) => eSub._id == e.client )[0].name:null
-    const allocationRulesFromClients=allocationRulesList.filter(e=>e.clients.length ? e.clients.map(eSub=>eSub.name).includes(clientName):true);
+    const allocationRulesFromClients=allocationRulesList.filter(e=>e.clients&&e.clients.length ? e.clients.map(eSub=>eSub.name).includes(clientName):true);
+    const pricesFromClients=prices.filter(e=>e.clients&&e.clients.length ? e.clients.map(eSub=>eSub.name).includes(clientName):true);
+    let price_rule = {}
+    if(pricesFromClients.length){
+      price_rule = {
+        price_id:pricesFromClients[0]._id,
+        name:pricesFromClients[0].name,
+      }
+    }
     return {
     job_number: props.jobNumber,
     operation_number: "ON" + Math.floor(Math.random() * 100000000) + 1,
@@ -489,6 +522,11 @@ const handleSaveForm = async () => {
     client_id: e.client,
     client_name: clientName,
     ...addresses,
+    allocation_rule: {
+      allocation_id:allocationRulesFromClients[0]._id,
+      name:allocationRulesFromClients[0].name,
+    },
+    price_rule,
     supplier_id: allocationRulesFromClients[0] ? allocationRulesFromClients[0].supplier_id : "",
     status: allocationRulesFromClients[0] ? "Assigned" : "Unassigned",
     last_status_user: "-",
@@ -496,51 +534,121 @@ const handleSaveForm = async () => {
   }
 });
 
-  const statusHistoryUnassigned = formValuesToSave.map((e) => ({
-    "status":"Unassigned",
-    "user":"User 1",
-    "notes":"",
-    "operation_number":e.operation_number
-  }));
-  const statusHistoryAssigned = formValuesToSave.map((e) => {
-    if(e.status==="Assigned"){
-      return {
-        status: "Assigned",
-        user: "User 1",
-        notes: "",
-        operation_number: e.operation_number,
-      };
-    }
-  });
-  let statusHistory=[...statusHistoryUnassigned, ...statusHistoryAssigned]
 
   if(saveClicked===1){
-    let finalPrices=selectedSn.map((e) => {
+    
+    let pricesForFinance=selectedSn.map((e) => {
       const clientName=clientsList.filter((eSub) => eSub._id == e.client )?clientsList.filter((eSub) => eSub._id == e.client )[0].name:null
       const pricesFromClients=prices.filter(e=>e.clients.length ? e.clients.map(eSub=>eSub.name).includes(clientName):true);
+      const cbm=fridgeTypesList.filter(eSub=>eSub._id==e.type)[0].cbm
+      let transportationFeez=0
+      let pricesToSave={
+        branding_fees: 0,
+        cabinet_testing_fees: 0,
+        corrective_reaction: 0,
+        corrective_service_in_house: 0,
+        drop: 0,
+        exchange_corrective_reaction: 0,
+        handling_in: 0,
+        in_house_preventive_maintenance: 0,
+        min_charge: 0,
+        name: 0,
+        preventive_maintenance: 0,
+        priority: 0,
+        storage: 0,
+        transp_cbm: 0,
+        transp_for_1_unit: 0}
+      //let sumOfValues=0
+      if(pricesFromClients.length){
+        // sumOfValues = Object.values(pricesFromClients[0])
+        //   .filter((e, i) => i > 3 && typeof e === "number")
+        //   .reduce((a, b) => a + b, 0);
+        pricesToSave={
+          branding_fees: pricesFromClients[0].branding_fees,
+          cabinet_testing_fees: pricesFromClients[0].cabinet_testing_fees,
+          corrective_reaction: pricesFromClients[0].corrective_reaction,
+          corrective_service_in_house: pricesFromClients[0].corrective_service_in_house,
+          drop: pricesFromClients[0].drop,
+          exchange_corrective_reaction: pricesFromClients[0].exchange_corrective_reaction,
+          handling_in: pricesFromClients[0].handling_in,
+          in_house_preventive_maintenance: pricesFromClients[0].in_house_preventive_maintenance,
+          min_charge: pricesFromClients[0].min_charge,
+          name: pricesFromClients[0].name,
+          preventive_maintenance: pricesFromClients[0].preventive_maintenance,
+          priority: pricesFromClients[0].priority,
+          storage: pricesFromClients[0].storage,
+          transp_cbm: pricesFromClients[0].transp_cbm,
+          transp_for_1_unit: pricesFromClients[0].transp_for_1_unit,
 
-      const sumOfValues = Object.values(pricesFromClients[0])
-        .filter((e, i) => i > 3 && typeof e === "number")
-        .reduce((a, b) => a + b, 0);
+        }
+        transportationFeez=(selectedSn.length===1)?pricesFromClients[0].transp_for_1_unit:cbm*pricesFromClients[0].transp_cbm
+      }else{
+
+      }
       return {
         validPrice: pricesFromClients.length,
-        sn: e.sn,
+        sn: e._id,
         client_id: e.client,
         client_name: clientName,
-        ...pricesFromClients[0],
-        total:sumOfValues
+        ...pricesToSave,
+        cbm:cbm,
+        transportation_fees:transportationFeez,
+        //total:sumOfValues
       }
     })
-    finalPrices.push({corrective_reaction:"Total"})
-    setPrices(finalPrices)
+
+
+    if(pricesForFinance.length>1){
+      let totalFeez=pricesForFinance.reduce((a,b)=> a.transportation_fees + b.transportation_fees)
+      let totalCBM=pricesForFinance.reduce((a,b)=> a.cbm + b.cbm)
+      let minCharge=pricesForFinance[0].min_charge
+      if(totalFeez<minCharge){
+        pricesForFinance=pricesForFinance.map(e=>{
+          e.transportation_fees=e.cbm*minCharge/totalCBM
+          return e
+        })
+      }
+    }
+    pricesForFinance=pricesForFinance.map(e=>{
+      // console.log(e.transportation_fees)
+      // console.log(e.branding_fees)
+      // console.log(e.cabinet_testing_fees)
+      // console.log(e.corrective_reaction)
+      // console.log(e.corrective_service_in_house)
+      // console.log(e.drop +e.exchange_corrective_reaction)
+      // console.log(e.handling_in)
+      // console.log(e.in_house_preventive_maintenance)
+      // console.log(e.preventive_maintenance)
+      // console.log(e.storage)
+      return {
+        validPrice: e.validPrice,
+        sn: e.sn,
+        client_id: e.client_id,
+        client_name: e.client_name,
+        branding_fees: e.branding_fees,
+        cabinet_testing_fees: e.cabinet_testing_fees,
+        corrective_reaction: e.corrective_reaction,
+        corrective_service_in_house: e.corrective_service_in_house,
+        drop: e.drop,
+        exchange_corrective_reaction: e.exchange_corrective_reaction,
+        handling_in: e.handling_in,
+        in_house_preventive_maintenance: e.in_house_preventive_maintenance,
+        name: e.name,
+        preventive_maintenance: e.preventive_maintenance,
+        priority: e.priority,
+        storage: e.storage,
+        transportation_fees:e.transportation_fees,
+        total: e.transportation_fees + e.branding_fees + e.cabinet_testing_fees + e.corrective_reaction + e.corrective_service_in_house + e.drop +e.exchange_corrective_reaction + e.handling_in + e.in_house_preventive_maintenance + e.preventive_maintenance + e.storage
+      }
+    })
+
+
+
+    pricesForFinance.push({corrective_reaction:"Total"})
+    setPrices(pricesForFinance)
     setSaveClicked(2)
   }else{
     const fetchData = async () => {
-      await axios({
-        method: "post",
-        url: `${process.env.REACT_APP_BASE_URL}/financial`,
-        data: financialToSave,
-      })
       await axios({
         method: "post",
         url: `${process.env.REACT_APP_BASE_URL}/liveOperations`,
@@ -554,8 +662,39 @@ const handleSaveForm = async () => {
       .catch((error) => {
         console.log(error);
       });
-      
 
+      let locationToDb=""
+      let locationIdToDb=""
+      let locationForHistory=""
+      if(formValues.operationType=="Deployment"){
+        locationToDb="store"
+        locationIdToDb=storeValue._id
+        locationForHistory=storeValue.location
+      }else if(formValues.operationType === "External Receipt" || formValues.operationType === "Retrieval"){
+        locationToDb="warehouse"
+        locationIdToDb=warehouseValue._id
+        locationForHistory=warehouseValue.location
+      }
+
+      const statusHistoryUnassigned = formValuesToSave.map((e) => ({
+        "status":"Unassigned",
+        "user":"User 1",
+        "notes":"",
+        "operation_number":e.operation_number,
+        "location":locationForHistory
+      }));
+      const statusHistoryAssigned = formValuesToSave.map((e) => {
+        if(e.status==="Assigned"){
+          return {
+            status: "Assigned",
+            user: "User 1",
+            notes: "",
+            operation_number: e.operation_number,
+            location:locationForHistory
+          };
+        }
+      });
+      let statusHistory=[...statusHistoryUnassigned, ...statusHistoryAssigned]
 
       await axios({
         method: "post",
@@ -563,22 +702,13 @@ const handleSaveForm = async () => {
         data: statusHistory,
       })
       
-      let locationToDb="NA"
-      let locationIdToDb="NA"
-      if(formValues.operationType=="Deployment"){
-        locationToDb="store"
-        locationIdToDb=storeValue._id
-      }else if(formValues.operationType === "External Receipt" || formValues.operationType === "Retrieval"){
-        locationToDb="warehouse"
-        locationIdToDb=warehouseValue._id
-      }
     selectedSn.forEach((e) => {
       axios({
         method: "put",
         url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e._id}`,
         data: [{
-          location: locationToDb,
-          location_id: locationIdToDb,
+          location: locationToDb===""?e.location:locationToDb,
+          location_id: locationIdToDb===""?e.location_id:locationIdToDb,
           booked:true
         }]
       })
@@ -626,7 +756,6 @@ const handleSaveForm = async () => {
         </Grid>
 
         {formValues.operationType &&
-        formValues.operationType != "External Receipt" &&
         formValues.operationType != "Preventive Maintenance" &&
         formValues.operationType != "Corrective Maintenance" ? (
           <Grid item xs={11}>
@@ -824,13 +953,13 @@ const handleSaveForm = async () => {
               },
               {
                 name: "location_id",
-                label: "location",
+                label: "address",
                 options: {
                   customBodyRender: (value, tableMeta, updateValue) => {
                     let cityValue = "-"
                     let neighbourhoodValue = "-"
                     let mobileValue = "-"
-                    if(tableMeta.rowData[8]==="store"){
+                    if(tableMeta.rowData[7]==="store"){
                       if(storesList.filter(e=> e._id==value)[0]){
                         let locationValue = storesList.filter(e=> e._id==value)[0].location;
                         if(citiesList.filter(e=> e._id==locationValue.city_id)[0]){
@@ -841,7 +970,7 @@ const handleSaveForm = async () => {
                         }
                         mobileValue=locationValue.mobile
                       }
-                    }else if(tableMeta.rowData[8]==="warehouse"){
+                    }else if(tableMeta.rowData[7]==="warehouse"){
                       if(warehousesList.filter(e=> e._id==value)[0]){
                         let locationValue = warehousesList.filter(e=> e._id==value)[0].location;
                         if(citiesList.filter(e=> e._id==locationValue.city_id)[0]){

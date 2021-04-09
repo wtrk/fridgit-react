@@ -22,10 +22,7 @@ import Moment from "react-moment";
 import { makeStyles} from "@material-ui/core/styles";
 import { Close} from "@material-ui/icons";
 import axios from 'axios';
-
 import "react-dropzone-uploader/dist/styles.css";
-import fridgeDummy from "assets/img/fridge-1.jpg";
-import clientDummy from "assets/img/clientDummy.png";
 
 import "../LiveOperation.css";
 
@@ -45,7 +42,10 @@ const OperationDialog = (props) => {
     const [liveOperationsList, setLiveOperationsList] = useState([]);
     const [historyList, setHistoryList] = useState([]);
     const [financialList, setFinancialList] = useState([]);
-    const [clientsName, setClientsName] = useState();
+    const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
+    const [citiesList, setCitiesList] = useState([]);
+    const [clientInfo, setClientInfo] = useState();
+    const [fridgeInfo, setFridgeInfo] = useState();
     let columnsForPrices = [
       { name: "job_number" },
       { name: "operation_number" },
@@ -55,14 +55,12 @@ const OperationDialog = (props) => {
       { name: "corrective_service_in_house" },
       { name: "drop" },
       { name: "exchange_corrective_reaction" },
-      { name: "min_charge" },
       { name: "handling_in" },
       { name: "in_house_preventive_maintenance" },
       { name: "preventive_maintenance" },
       { name: "promise_day" },
       { name: "storage" },
-      { name: "transp_cbm" },
-      { name: "transp_for_1_unit" },
+      { name: "transportation_fees" },
       { name: "labor" },
       { name: "spare" },
       { name: "total" }
@@ -73,7 +71,7 @@ const OperationDialog = (props) => {
       rowsPerPage: 100,
       customFooter: () => {
         return (
-          <div class="d-flex justify-content-end px-5 py-3"><strong>Total</strong>: {(financialList.length > 1)?financialList.reduce((a,b)=>a.total+b.total):financialList[0].total}</div>
+          <div className="d-flex justify-content-end px-5 py-3"><strong>Total</strong>: {(financialList.length > 1)?financialList.reduce((a,b)=>a.total+b.total):financialList[0].total}</div>
         );
       }
     };
@@ -92,10 +90,25 @@ const OperationDialog = (props) => {
     
     useEffect(() => {
       const fetchData = async () => {
+        const neighbourhoods = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
+          responseType: "json",
+        }).then((response) => {
+          return response.data
+        });
+        const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
+          responseType: "json",
+        }).then((response) => {
+          return response.data
+        });
         const history = await axios(`${process.env.REACT_APP_BASE_URL}/operations/history/${liveOperationsList.operation_number}`, {
           responseType: "json",
         }).then((response) => {
-          setHistoryList(response.data)
+          
+          setHistoryList(response.data.map(e=>{
+            let location={}
+
+            return {...e,location}
+          }))
           return response.data
         });
         const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${liveOperationsList.operation_number}`, {
@@ -104,31 +117,32 @@ const OperationDialog = (props) => {
           setFinancialList(response.data)
           return response.data
         });
+        if(liveOperationsList.client_id){
+          const client = await axios(`${process.env.REACT_APP_BASE_URL}/clients/${liveOperationsList.client_id}`, {
+            responseType: "json",
+          }).then((response) => {
+            setClientInfo(response.data)
+          });
+        }
+        if(liveOperationsList.sn){
+          const client = await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/bySn/${liveOperationsList.sn}`, {
+            responseType: "json",
+          }).then((response) => {
+            setFridgeInfo(response.data)
+          });
+        }
       };
       fetchData();
     }, [liveOperationsList]);
     
-    useEffect(() => {
-      const fetchData = async () => {
-        const client = await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
-          responseType: "json",
-        }).then((response) => {
-          if("response.data",response.data.filter((e) => e._id == liveOperationsList.client_id).length){
-            setClientsName(response.data.filter((e) => e._id == liveOperationsList.client_id)[0].name)
-            return response.data
-          }
-        });
-      };
-      fetchData();
-    }, [liveOperationsList]);
   /**************** -OnClickItemDialog START- **************/
   const DialogTabsContent = (props) => {
     if (props.tab === 1) {
       return (
         <Timeline align="left">
           {historyList
-            ? historyList.map((e) => (
-                <TimelineItem key={e._id} style={{minHeight:50}}>
+            ? historyList.map((e) => {
+                return <TimelineItem key={e._id} style={{minHeight:50}}>
                   <TimelineOppositeContent>
                     {(e.status==="Assigned") ? <Typography>{e.status} to {props.supplierName}</Typography>:<Typography>{e.status}</Typography>}
                   </TimelineOppositeContent>
@@ -140,64 +154,62 @@ const OperationDialog = (props) => {
                   <Moment format="DD MMM YYYY - HH:mm">{e.createdAt}</Moment>
                   </TimelineContent>
                 </TimelineItem>
-              ))
+            })
             : null}
         </Timeline>
       );
     } else if (props.tab === 2) {
       return (
         <Grid container className="infoTabContainer" spacing={3}>
-          <Grid item container xs={12} md={6} spacing={2}>
+          {fridgeInfo?<Grid item container xs={12} md={6} spacing={2}>
             <Grid item xs={4}>
-              <img src={fridgeDummy} alt="" />
+              {fridgeInfo.photo?
+              <img src={require("assets/uploads/clients/"+fridgeInfo.photo)} alt="" /> 
+              :null}
             </Grid>
             <Grid item xs={8}>
               <h4><strong>Fridge</strong></h4>
               <p>
-                <strong>Type</strong>: EPTA 482L EIS (Ver-6S18B)
+                <strong>Type</strong>: {fridgeInfo.name}
               </p>
               <p>
-                <strong>Branding</strong>: Walls
+                <strong>Branding</strong>: {liveOperationsList.brand}
               </p>
               <p>
-                <strong>SN</strong>: 18GE43245
+                <strong>SN</strong>: {liveOperationsList.sn}
               </p>
               <p>
-                <strong>Status</strong>: Needs Repair
+                <strong>Status</strong>: {liveOperationsList.status}
               </p>
               <p>
-                <strong>Location</strong>: Bekaa - CHAFIC JAMIL FOR GENERAL
-                TRADING
-              </p>
-              <p>
-                <strong>CBM</strong>: 222346678
+                <strong>CBM</strong>: {fridgeInfo.cbm}
               </p>
             </Grid>
-          </Grid>
+          </Grid>:null}
 
-          <Grid item container xs={12} md={6} spacing={2}>
+        {clientInfo?<Grid item container xs={12} md={6} spacing={2}>
             <Grid item xs={4}>
-              <img src={clientDummy} alt="" />
+              {clientInfo.photo?
+              <img src={require("assets/uploads/clients/"+clientInfo.photo)} alt="" />
+              :null}
             </Grid>
             <Grid item xs={8}>
               <h4><strong>Client</strong></h4>
               <p>
-                <strong>Company</strong>: Unilever Levant S.A.R.L.
+                <strong>Company</strong>: {clientInfo.name}
               </p>
               <p>
-                <strong>Address</strong>: 3rd Floor, Dolphin Building, Fouad
-                Ammoun Street-Jisr El Wati, Sin El Fil PO Box 90-908 Beirut/
-                Lebanon
+                <strong>Address</strong>:  {clientInfo.address}
               </p>
               <p>
-                <strong>Phone</strong>: +961 1 497630
+                <strong>Phone</strong>:  {clientInfo.phone}
               </p>
               <p>
-                <strong>Email</strong>: Baker.Sibai@unilever.com
+                <strong>Email</strong>:  {clientInfo.email}
               </p>
             </Grid>
+          </Grid>:null}
           </Grid>
-        </Grid>
       );
     } else if (props.tab === 3) {
       return (
@@ -218,34 +230,40 @@ const OperationDialog = (props) => {
 
   return (
     <Fragment>
+      {console.log("istoryList",historyList)}
       <DialogContent dividers className="entryEditHeader">
         <Grid container>
-          <Grid item xs={4}>
+          <Grid item xs={3}>
             <div className={classes.root_avatar}>
-            {clientsName ? (
+              {clientInfo ? (
                   <div className="avatar_circle">
-                    {clientsName.substring(0, 2)}
+                    {clientInfo.name.substring(0, 2)}
                   </div>
                 ) : null}
-
               <div>
-                <strong>Client</strong>
-                <br />
-                {clientsName}
+                <strong>Client</strong><br />
+                {clientInfo?clientInfo.name:null}
               </div>
             </div>
           </Grid>
-
-          <Grid item xs={4}>
+          <Grid item xs={3}>
             <strong>Sn:</strong> {liveOperationsList.sn}
             <br />
             <strong>Status:</strong> {liveOperationsList.status}
-          </Grid>
-
-          <Grid item xs={4}>
+            <br/>
             <strong>Branding:</strong> {liveOperationsList.brand}
+            </Grid>
+          <Grid item xs={3}>
+          {liveOperationsList.allocation_rule?<span><strong>Allocation Rules:</strong> {liveOperationsList.allocation_rule.name}</span>:null}
+            <br />
+            {liveOperationsList.price_rule?<span><strong>Price Rules:</strong> {liveOperationsList.price_rule.name}</span>:null}
             <br />
             <strong>Type:</strong> {liveOperationsList.operation_type}
+          </Grid>
+          <Grid item xs={3}>
+            {historyList.length?<span><strong>location:</strong> {historyList[0].location.neighbourhood} - {historyList[0].location.city}</span>:null}
+            <br />
+            <strong>Date:</strong> {liveOperationsList.createdAt}
           </Grid>
         </Grid>
         <div className="entryEditHeader__tabsCont">

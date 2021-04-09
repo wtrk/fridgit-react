@@ -13,7 +13,7 @@ import {
 } from "@material-ui/core";
 import Alert from '@material-ui/lab/Alert';
 import MUIDataTable from "mui-datatables";
-import { Close, Save, ArrowBackIosOutlined } from "@material-ui/icons";
+import { Close, Save, ArrowBackIosOutlined,Publish } from "@material-ui/icons";
 import axios from 'axios';
 import SubTablesLegal from "./SubTablesLegal.js";
 import SubTablesContact from "./SubTablesContact.js";
@@ -31,32 +31,37 @@ const Clients = (props) => {
   const [openAddContact, setOpenAddContact] = useState(false);
   const [dataLegal, setDataLegal] = useState(props.data.legals);
   const [dataContacts, setDataContacts] = useState(props.data.contacts);
-  const [image, setImage] = useState({ preview: "", raw: "" });
+  const [image, setImage] = useState({ preview: "", file: "" });
 
-  const handleChange = e => {
+  const handleChangeImg = e => {
     if (e.target.files.length) {
       setImage({
         preview: URL.createObjectURL(e.target.files[0]),
-        raw: e.target.files[0]
+        file: e.target.files[0]
       });
     }
   };
 
-  const handleUpload = async e => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append("image", image.raw);
+  const handleUploadImg = async e => {
+  const formData = new FormData();
+  formData.append("file",image.file);
 
-    // await fetch("YOUR_URL", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "multipart/form-data"
-    //   },
-    //   body: formData
-    // });
-  };
-
-
+  for (const [key, value] of Object.entries(formErrors)) {
+      if(value.error===true) return setOpenAlertError(true);
+  }
+    await axios({
+      method: "put",
+      url: `${process.env.REACT_APP_BASE_URL}/clients/img/${clientId}`,
+      data: formData,
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+      .then(function (response) {
+        setOpenAlertSuccess(true);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+}
   const optionsContact = {
     filterType: "checkbox",
     rowsPerPage: 6,
@@ -187,43 +192,45 @@ const handleOnSubmit = async () => {
           <Typography variant="h6">Client Details</Typography>
         </Toolbar>
       </AppBar>
-      <Collapse in={openAlertSuccess}>
-        <Alert severity="success" onClick={() => setOpenAlertSuccess(false)}>
-          The country is successfully created
-        </Alert>
-      </Collapse>
-      <Collapse in={openAlertError}>
-        <Alert severity="error" onClick={() => setOpenAlertError(false)}>
-          Please validate the Form and submit it again
-        </Alert>
-      </Collapse>
       <div style={{ padding: "80px 30px 0" }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={4}>
             <div className="clientProfile">
-              {/* <img src={require("../../../assets/img/sidebar-2.jpg")} alt="" className="mb-4" /> */}
               <div>
-                <label htmlFor="upload-button">
-                  {image.preview ? (
-                    <img src={image.preview} alt="dummy" width="300" height="300" />
-                  ) : (
-                    <>
-                      <span className="fa-stack fa-2x mt-3 mb-2">
-                        <i className="fas fa-circle fa-stack-2x" />
-                        <i className="fas fa-store fa-stack-1x fa-inverse" />
-                      </span>
-                      <h5 className="text-center">Upload your photo</h5>
-                    </>
+                {openAlertSuccess?
+                  <div className="alert alert-success" role="alert">
+                    The Image was successfully updated
+                  </div>
+                :null}
+                {!image.preview ? (
+                  <label htmlFor="upload-button" style={{width:"100%"}}>
+                  {props.data.photo ? (
+                    <img src={require("assets/uploads/clients/"+props.data.photo)} alt="" style={{width:"100%"}} className="mb-4" /> 
+                  ):(
+                    <h5 className="text-center">Click here to upload a photo</h5>
                   )}
                 </label>
+                ) : (
+                  <>
+                <label htmlFor="upload-button" style={{width:"100%"}}><img src={image.preview} alt="" style={{width:"100%"}} /></label>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="large"
+                  className="btn btn--save float-right"
+                  onClick={handleUploadImg}
+                  startIcon={<Publish />}
+                >
+                  Upload
+                </Button>
+                </>
+                )}
                 <input
                   type="file"
                   id="upload-button"
                   style={{ display: "none" }}
-                  onChange={handleChange}
+                  onChange={handleChangeImg}
                 />
-                <br />
-                <button onClick={handleUpload}>Upload</button>
               </div>
               <TextField
                 label="Company"

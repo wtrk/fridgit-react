@@ -58,6 +58,8 @@ const SnDialog = (props) => {
     const classes = useStyles(); //custom css
     const [liveOperationsList, setLiveOperationsList] = useState([]);
     const [financialList, setFinancialList] = useState([]);
+    const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
+    const [citiesList, setCitiesList] = useState([]);
     let columnsForPrices = [
       { name: "job_number" },
       { name: "operation_number" },
@@ -67,14 +69,12 @@ const SnDialog = (props) => {
       { name: "corrective_service_in_house" },
       { name: "drop" },
       { name: "exchange_corrective_reaction" },
-      { name: "min_charge" },
       { name: "handling_in" },
       { name: "in_house_preventive_maintenance" },
       { name: "preventive_maintenance" },
       { name: "promise_day" },
       { name: "storage" },
-      { name: "transp_cbm" },
-      { name: "transp_for_1_unit" },
+      { name: "transportation_fees" },
       { name: "labor" },
       { name: "spare" },
       { name: "total" }
@@ -86,17 +86,50 @@ const SnDialog = (props) => {
       rowsPerPage: 100,
       customFooter: () => {
         return (
-          <div class="d-flex justify-content-end px-5 py-3"><strong>Total</strong>: {(financialList.length > 1)?financialList.reduce((a,b)=>a.total+b.total):financialList[0].total}</div>
+          <div className="d-flex justify-content-end px-5 py-3">
+            <strong>Total</strong>: {(financialList.length > 1)?financialList.map(e=>e.total).reduce((a,b)=>a+b):financialList[0].total}</div>
         );
       }
     };
     
     useEffect(() => {
       const fetchData = async () => {
+        const neighbourhoods = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
+          responseType: "json",
+        }).then((response) => {
+          setNeighbourhoodsList(response.data)
+          return response.data
+        });
+        const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
+          responseType: "json",
+        }).then((response) => {
+          setCitiesList(response.data)
+          return response.data
+        });
+
         const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${props.snId}`, {
           responseType: "json",
         }).then((response) => {
-          setLiveOperationsList(response.data)
+          setLiveOperationsList(response.data.map(e=>{
+            let location={}
+            if(e.execution_address){
+              location.neighbourhood=neighbourhoods.length?neighbourhoods.filter(eSub=>eSub._id===e.execution_address.neighbourhood_id)[0].name:"";
+              location.city=cities.length?cities.filter(eSub=>eSub._id===e.execution_address.city_id)[0].name:"";
+              location.shop_name=e.execution_address.shop_name;
+              location.mobile=e.execution_address.mobile;
+            }else if(e.initiation_address){
+              location.neighbourhood=neighbourhoods.length?neighbourhoods.filter(eSub=>eSub._id===e.initiation_address.neighbourhood_id)[0].name:"";
+              location.city=cities.length?cities.filter(eSub=>eSub._id===e.initiation_address.city_id)[0].name:"";
+              location.shop_name=e.initiation_address.shop_name;
+              location.mobile=e.initiation_address.mobile;
+            }else{
+              location.neighbourhood="";
+              location.city="";
+              location.shop_name="";
+              location.mobile="";
+            }
+            return {...e,location}
+          }))
           return response.data
         });
         const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/bySn/${props.snId}`, {
@@ -119,6 +152,8 @@ const SnDialog = (props) => {
               <TimelineItem key={e._id} style={{minHeight:50}}>
               <TimelineOppositeContent>
                     <Typography>{e.operation_type} ({e.operation_number})</Typography>
+                    <Typography>{e.location.shop_name} - {e.location.mobile}</Typography>
+                    <Typography>{e.location.city} - {e.location.neighbourhood}</Typography>
                   </TimelineOppositeContent>
                   <TimelineSeparator>
                     <TimelineDot />
