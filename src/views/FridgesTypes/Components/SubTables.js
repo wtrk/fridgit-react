@@ -221,7 +221,7 @@ const validateInputHandler = (e) => {
                 {!image.preview ? (
                   <label htmlFor="upload-button" style={{width:"100%"}}>
                   {formValues.photo ? (
-                    <img src={require("assets/uploads/clients/"+formValues.photo)} alt="" style={{width:"100%"}} className="mb-4" /> 
+                    <img src={require(`${process.env.REACT_PATH}/types/${formValues.photo}`)} alt="" style={{width:"100%"}} className="mb-4" /> 
                   ):(
                     <h5 className="text-center">Click here to upload a photo</h5>
                   )}

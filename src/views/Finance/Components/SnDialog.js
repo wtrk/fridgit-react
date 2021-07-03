@@ -212,7 +212,7 @@ const SnDialog = (props) => {
           {fridgeInfo?<Grid item container xs={12} md={6} spacing={2}>
             <Grid item xs={4}>
               {fridgeInfo.photo?
-              <img src={require("assets/uploads/clients/"+fridgeInfo.photo)} alt="" /> 
+              <img src={require(`${process.env.REACT_PATH}/types/${fridgeInfo.photo}`)} alt="" /> 
               :null}
             </Grid>
             <Grid item xs={8}>
@@ -238,7 +238,7 @@ const SnDialog = (props) => {
         {clientInfo?<Grid item container xs={12} md={6} spacing={2}>
             <Grid item xs={4}>
               {clientInfo.photo?
-              <img src={require("assets/uploads/clients/"+clientInfo.photo)} alt="" />
+              <img src={require(`${process.env.REACT_PATH}/clients/${clientInfo.photo}`)} alt="" />
               :null}
             </Grid>
             <Grid item xs={8}>
