@@ -54,7 +54,7 @@ TabPanel.propTypes = {
 };
 
 export default function FullWidthTabs() {
-  const [isLoading, setIsloading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]); //table items
   const [itemsBackup, setItemsBackup] = useState([]);
   const [userProfileList, setUserProfileList] = useState([]); //table items
@@ -88,7 +88,7 @@ export default function FullWidthTabs() {
         })
         setItems(itemsDb);
         setItemsBackup(itemsDb)
-        return setIsloading(false)
+        return setIsLoading(false)
       });
       const userType = await axios(`${process.env.REACT_APP_BASE_URL}/userType`, {
         responseType: "json",

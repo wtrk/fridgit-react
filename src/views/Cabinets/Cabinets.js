@@ -13,10 +13,11 @@ import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 
 import { makeStyles } from "@material-ui/core/styles";
-import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
 import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
+import FilterComponent from "./Components/FilterComponent.js";
 import SubTables from "./Components/SubTables.js";
+import ImportXlsx from "./Components/ImportXlsx.js";
 import axios from 'axios';
 
 import AddFormDialog from "components/CustomComponents/AddFormDialog.js";
@@ -38,8 +39,8 @@ import {
   Grid,
 } from "@material-ui/core";
 import Moment from "react-moment";
+import moment from "moment";
 import TabsOnTop from "./Components/TabsOnTop.js";
-import "./Cabinets.css";
 
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -69,7 +70,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 const Cabinet = () => {
   const classes = useStyles(); //custom css
-  const [isLoading, setIsloading] = useState(true);  
+  const [isLoading, setIsLoading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [cabinetId, setCabinetId] = useState(); //modal title
   const [formTitle, setFormTitle] = useState("Add"); //modal title
@@ -78,7 +79,7 @@ const Cabinet = () => {
   const [openDialogItem, setOpenDialogItem] = useState(false); //for modal1
   const [openDialog2, setOpenDialog2] = useState(false); //for modal2
   const [itemsBackup, setItemsBackup] = useState([]);
-  const [searchValue, setSearchValue] = useState({});
+  const [cabinetsToExport, setCabinetsToExport] = useState([]);
   const [citiesList, setCitiesList] = useState([]);
   const [storesList, setStoresList] = useState([]);
   const [warehousesList, setWarehousesList] = useState([]);
@@ -89,64 +90,98 @@ const Cabinet = () => {
   const [itemsFiltered, setItemsFiltered] = useState(); //tabs items
   const [tabIndex, setTabIndex] = useState(0);
   const [liveOperationsList, setLiveOperationsList] = useState([]);
+  const [pagingInfo, setPagingInfo] = useState({page:0,limit:10,skip:0,count:0}); //Pagination Info
+  const [searchEntry, setSearchEntry] = useState([]); //searchEntry
+  const [importXlsx, setImportXlsx] = useState(false); //Import Excel
+  const [cabinetsSn, setCabinetsSn] = useState();
+  const [clientInfo, setClientInfo] = useState();
+  const [fridgeInfo, setFridgeInfo] = useState();
+  const [preventiveActions, setPreventiveActions] = useState();
+  
+
   useEffect(() => {
     const fetchData = async () => {
-      const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
-        responseType: "json",
-      }).then((response) => {
-        setCitiesList(response.data)
-        return response.data
-      });
-      const neighbourhoods = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
-        responseType: "json",
-      }).then((response) => {
-        setNeighbourhoodsList(response.data)
-        return response.data
-      });
-      const clients = await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
-        responseType: "json",
-      }).then((response) => {
-        setClientsList(response.data)
-        return response.data
-      });
-      const stores = await axios(`${process.env.REACT_APP_BASE_URL}/stores`, {
-        responseType: "json",
-      }).then((response) => {
-        setStoresList(response.data)
-        return response.data
-      });
-      const warehouses = await axios(`${process.env.REACT_APP_BASE_URL}/warehouses`, {
-        responseType: "json",
-      }).then((response) => {
-        setWarehousesList(response.data)
-        return response.data
-      });
-      const fridgesTypesList = await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`, {
-        responseType: "json",
-      }).then((response) => {
-        setFridgesTypesList(response.data)
-        return response.data
-      });
-      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {
-        responseType: "json",
-      }).then((response) => {
-        setItems(response.data)
-        setItemsBackup(response.data)
-        return setIsloading(false)
-      });
+        await axios.all([
+          axios.get(`${process.env.REACT_APP_BASE_URL}/cities`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/stores`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/warehouses`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/preventiveActions`)
+        ]).then(response => {
+          setCitiesList(response[0].data)
+          setNeighbourhoodsList(response[1].data)
+          setClientsList(response[2].data)
+          setStoresList(response[3].data)
+          setWarehousesList(response[4].data)
+          setFridgesTypesList(response[5].data)
+          setPreventiveActions(response[6].data)
+        })
     };
     fetchData();
   }, [openAddForm]);
-
-  /**************** -OnClickItemDialog START- **************/
-    
+  
   useEffect(() => {
     const fetchData = async () => {
-      const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${cabinetId}`, {
+      const sn=liveOperationsList.length?liveOperationsList[0].sn:null;
+      const clientId=liveOperationsList.length?liveOperationsList[0].client_id:null;
+      const findSn=sn?items.find(e=>e._id===sn):null;
+      setCabinetsSn(findSn?findSn.sn:"")
+      if(clientId){
+        await axios(`${process.env.REACT_APP_BASE_URL}/clients/${clientId}`, {
+          responseType: "json",
+        }).then((response) => {
+          setClientInfo(response.data)
+        });
+      }
+      if(findSn){
+        await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/bySn/${liveOperationsList[0].sn}`, {
+          responseType: "json",
+        }).then((response) => {
+          setFridgeInfo(response.data)
+        });
+      }
+    };
+    fetchData();
+  }, [liveOperationsList]);
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets/export`, {responseType: "json"
+      }).then((response) => {
+        setCabinetsToExport(response.data)
+      });
+    };
+    fetchData();
+  }, []);
+  /**************** -OnClickItemDialog START- **************/
+    
+useEffect(() => {
+  const fetchData = async () => {
+    await axios(`${process.env.REACT_APP_BASE_URL}/cabinets?limit=${pagingInfo.limit}&skip=${pagingInfo.skip}&searchEntry=${searchEntry}`, {
+      responseType: "json",
+    }).then((response) => {
+      setPagingInfo({...pagingInfo,count:response.data.count});
+      setItems(response.data.data)
+      setItemsBackup(response.data.data)
+      return setIsLoading(false)
+    })
+    .catch((error) => {
+      console.log("error",error);
+    });
+  };
+  fetchData();
+}, [openAddForm,pagingInfo.page,pagingInfo.limit,searchEntry]);
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${cabinetId}`, {
         responseType: "json",
       }).then((response) => {
         setLiveOperationsList(response.data)
-        return response.data
       });
     };
     fetchData();
@@ -154,7 +189,7 @@ const Cabinet = () => {
 
   const [dialogItemTab, setDialogItemTab] = useState(1);
   const DialogTabsContent = (props) => {
-
+    console.log("1")
     if (props.tab === 1) {
       return (
         <Timeline align="left">
@@ -180,55 +215,95 @@ const Cabinet = () => {
     } else if (props.tab === 2) {
       return (
         <Grid container className="infoTabContainer" spacing={3}>
-          <Grid item container xs={12} md={6} spacing={2}>
+          {fridgeInfo?<Grid item container xs={12} md={6} spacing={2}>
             <Grid item xs={4}>
-              <img src={require("assets/img/fridge-1.jpg")} alt="" />
+              {fridgeInfo.photo?
+              <img src={require("assets/uploads/clients/"+fridgeInfo.photo)} alt="" /> 
+              :null}
             </Grid>
             <Grid item xs={8}>
-              <h3>Fridge</h3>
+              <h4><strong>Fridge</strong></h4>
+              <p><strong>Type</strong>: {fridgeInfo.name}</p>
+              {liveOperationsList.length?
+                <p><strong>Branding</strong>: {liveOperationsList[0].brand}</p>
+              :null}
               <p>
-                <strong>Type</strong>: EPTA 482L EIS (Ver-6S18B)
+                <strong>SN</strong>: {cabinetsSn}
               </p>
+              {liveOperationsList.length?
+                <p><strong>Status</strong>: {liveOperationsList[0].status}</p>
+              :null}
               <p>
-                <strong>Branding</strong>: Walls
-              </p>
-              <p>
-                <strong>SN</strong>: 18GE43245
-              </p>
-              <p>
-                <strong>Status</strong>: Needs Repair
-              </p>
-              <p>
-                <strong>Location</strong>: Bekaa - CHAFIC JAMIL FOR GENERAL
-                TRADING
+                <strong>CBM</strong>: {fridgeInfo.cbm}
               </p>
             </Grid>
-          </Grid>
+          </Grid>:null}
 
-          <Grid item container xs={12} md={6} spacing={2}>
+        {clientInfo?<Grid item container xs={12} md={6} spacing={2}>
             <Grid item xs={4}>
-              <img src={require("assets/img/clientDummy.png")} alt="" />
+              {clientInfo.photo?
+              <img src={require("assets/uploads/clients/"+clientInfo.photo)} alt="" />
+              :null}
             </Grid>
             <Grid item xs={8}>
-              <h3>Client</h3>
+              <h4><strong>Client</strong></h4>
               <p>
-                <strong>Company</strong>: Unilever Levant S.A.R.L.
+                <strong>Company</strong>: {clientInfo.name}
               </p>
               <p>
-                <strong>Address</strong>: 3rd Floor, Dolphin Building, Fouad
-                Ammoun Street-Jisr El Wati, Sin El Fil PO Box 90-908 Beirut/
-                Lebanon
+                <strong>Address</strong>:  {clientInfo.address}
               </p>
               <p>
-                <strong>Phone</strong>: +961 1 497630
+                <strong>Phone</strong>:  {clientInfo.phone}
               </p>
               <p>
-                <strong>Email</strong>: Baker.Sibai@unilever.com
+                <strong>Email</strong>:  {clientInfo.email}
               </p>
             </Grid>
+          </Grid>:null}
           </Grid>
-        </Grid>
       );
+    } else if (props.tab === 3) {
+      let preventive=items.find(e=>e._id===cabinetId).preventive
+      preventive=preventive?preventive.filter(e=>e.reportable===true):[]
+      if(preventive.length){
+        const columnsPreventive = [
+          {
+            name: "_id",
+            options: {display: false}
+          },
+          {
+            name: "preventiveActions_id",
+            options: {display: false}
+          },
+          {name: "date",label: "Date"},
+          {name: "operation_number",label: "Qperation Number"},
+          {name: "preventiveActions_id",label: "Preventive Actions",
+            options: {
+              customBodyRender: (value, tableMeta, updateValue) => {
+                return preventiveActions.find(e=>e._id===tableMeta.rowData[1]).name;
+              },
+            },
+          },
+          {name: "rightAnswer_id",label: "Right Answer",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => {
+              const preventiveAnswers=preventiveActions.find(e=>e._id===tableMeta.rowData[1]).answers.find(e=>e._id===value)
+              console.log("ddddddddddddddd",preventiveAnswers)
+              return preventiveAnswers?preventiveAnswers.name:"-";
+            },
+          },
+        },
+          {name: "notes",label: "Notes",},
+        ];
+        return <MUIDataTable
+            title=""
+            data={preventive}
+            columns={columnsPreventive}
+          />
+      }else{
+        return <p>No Data Available</p>
+      }
     }
   };
   const handleClickDialogItemTabs = (DialogItemTabSelected) => {
@@ -243,6 +318,10 @@ const Cabinet = () => {
   const handleCloseDialogItem = () => {
     setOpenDialogItem(false);
   };
+
+  const handleImportXlsx = () => {
+    setImportXlsx(true)
+  }
   /**************** -OnClickItemDialog END- **************/
   const columns = [
     {
@@ -321,17 +400,45 @@ const Cabinet = () => {
     {
       name: "days_to_prev",
       label: "Days To Prev",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let currentRowInFridgeType=fridgesTypesList.filter(e=>e._id===tableMeta.rowData[3])[0]
+          let prevCountPerYear=currentRowInFridgeType?currentRowInFridgeType.preventive_count_year:1
+          let daysFromLastPrev=Math.round((moment().unix()-moment(tableMeta.rowData[8]).unix())/12/30/24/24)
+          return tableMeta.rowData[8]?Math.round((365/prevCountPerYear)-daysFromLastPrev):"NA"
+        },
+      },
+    },
+    {
+      name: "last_prev_date",
+      label: "Last Preventive Date",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return value?<Moment format="DD MMM YYYY">{value}</Moment>:"NA"
+        },
+      },
     },
     {
       name: "prev_status",
-      label: "Prev Status",
+      label: "Preventive Status",
     },
     {
       name: "finance",
       label: "Finance $"
     },
     {
-      name: "location"
+      name: "location",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let locationValue
+          if(value==="store"){
+            locationValue=storesList.find(e=>e._id===tableMeta.rowData[12]).name
+          }else if(value==="warehouse"){
+            locationValue=warehousesList.find(e=>e._id===tableMeta.rowData[12]).name
+          }
+          return `${locationValue} (${value})`
+        }
+      }
     },
     {
       name: "location_id",
@@ -341,25 +448,25 @@ const Cabinet = () => {
           let cityValue = "-"
           let neighbourhoodValue = "-"
           let mobileValue = "-"
-          if(tableMeta.rowData[10]==="store"){
-            if(storesList.filter(e=> e._id==value)[0]){
-              let locationValue = storesList.filter(e=> e._id==value)[0].location;
-              if(citiesList.filter(e=> e._id==locationValue.city_id)[0]){
-                cityValue = citiesList.filter(e=> e._id==locationValue.city_id)[0].name;
+          if(tableMeta.rowData[11]==="store"){
+            if(storesList.find(e=> e._id==value)){
+              let locationValue = storesList.find(e=> e._id==value).location;
+              if(citiesList.find(e=> e._id==locationValue.city_id)){
+                cityValue = citiesList.find(e=> e._id==locationValue.city_id).name;
               }
-              if(neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0]){
-                neighbourhoodValue = neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0].name;
+              if(neighbourhoodsList.find(e=> e._id==locationValue.neighbourhood_id)){
+                neighbourhoodValue = neighbourhoodsList.find(e=> e._id==locationValue.neighbourhood_id).name;
               }
               mobileValue=locationValue.mobile
             }
-          }else if(tableMeta.rowData[10]==="warehouse"){
-            if(warehousesList.filter(e=> e._id==value)[0]){
-              let locationValue = warehousesList.filter(e=> e._id==value)[0].location;
-              if(citiesList.filter(e=> e._id==locationValue.city_id)[0]){
-                cityValue = citiesList.filter(e=> e._id==locationValue.city_id)[0].name;
+          }else if(tableMeta.rowData[11]==="warehouse"){
+            if(warehousesList.find(e=> e._id==value)){
+              let locationValue = warehousesList.find(e=> e._id==value).location;
+              if(citiesList.find(e=> e._id==locationValue.city_id)){
+                cityValue = citiesList.find(e=> e._id==locationValue.city_id).name;
               }
-              if(neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0]){
-                neighbourhoodValue = neighbourhoodsList.filter(e=> e._id==locationValue.neighbourhood_id)[0].name;
+              if(neighbourhoodsList.find(e=> e._id==locationValue.neighbourhood_id)){
+                neighbourhoodValue = neighbourhoodsList.find(e=> e._id==locationValue.neighbourhood_id).name;
               }
               mobileValue=locationValue.mobile
             }
@@ -400,12 +507,13 @@ const Cabinet = () => {
   const options = {
     filter: false,
     onRowsDelete: null,
-    rowsPerPage: 20,
-    rowsPerPageOptions: [20, 50, 100],
+    rowsPerPage: pagingInfo.limit,
+    rowsPerPageOptions: [10, 50, 100],
     selectToolbarPlacement: "replace",
     customToolbar: () => {
       return (
         <CustomToolbar
+          importXlsx={handleImportXlsx}
           listener={() => {
             handleAdd("Add New Cabinet");
           }}
@@ -422,14 +530,32 @@ const Cabinet = () => {
         });
     },
     onDownload: (buildHead, buildBody, columns, data) => {
-      data.map(rowData=>{
-        const city = citiesList.filter(e=> e._id==rowData.data[8].city_id)[0].name
-        const neighbourhood = neighbourhoodsList.filter(e=> e._id==rowData.data[8].neighbourhood_id)[0].name
-        const mobile =rowData.data[8].mobile
-        rowData.data[8] = "City: "+city+"\nNeighbourhood: "+neighbourhood+"\nMobile: "+mobile
-        return rowData
-      })
-      return buildHead(columns) + buildBody(data);
+      let tableOptions=[
+        { name: "sn",download:true},
+        { name: "sn2",download:true},
+        { name: "type",download:true},
+        { name: "client",download:true},
+        { name: "mobile",download:true},
+        { name: "city",download:true},
+        { name: "neighbourhood",download:true},
+        { name: "brand",download:true},
+        { name: "status",download:true},
+        { name: "prev_status",download:true},
+        { name: "is_new",download:true},
+        { name: "booked",download:true},
+      ]
+      let tableData=cabinetsToExport.data.map((e,i)=>({index:i,data:Object.values(e)}))
+      return buildHead(tableOptions) + buildBody(tableData);
+    },
+    serverSide: true,
+    count:pagingInfo.count, // Use total number of items
+    page: pagingInfo.page,
+    onTableChange: (action, tableState) => {
+      if (action === "changePage") {
+        setPagingInfo({...pagingInfo,page:tableState.page,skip:tableState.page*pagingInfo.limit});
+      }else if(action === "changeRowsPerPage"){
+        setPagingInfo({...pagingInfo,limit:tableState.rowsPerPage});
+      }
     }
   };
   const handleFilter = () => {
@@ -448,31 +574,10 @@ const Cabinet = () => {
   const handleCloseDialog2 = () => {
     setOpenDialog2(false);
   };
-
-  // const handleAdd = () => {
-  //   setOpenDialog2(true);
-  //   setmodal_Title("Add");
-  // };
-  const handleClickOpenDialog2 = (rowID, modal_Title) => {
-    setOpenDialog2(true);
-    setmodal_Title(modal_Title);
-  };
   
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
-    if(newValue.length===0) setItems(itemsBackup); else{
-      let valueToSearch=[]
-      newValue.forEach(newValueEntry=>{
-        valueToSearch.push(...itemsBackup.filter((e,i) => {
-          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
-            if (e.sn.toLowerCase().includes(newValueEntry.toLowerCase())){
-              return true;
-            }
-          }
-        }))
-      })
-      setItems(valueToSearch)
-    }
+    setSearchEntry(newValue)
   }
   //Search component ---------------END--------------
 
@@ -556,6 +661,7 @@ const Cabinet = () => {
             aria-labelledby="customized-dialog-title"
             open={openDialogItem}
           >
+            {liveOperationsList.length?
             <DialogContent dividers className="entryEditHeader">
               <Grid container>
                 <Grid item xs={4}>
@@ -563,31 +669,25 @@ const Cabinet = () => {
                     <Avatar>JO</Avatar>
 
                     <div>
-                      <strong>Client</strong>
-                      <br />
-                      Jollychic
+                      <strong>Client</strong><br />
+                      {clientsList.find(e=>e._id===liveOperationsList[0].client_id).name}
                     </div>
                   </div>
                 </Grid>
 
                 <Grid item xs={4}>
-                  <strong>Sn:</strong> 18GE43250
-                  <br />
-                  <strong>Status:</strong> Operational
+                  <strong>Sn:</strong> {items.find(e=>e._id===liveOperationsList[0].sn).sn}<br />
+                  <strong>Status:</strong> {liveOperationsList[0].status}
                 </Grid>
 
                 <Grid item xs={4}>
-                  <strong>Branding:</strong> Walls
-                  <br />
-                  <strong>Type:</strong> Walls
+                  <strong>Branding:</strong> {liveOperationsList[0].brand}<br />
+                  <strong>Price Rule:</strong> {liveOperationsList[0].price_rule.name}
                 </Grid>
               </Grid>
               <div className="entryEditHeader__tabsCont">
                 <Button
-                  className={
-                    "ceeh__tabsCont--btn " +
-                    (dialogItemTab === 1 ? "selected" : "")
-                  }
+                  className={"ceeh__tabsCont--btn " + (dialogItemTab === 1 ? "selected" : "")}
                   onClick={() => {
                     handleClickDialogItemTabs(1);
                   }}
@@ -595,15 +695,20 @@ const Cabinet = () => {
                   History
                 </Button>
                 <Button
-                  className={
-                    "ceeh__tabsCont--btn " +
-                    (dialogItemTab === 2 ? "selected" : "")
-                  }
+                  className={"ceeh__tabsCont--btn " + (dialogItemTab === 2 ? "selected" : "")}
                   onClick={() => {
                     handleClickDialogItemTabs(2);
                   }}
                 >
                   Info
+                </Button>
+                <Button
+                  className={"ceeh__tabsCont--btn " + (dialogItemTab === 3 ? "selected" : "")}
+                  onClick={() => {
+                    handleClickDialogItemTabs(3);
+                  }}
+                >
+                  Reported Answers
                 </Button>
                 <Button
                   id="Edit"
@@ -615,7 +720,7 @@ const Cabinet = () => {
                   Edit
                 </Button>
               </div> 
-            </DialogContent>
+            </DialogContent>:null}
             <DialogContent dividers>
               <DialogTabsContent tab={dialogItemTab} />
             </DialogContent>
@@ -646,15 +751,25 @@ const Cabinet = () => {
               clientsList={clientsList}
             />
           </Dialog>
-          {/*********************** FILTER start ****************************/}
-          <Dialog
+        {/*********************** FILTER start ****************************/}
+        <Dialog
             onClose={() => setFilterDialog(false)}
             maxWidth={"xl"}
             fullWidth
             aria-labelledby="customized-dialog-title"
             open={filterDialog}
           >
-            <FilterComponent setOpenDialog={setFilterDialog} />
+            <FilterComponent setOpenDialog={setFilterDialog} setItems={setItems} setPagingInfo={setPagingInfo} pagingInfo={pagingInfo} />
+          </Dialog>
+
+          {/*********************** IMPORT EXCEL start ****************************/}
+          <Dialog
+            onClose={() => setImportXlsx(false)}
+            maxWidth={"md"} fullWidth
+            aria-labelledby="customized-dialog-title"
+            open={importXlsx}
+          > 
+            <ImportXlsx setOpenDialog={setImportXlsx} clientsList={clientsList}  />
           </Dialog>
         </div>
       </Container>

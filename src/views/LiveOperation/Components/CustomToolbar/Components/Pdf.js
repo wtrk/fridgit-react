@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
 
 // Create Document Component
 const Pdf = (props) => {
-  const [isLoading, setIsloading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState(props.correctiveReportDb);
 return isLoading === true ? (
   <PDFViewer style={styles.pdfContainer}>
@@ -196,7 +196,7 @@ return isLoading === true ? (
                 <Text>Store Name</Text>
               </View>
               <View style={styles.colText}>
-                <Text>{props.locationForPdf.name && "-"}</Text>
+                <Text>{props.locationForPdf.name || "-"}</Text>
               </View>
             </View>
           </View>
@@ -214,7 +214,7 @@ return isLoading === true ? (
                 <Text>Store Code:</Text>
               </View>
               <View style={styles.colText}>
-                <Text>{props.locationForPdf.code && "-"}</Text>
+                <Text>{props.locationForPdf.code || "-"}</Text>
               </View>
             </View>
           </View>
@@ -232,7 +232,7 @@ return isLoading === true ? (
                 <Text>Branch Code:</Text>
               </View>
               <View style={styles.colText}>
-                <Text>{props.locationForPdf.branch_number && "-"}</Text>
+                <Text>{props.locationForPdf.branch_number || "-"}</Text>
               </View>
             </View>
           </View>
@@ -247,10 +247,10 @@ return isLoading === true ? (
             </View>
             <View style={styles.colCont_2}>
               <View style={styles.coltitle}>
-                <Text>StoreAddress:</Text>
+                <Text>Store Address:</Text>
               </View>
               <View style={styles.colText}>
-                <Text>{props.locationForPdf.city_id && "-"}</Text>
+                <Text>{props.locationForPdf.city_id || "-"}</Text>
               </View>
             </View>
           </View>
@@ -267,10 +267,10 @@ return isLoading === true ? (
             </View>
             <View style={styles.colCont_2}>
               <View style={styles.coltitle}>
-                <Text>Store Contact#:</Text>
+                <Text>Store Contact #:</Text>
               </View>
               <View style={styles.colText}>
-                <Text>{props.locationForPdf.mobile && "-"}</Text>
+                <Text>{props.locationForPdf.mobile || "-"}</Text>
               </View>
             </View>
           </View>

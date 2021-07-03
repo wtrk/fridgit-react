@@ -149,7 +149,7 @@ return <Fragment>
                 <h5>Created Date</h5>
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
                   <DatePicker
-                     format="DD MMM YYYY"
+                     format="dd MMM yyyy"
                     id="createdDateFrom"
                     label="Date from"
                     views={["year", "month", "date"]}
@@ -164,7 +164,7 @@ return <Fragment>
                 <h5> &nbsp;</h5>
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
                   <DatePicker
-                     format="DD MMM YYYY"
+                     format="dd MMM yyyy"
                     id="createdDateTo"
                     label="Date to"
                     views={["year", "month", "date"]}
@@ -196,7 +196,7 @@ return <Fragment>
                 <h5>Promise Date</h5>
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
                   <DatePicker
-                     format="DD MMM YYYY"
+                     format="dd MMM yyyy"
                     label="Date from"
                     views={["year", "month", "date"]}
                     value={promiseFromDate}
@@ -210,7 +210,7 @@ return <Fragment>
                 <h5> &nbsp;</h5>
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
                   <DatePicker
-                     format="DD MMM YYYY"
+                     format="dd MMM yyyy"
                     id="createdDateTo"
                     label="Date to"
                     views={["year", "month", "date"]}

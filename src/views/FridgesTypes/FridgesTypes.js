@@ -23,7 +23,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const FridgesType = () => {
-  const [isLoading, setIsloading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [openAddPreventive, setOpenAddPreventive] = useState(false); //for modal
   const [fridgesTypeId, setFridgesTypeID] = useState(); //modal title
@@ -41,7 +41,7 @@ const FridgesType = () => {
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
-        return setIsloading(false)
+        return setIsLoading(false)
       });
     };
     fetchData();
@@ -61,6 +61,7 @@ const FridgesType = () => {
             preventive: preventivesChosen,
           }]
         }).then((response)=>{
+          setIsLoading(true)
           setRefreshData(response.data)
           
         })
@@ -116,6 +117,10 @@ const FridgesType = () => {
     {
       name: "cbm",
       label: "CBM",
+    },
+    {
+      name: "preventive_count_year",
+      label: "Preventive count/year",
     },
     {
       name: "preventive",
@@ -245,6 +250,8 @@ const FridgesType = () => {
             title={formTitle}
             handleClose={handleCloseAddForm}
             fridgesTypeId={fridgesTypeId}
+            setIsLoading={setIsLoading}
+            setRefreshData={setRefreshData}
           />
         </Dialog>
         <Dialog
@@ -259,7 +266,7 @@ const FridgesType = () => {
             fridgesTypeId={fridgesTypeId}
             preventivesChosen={preventivesChosen}
             setPreventivesChosen={setPreventivesChosen}
-            setIsloading={setIsloading}
+            setIsLoading={setIsLoading}
           />
         </Dialog>
         {/*********************** FILTER start ****************************/}

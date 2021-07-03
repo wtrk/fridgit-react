@@ -4,7 +4,6 @@ import {
   Slide,
   Dialog,
   TextField,
-  Chip,
   CircularProgress,
 } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
@@ -18,15 +17,12 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import { useHistory } from "react-router-dom";
 import "./LiveOperation.css";
 import axios from 'axios';
-import FilterComponent from "components/CustomComponents/FilterComponent.js";
+import FilterComponent from "./Components/FilterComponent.js";
 import TabsOnTop from "./Components/TabsOnTop.js";
 import SnDialog from "./Components/SnDialog.js";
 import OperationDialog from "./Components/OperationDialog.js";
 import JobDialog from "./Components/JobDialog.js";
 import CustomToolbarSelect from "./Components/CustomToolbar/CustomToolbarSelect.js";
-
-// Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
-const top100Films = [];
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -35,7 +31,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 export default function FullWidthTabs() {
   let history = useHistory();
 const [tabIndex,setTabIndex] = useState(0); //tabs tabIndex
-const [isLoading, setIsloading] = useState(true);  
+const [isLoading, setIsLoading] = useState(true);  
 const [items, setItems] = useState([]); //table items
 const [itemsFiltered,setItemsFiltered] = useState(); //table items
 const [filterDialog,setFilterDialog] = useState(false);
@@ -51,66 +47,72 @@ const [openJobDialog,setOpenJobDialog] = useState(false);
 const [operationId,setOperationId] = useState();
 const [jobNumber,setJobNumber] = useState();
 const [supplierName,setSupplierName] = useState("");
+const [liveOperationsToExport, setLiveOperationsToExport] = useState([]);
 const [itemsBackup, setItemsBackup] = useState([]); //Search
 const [statusUpdated, setStatusUpdated] = useState([]); //Status Updated
+const [pagingInfo, setPagingInfo] = useState({page:0,limit:20,skip:0,count:20}); //Pagination Info
+const [searchEntry, setSearchEntry] = useState([]); //searchEntry
 
 useEffect(() => {
   const fetchData = async () => {
-    const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
-      responseType: "json",
-    }).then((response) => {
-      setCitiesList(response.data)
-      return response.data
-    });
-    const neighbourhood = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
-      responseType: "json",
-    }).then((response) => {
-      setNeighbourhoodsList(response.data)
-      return response.data
-    });
-    const client = await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
-      responseType: "json",
-    }).then((response) => {
-      setClientsList(response.data)
-      return response.data
-    });
-    const supplier = await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
-      responseType: "json",
-    }).then((response) => {
-      setSuppliersList(response.data)
-      return response.data
-    });
-    const cabinet = await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {
-      responseType: "json",
-    }).then((response) => {
-      setCabinetsList(response.data)
-      return response.data
-    });
+      await axios.all([
+        axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/clients`),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/cities`),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/liveOperations/export`)
+      ])
+      .then(response => {
+        setCabinetsList(response[0].data.data)
+        setClientsList(response[1].data)
+        setCitiesList(response[2].data)
+        setNeighbourhoodsList(response[3].data)
+        setSuppliersList(response[4].data)
+        setLiveOperationsToExport(response[5].data)
+      })
   };
   fetchData();
 }, []);
+
+
+// useEffect(() => {
+//   const fetchData = async () => {
+//     await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/export`, {responseType: "json"
+//     }).then((response) => {
+//       setLiveOperationsToExport(response.data)
+//     });
+//   };
+//   fetchData();
+// }, []);
+
 useEffect(() => {
   const fetchData = async () => {
-    await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations`, {
+    await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations?limit=${pagingInfo.limit}&skip=${pagingInfo.skip}&searchEntry=${searchEntry}`, {
       responseType: "json",
     }).then((response) => {
-      setItems(response.data)
-      setItemsBackup(response.data)
-      return setIsloading(false)
+      setPagingInfo({...pagingInfo,count:response.data.count});
+      setItems(response.data.data)
+      setItemsBackup(response.data.data)
+      return setIsLoading(false)
     })
     .catch((error) => {
       console.log("error",error);
     });
   };
   fetchData();
-}, [statusUpdated]);
+}, [statusUpdated,pagingInfo.page,pagingInfo.limit,searchEntry]);
+
+
   /************************* -Tabledata START- ***************************/
   const columns = [
     {
       name: "_id",
-      options: {
-        display: false,
-      },
+      options: {display: false},
+    },
+    {
+      name: "sn",
+      options: {display: false},
     },
     {
       name: "job_number",
@@ -334,7 +336,7 @@ useEffect(() => {
   const options = {
     filter: false,
     onRowsDelete: null,
-    rowsPerPage: 20,
+    rowsPerPage: pagingInfo.limit,
     rowsPerPageOptions: [20, 50, 100],
     selectToolbarPlacement: "replace",
     customToolbar: () => {
@@ -343,7 +345,41 @@ useEffect(() => {
       );
     },
     customToolbarSelect: (selectedRows, displayData, setSelectedRows) => {
-     return  <CustomToolbarSelect setStatusUpdated={setStatusUpdated} selectedRows={selectedRows} displayData={displayData} setSelectedRows={setSelectedRows} setItems={setItems} items={items}  />
+      const snSelected=displayData[selectedRows.data[0].dataIndex].data[1]
+      const fridgeType=cabinetsList.find(e=>e._id===snSelected).type
+     return  <CustomToolbarSelect fridgeType={fridgeType} setStatusUpdated={setStatusUpdated} selectedRows={selectedRows} displayData={displayData} setSelectedRows={setSelectedRows} setItems={setItems} items={items} cabinetsList={cabinetsList}  />
+    },
+    onDownload: (buildHead, buildBody, columns, data) => {
+      let tableOptions=[
+        { name: "job_number",download:true},
+        { name: "operation_number",download:true},
+        { name: "operation_type",download:true},
+        { name: "brand",download:true},
+        { name: "city",download:true},
+        { name: "neighbourhood",download:true},
+        { name: "shop_name",download:true},
+        { name: "mobile",download:true},
+        { name: "status",download:true},
+        { name: "allocation_rule",download:true},
+        { name: "price_rule",download:true},
+        { name: "last_status_user",download:true},
+        { name: "last_status_update",download:true},
+        { name: "supplier",download:true},
+        { name: "sn",download:true},
+        { name: "client",download:true},
+      ]
+      let tableData=liveOperationsToExport.data.map((e,i)=>({index:i,data:Object.values(e)}))
+      return buildHead(tableOptions) + buildBody(tableData);
+    },
+    serverSide: true,
+    count:pagingInfo.count, // Use total number of items
+    page: pagingInfo.page,
+    onTableChange: (action, tableState) => {
+      if (action === "changePage") {
+        setPagingInfo({...pagingInfo,page:tableState.page,skip:tableState.page*pagingInfo.limit});
+      }else if(action === "changeRowsPerPage"){
+        setPagingInfo({...pagingInfo,limit:tableState.rowsPerPage});
+      }
     }
   };
   const handleOpenOperationDialog = (id,supplierName)=>{
@@ -361,8 +397,6 @@ useEffect(() => {
     setSnId(id)
   }
   const handleOpenAddDialog = () => {
-    //setOpenAddDialog(true);
-    //let path = `/admin/LiveTransportation_1`;
     let path = `/admin/LiveOperationAdd`;
     history.push(path);
   };
@@ -373,25 +407,7 @@ useEffect(() => {
     
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
-    if(newValue.length===0) setItems(itemsBackup); else{
-      let valueToSearch=[]
-      newValue.forEach(newValueEntry=>{
-        valueToSearch.push(...itemsBackup.filter((e,i) => {
-          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
-            if (e.job_number.toLowerCase().includes(newValueEntry.toLowerCase())){
-              return true;
-            }
-            if (e.operation_number.toLowerCase().includes(newValueEntry.toLowerCase())){
-              return true;
-            }
-            if (e.sn.toLowerCase().includes(newValueEntry.toLowerCase())){
-              return true;
-            }
-          }
-        }))
-      })
-      setItems(valueToSearch)
-    }
+    setSearchEntry(newValue)
   }
   //Search component ---------------END--------------
 
@@ -438,7 +454,7 @@ useEffect(() => {
 
       </Container>
       <div>
-        {/*********************** -Job Dialog START- ****************************/}
+        {/*********************** -Operation Dialog START- ****************************/}
         <Dialog
           maxWidth={"xl"}
           fullWidth
@@ -446,9 +462,9 @@ useEffect(() => {
           open={openOperationDialog}
           onClose={() => setOpenOperationDialog(false)}
         >
-          <OperationDialog setOpenDialog={setOpenOperationDialog} operationId={operationId} supplierName={supplierName} />
+          <OperationDialog setOpenDialog={setOpenOperationDialog} operationId={operationId} supplierName={supplierName} cabinetsList={cabinetsList} />
         </Dialog>
-        {/*********************** -Operation Dialog START- ****************************/}
+        {/*********************** -Job Dialog START- ****************************/}
         <Dialog
           maxWidth={"xl"}
           fullWidth
@@ -456,9 +472,8 @@ useEffect(() => {
           open={openJobDialog}
           onClose={() => setOpenJobDialog(false)}
         >
-          <JobDialog setOpenDialog={setOpenJobDialog} jobNumber={jobNumber} supplierName={supplierName} />
+          <JobDialog setOpenDialog={setOpenJobDialog} jobNumber={jobNumber} supplierName={supplierName} cabinetsList={cabinetsList} />
         </Dialog>
-
         {/*********************** -Sn Dialog START- ****************************/}
         <Dialog
           maxWidth={"xl"}
@@ -467,19 +482,20 @@ useEffect(() => {
           open={openSnDialog}
           onClose={() => setOpenSnDialog(false)}
         >
-          <SnDialog setOpenDialog={setOpenSnDialog} snId={snId} />
+          <SnDialog setOpenDialog={setOpenSnDialog} snId={snId} cabinetsList={cabinetsList} />
         </Dialog>
-
-        {/*********************** -FILTER START- ****************************/}
+        {/*********************** FILTER start ****************************/}
         <Dialog
+          onClose={() => setFilterDialog(false)}
           maxWidth={"xl"}
           fullWidth
           TransitionComponent={Transition}
+          aria-labelledby="customized-dialog-title"
           open={filterDialog}
-          onClose={() => setFilterDialog(false)}
         >
-          <FilterComponent setOpenDialog={setFilterDialog} />
+          <FilterComponent setOpenDialog={setFilterDialog} setItems={setItems} setPagingInfo={setPagingInfo} pagingInfo={pagingInfo} />
         </Dialog>
+
       </div>
     </div>
   );

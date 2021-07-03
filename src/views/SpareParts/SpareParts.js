@@ -21,7 +21,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const SpareParts = () => {
-  const [isLoading, setIsloading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]); //table items
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [sparePartsId, setSparePartsID] = useState(); //modal title
@@ -36,7 +36,7 @@ const SpareParts = () => {
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
-        return setIsloading(false)
+        return setIsLoading(false)
       });
     };
     fetchData();

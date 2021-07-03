@@ -1,21 +1,31 @@
-import React, { Fragment } from "react";
+import React, { Fragment,useState,useEffect } from "react";
 import AppBar from "@material-ui/core/AppBar";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
+import axios from 'axios';
 
 const TabsOnTopFromStatus = (props) => {
-  /************ -Tabs START- **************/
-  const dataLength = (status) => {
-    const filteredObj =
-      status.toUpperCase() === "ALL"
-        ? props.items
-        : props.items.filter((e) => {
-            return e.status.toUpperCase() == status.toUpperCase();
-          });
-    return filteredObj.length;
+  const [countStatus,setCountStatus] = useState(0);
+  const [countAll,setCountAll] = useState(0);
+  
+useEffect(() => {
+  const fetchData = async () => {
+    await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/count`, {
+      responseType: "json",
+    }).then((response) => {
+      setCountStatus(response.data.data)
+      setCountAll(response.data.total)
+    })
+    .catch((error) => {
+      console.log("error",error);
+    });
   };
+  fetchData();
+}, []);
+
+
+  
   const tabsTitle = [ 
-    // ...new Set(props.items.map((e) => e.status)) ---- get unique status object from items
     "In Progress","Completed","Failed","On Hold","Assigned","Unassigned","Accepted","Canceled"
   ];
   const handleChangeTabs = (event, newIndex) => {
@@ -49,7 +59,7 @@ const TabsOnTopFromStatus = (props) => {
           label={
             <Fragment>
               <span>All</span>
-              <div className="TabsOnTopFromStatus__tab--number">{dataLength("All")}</div>
+              <div className="TabsOnTopFromStatus__tab--number">{countAll}</div>
             </Fragment>
           }
         />
@@ -62,7 +72,7 @@ const TabsOnTopFromStatus = (props) => {
             label={
               <Fragment>
                 <span>{e}</span>
-                <div className="table-length-cont">{dataLength(e)}</div>
+                <div className="table-length-cont">{countStatus[e] || 0}</div>
               </Fragment>
             }
           />

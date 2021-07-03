@@ -26,7 +26,7 @@ const LiveOperationAdd = () => {
   const [items, setItems] = useState(); //table items
   const [itemsUpdated, setItemsUpdated] = useState(); //table items
   const [pricesToUse, setPricesToUse] = useState(); //table items
-  const [openAddDialog,setOpenAddDialog] = useState(false); //for modal
+  const [openAddDialog,setOpenAddDialog] = useState(true); //for modal
   const [citiesList, setCitiesList] = useState([]);
   const [suppliersList, setSuppliersList] = useState([]);
   const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
@@ -57,8 +57,8 @@ const LiveOperationAdd = () => {
       const cabinet = await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {
         responseType: "json",
       }).then((response) => {
-        setCabinetsList(response.data)
-        return response.data
+        setCabinetsList(response.data.data)
+        return response.data.data
       });
     };
     fetchData();
@@ -193,6 +193,7 @@ const LiveOperationAdd = () => {
       if (cabinetsFirstRun.current) {
         cabinetsFirstRun.current = false;
       }else{
+        console.log("itemsUpdateditemsUpdateditemsUpdateditemsUpdated",itemsUpdated)
         await axios({
           method: "post",
           url: `${process.env.REACT_APP_BASE_URL}/financial`,
@@ -200,6 +201,7 @@ const LiveOperationAdd = () => {
             return {
               sn: e.sn,
               operation_number: e.operation_number,
+              price_rule_name:e.price_rule.name,
               job_number: e.job_number,
               promise_day: pricesToUse[0].promise_day,
               handling_in: pricesToUse[0].handling_in,
@@ -213,7 +215,9 @@ const LiveOperationAdd = () => {
               preventive_maintenance: pricesToUse[0].preventive_maintenance,
               exchange_corrective_reaction: pricesToUse[0].exchange_corrective_reaction,
               corrective_reaction: pricesToUse[0].corrective_reaction,
-              total: pricesToUse[0].total
+              total: pricesToUse[0].total,
+              location: e.execution_address?e.execution_address:e.initiation_address,
+              operation_type:e.operation_type
             }
           }),
         })

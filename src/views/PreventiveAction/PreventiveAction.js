@@ -49,7 +49,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const PreventiveAction = () => {
   const classes = useStyles(); //custom css
-  const [isLoading, setIsloading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [preventiveActionId, setPreventiveActionID] = useState(); //modal title
   const [countriesList, setCountriesList] = useState([]);
@@ -76,7 +76,7 @@ const PreventiveAction = () => {
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
-        return setIsloading(false);
+        return setIsLoading(false);
       });
     };
     fetchData();

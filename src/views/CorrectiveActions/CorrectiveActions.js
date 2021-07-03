@@ -22,7 +22,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const CorrectiveActions = () => {
-  const [isLoading, setIsloading] = useState(true);  
+  const [isLoading, setIsLoading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [correctiveActionsId, setCorrectiveActionsID] = useState(); //modal title
   const [formTitle, setFormTitle] = useState("Add"); //modal title
@@ -37,7 +37,7 @@ const CorrectiveActions = () => {
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
-        return setIsloading(false)
+        return setIsLoading(false)
       });
     };
     fetchData();

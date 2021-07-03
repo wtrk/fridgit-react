@@ -46,7 +46,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const City = () => {
   const classes = useStyles(); //custom css
-  const [isLoading, setIsloading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [cityId, setCityID] = useState(); //modal title
   const [countriesList, setCountriesList] = useState([]);
@@ -69,7 +69,7 @@ const City = () => {
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
-        return setIsloading(false);
+        return setIsLoading(false);
       });
     };
     fetchData();

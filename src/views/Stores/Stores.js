@@ -22,7 +22,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const Store = () => {
-  const [isLoading, setIsloading] = useState(true);  
+  const [isLoading, setIsLoading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [storesId, setStoreID] = useState(); //modal title
   const [formTitle, setFormTitle] = useState("Add"); //modal title
@@ -52,7 +52,7 @@ const Store = () => {
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
-        return setIsloading(false)
+        return setIsLoading(false)
       });
     };
     fetchData();

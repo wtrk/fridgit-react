@@ -1,10 +1,10 @@
-import React, { useState,Fragment, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Button,
   Grid,
-  Avatar,
-  DialogActions, DialogContent,TableFooter, TableCell, TableRow
+  DialogContent,
+  DialogActions
 } from "@material-ui/core";
 import {
   Timeline,
@@ -20,7 +20,7 @@ import MUIDataTable from "mui-datatables";
 import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import Moment from "react-moment";
 import { makeStyles} from "@material-ui/core/styles";
-import { Close} from "@material-ui/icons";
+import { Close } from "@material-ui/icons";
 import axios from 'axios';
 import "react-dropzone-uploader/dist/styles.css";
 
@@ -40,30 +40,43 @@ const OperationDialog = (props) => {
     const classes = useStyles(); //custom css
     const [dialogItemTab, setDialogItemTab] = useState(1);
     const [liveOperationsList, setLiveOperationsList] = useState([]);
+    const [suppliersList, setSuppliersList] = useState([]);
     const [historyList, setHistoryList] = useState([]);
     const [financialList, setFinancialList] = useState([]);
-    const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
-    const [citiesList, setCitiesList] = useState([]);
     const [clientInfo, setClientInfo] = useState();
     const [fridgeInfo, setFridgeInfo] = useState();
+    const [cabinetsSn, setCabinetsSn] = useState();
     let columnsForPrices = [
-      { name: "job_number" },
-      { name: "operation_number" },
-      { name: "branding_fees" },
-      { name: "cabinet_testing_fees" },
-      { name: "corrective_reaction" },
-      { name: "corrective_service_in_house" },
-      { name: "drop" },
-      { name: "exchange_corrective_reaction" },
-      { name: "handling_in" },
-      { name: "in_house_preventive_maintenance" },
-      { name: "preventive_maintenance" },
-      { name: "promise_day" },
-      { name: "storage" },
-      { name: "transportation_fees" },
-      { name: "labor" },
-      { name: "spare" },
-      { name: "total" }
+      { name: "createdAt",label: "Date",
+        options: {
+          customBodyRender: (value, tableMeta, updateValue) => <Moment format="DD MMM YYYY">{value}</Moment>
+        },
+      },
+      { name: "location",label: "Location",
+        options: {
+          customBodyRender: (value, tableMeta, updateValue) => {
+          return value.shop_name
+          }
+        },
+      },
+      { name: "operation_type",label: "Operation Type" },
+      { name: "job_number",label: "Job Number" },
+      { name: "operation_number",label: "operation number" },
+      { name: "branding_fees",label: "branding fees" },
+      { name: "cabinet_testing_fees",label: "cabinet testing fees" },
+      { name: "corrective_reaction",label: "corrective reaction" },
+      { name: "corrective_service_in_house",label: "corrective service in house" },
+      { name: "drop",label: "drop" },
+      { name: "exchange_corrective_reaction",label: "exchange corrective reaction" },
+      { name: "handling_in",label: "handling in" },
+      { name: "in_house_preventive_maintenance",label: "in house preventive maintenance" },
+      { name: "preventive_maintenance",label: "preventive maintenance" },
+      { name: "promise_day",label: "promise day" },
+      { name: "storage",label: "storage" },
+      { name: "transportation_fees",label: "transportation fees" },
+      { name: "labor",label: "labor" },
+      { name: "spare",label: "spare" },
+      { name: "total",label: "total" }
     ]
     const optionsForPrices = {
       filter:false,
@@ -76,30 +89,37 @@ const OperationDialog = (props) => {
       }
     };
     
-    useEffect(() => {
-      const fetchData = async () => {
-        const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/${props.operationId}`, {
-          responseType: "json",
-        }).then((response) => {
-          setLiveOperationsList(response.data)
-          return response.data
-        });
-      };
-      fetchData();
-    }, []);
+    // useEffect(() => {
+    //   const fetchData = async () => {
+    //     const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/${props.operationId}`, {
+    //       responseType: "json",
+    //     }).then((response) => {
+    //       setLiveOperationsList(response.data)
+    //       return response.data
+    //     });
+    //   };
+    //   fetchData();
+    // }, []);
+    
+  useEffect(() => {
+    const fetchData = async () => {
+        await axios.all([
+          axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/liveOperations/${props.operationId}`)
+        ]).then(response => {
+          setSuppliersList(response[0].data)
+          setLiveOperationsList(response[1].data)
+        })
+    };
+    fetchData();
+  }, []);
+
     
     useEffect(() => {
       const fetchData = async () => {
-        const neighbourhoods = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
-          responseType: "json",
-        }).then((response) => {
-          return response.data
-        });
-        const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
-          responseType: "json",
-        }).then((response) => {
-          return response.data
-        });
+        let findSn=props.cabinetsList.find(e=>e._id===liveOperationsList.sn)
+        setCabinetsSn(findSn?findSn.sn:"")
+
         const history = await axios(`${process.env.REACT_APP_BASE_URL}/operations/history/${liveOperationsList.operation_number}`, {
           responseType: "json",
         }).then((response) => {
@@ -142,9 +162,10 @@ const OperationDialog = (props) => {
         <Timeline align="left">
           {historyList
             ? historyList.map((e) => {
+              const supplierName=suppliersList.find(eSub=>eSub._id===e.supplier_id);
                 return <TimelineItem key={e._id} style={{minHeight:50}}>
                   <TimelineOppositeContent>
-                    {(e.status==="Assigned") ? <Typography>{e.status} to {props.supplierName}</Typography>:<Typography>{e.status}</Typography>}
+                    {(e.status==="Assigned") ? <Typography>{e.status} {supplierName?"to "+supplierName.name:""}</Typography>:<Typography>{e.status}</Typography>}
                   </TimelineOppositeContent>
                   <TimelineSeparator>
                     <TimelineDot />
@@ -176,7 +197,7 @@ const OperationDialog = (props) => {
                 <strong>Branding</strong>: {liveOperationsList.brand}
               </p>
               <p>
-                <strong>SN</strong>: {liveOperationsList.sn}
+                <strong>SN</strong>: {cabinetsSn}
               </p>
               <p>
                 <strong>Status</strong>: {liveOperationsList.status}
@@ -229,8 +250,7 @@ const OperationDialog = (props) => {
 
 
   return (
-    <Fragment>
-      {console.log("istoryList",historyList)}
+    <>
       <DialogContent dividers className="entryEditHeader">
         <Grid container>
           <Grid item xs={3}>
@@ -247,7 +267,7 @@ const OperationDialog = (props) => {
             </div>
           </Grid>
           <Grid item xs={3}>
-            <strong>Sn:</strong> {liveOperationsList.sn}
+            <strong>Sn:</strong> {cabinetsSn}
             <br />
             <strong>Status:</strong> {liveOperationsList.status}
             <br/>
@@ -278,9 +298,7 @@ const OperationDialog = (props) => {
             History
           </Button>
           <Button
-            className={
-              "ceeh__tabsCont--btn " + (dialogItemTab === 2 ? "selected" : "")
-            }
+            className={"ceeh__tabsCont--btn " + (dialogItemTab === 2 ? "selected" : "")}
             onClick={() => {
               setDialogItemTab(2);
             }}
@@ -288,9 +306,7 @@ const OperationDialog = (props) => {
             Info
           </Button>
           <Button
-            className={
-              "ceeh__tabsCont--btn " + (dialogItemTab === 3 ? "selected" : "")
-            }
+            className={"ceeh__tabsCont--btn " + (dialogItemTab === 3 ? "selected" : "")}
             onClick={() => {
               setDialogItemTab(3);
             }}
@@ -314,7 +330,7 @@ const OperationDialog = (props) => {
           Close
         </Button>
       </DialogActions>
-    </Fragment>
+    </>
   );
 };
 

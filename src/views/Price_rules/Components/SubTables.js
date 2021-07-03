@@ -7,6 +7,7 @@ import {
   Grid,
   Toolbar,
   Collapse,
+  Switch,
   CircularProgress
 } from "@material-ui/core";
 import axios from 'axios';
@@ -50,6 +51,7 @@ const SubTables = (props) => {
     const nameRef = useRef()
     const promise_dayRef = useRef()
     const serviceRef = useRef()
+    const activeRef = useRef()
     const handling_inRef = useRef()
     const storageRef = useRef()
     const in_house_preventive_maintenanceRef = useRef()
@@ -69,6 +71,7 @@ const SubTables = (props) => {
       name: "",
       promise_day: "",
       service: "",
+      active: "",
       handling_in: "",
       storage: "",
       in_house_preventive_maintenance: "",
@@ -88,19 +91,6 @@ const SubTables = (props) => {
       name: {error:false,msg:""},
       promise_day: {error:false,msg:""},
       service: {error:false,msg:""},
-      handling_in: {error:false,msg:""},
-      storage: {error:false,msg:""},
-      in_house_preventive_maintenance: {error:false,msg:""},
-      corrective_service_in_house: {error:false,msg:""},
-      cabinet_testing_fees: {error:false,msg:""},
-      branding_fees: {error:false,msg:""},
-      drop: {error:false,msg:""},
-      transp_cbm: {error:false,msg:""},
-      transp_for_1_unit: {error:false,msg:""},
-      min_charge: {error:false,msg:""},
-      preventive_maintenance: {error:false,msg:""},
-      exchange_corrective_reaction: {error:false,msg:""},
-      corrective_reaction: {error:false,msg:""}
     });
     
   useEffect(()=>{
@@ -175,7 +165,8 @@ const SubTables = (props) => {
         case "priority": nameRef.current.focus();break;
         case "name": promise_dayRef.current.focus();break;
         case "promise_day": serviceRef.current.focus();break;
-        case "service": handling_inRef.current.focus();break;
+        case "service": activeRef.current.focus();break;
+        case "active": handling_inRef.current.focus();break;
         case "handling_in": storageRef.current.focus();break;
         case "storage": in_house_preventive_maintenanceRef.current.focus();break;
         case "in_house_preventive_maintenance": corrective_service_in_houseRef.current.focus();break;
@@ -202,12 +193,16 @@ const handleChangeForm = (e) => {
   const { name, value } = e.target;
   setFormValues({ ...formValues, [name]: value });
 };
+const handleChangeSwitch = (e) => {
+  const { name, checked } = e.target;
+  const value=checked===true ? 1 : 0;
+  setFormValues({ ...formValues, [name]: value });
+};
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
   }
-  
-  if (props.priceRuleId) {
+  if (props.priceRuleId&&props.actionDialog==="Edit") {
     await axios({
       method: "put",
       url: `${process.env.REACT_APP_BASE_URL}/priceRules/${props.priceRuleId}`,
@@ -221,6 +216,7 @@ const handleOnSubmit = async () => {
       console.log(error);
     });
   } else {
+    delete formValues._id
     await axios({
       method: "post",
       url: `${process.env.REACT_APP_BASE_URL}/priceRules`,
@@ -233,6 +229,7 @@ const handleOnSubmit = async () => {
         promise_day: "",
         priority: "",
         service: "",
+        active: "",
         handling_in: "",
         storage: "",
         in_house_preventive_maintenance: "",
@@ -270,7 +267,7 @@ const validateInputHandler = (e) => {
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />
           <Typography variant="h6" className={classes.title}>
-            {props.title}
+            {props.actionDialog==="edit"?"Edit Price Rule":"Add Price Rule"}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -332,7 +329,6 @@ const validateInputHandler = (e) => {
                 error={formErrors.promise_day.error}
               />
             </Grid>
-
             <Grid item xs={12} sm={4}>
               <Autocomplete
                 id="serviceTypeInput"
@@ -358,6 +354,16 @@ const validateInputHandler = (e) => {
                 )}
               />
             </Grid>
+            <Grid item xs={6} sm={4} md={3}>
+              Active: <Switch
+                checked={formValues.active == 1 ? true : false}
+                color="primary"
+                name="active"
+                inputRef={corrective_service_in_houseRef}
+                inputProps={{ "aria-label": "primary checkbox" }}
+                onChange={handleChangeSwitch}
+              />
+            </Grid>
 
             <Grid item xs={12}>
               <h3>Job Fees</h3>
@@ -372,13 +378,6 @@ const validateInputHandler = (e) => {
                 value={formValues.handling_in || ""}
                 inputRef={handling_inRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.handling_in.error
-                    ? formErrors.handling_in.msg
-                    : null
-                }
-                error={formErrors.handling_in.error}
               />
             </Grid>
             <Grid item xs={6} sm={4}>
@@ -391,11 +390,6 @@ const validateInputHandler = (e) => {
                 value={formValues.storage || ""}
                 inputRef={storageRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.storage.error ? formErrors.storage.msg : null
-                }
-                error={formErrors.storage.error}
               />
             </Grid>
             <Grid item xs={6} sm={4}>
@@ -408,13 +402,6 @@ const validateInputHandler = (e) => {
                 value={formValues.in_house_preventive_maintenance || ""}
                 inputRef={in_house_preventive_maintenanceRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.in_house_preventive_maintenance.error
-                    ? formErrors.in_house_preventive_maintenance.msg
-                    : null
-                }
-                error={formErrors.in_house_preventive_maintenance.error}
               />
             </Grid>
             <Grid item xs={6} sm={4}>
@@ -427,13 +414,6 @@ const validateInputHandler = (e) => {
                 value={formValues.corrective_service_in_house || ""}
                 inputRef={corrective_service_in_houseRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.corrective_service_in_house.error
-                    ? formErrors.corrective_service_in_house.msg
-                    : null
-                }
-                error={formErrors.corrective_service_in_house.error}
               />
             </Grid>
             <Grid item xs={6} sm={4}>
@@ -446,13 +426,6 @@ const validateInputHandler = (e) => {
                 value={formValues.cabinet_testing_fees || ""}
                 inputRef={cabinet_testing_feesRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.cabinet_testing_fees.error
-                    ? formErrors.cabinet_testing_fees.msg
-                    : null
-                }
-                error={formErrors.cabinet_testing_fees.error}
               />
             </Grid>
             <Grid item xs={6} sm={4}>
@@ -465,13 +438,6 @@ const validateInputHandler = (e) => {
                 value={formValues.branding_fees || ""}
                 inputRef={branding_feesRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.branding_fees.error
-                    ? formErrors.branding_fees.msg
-                    : null
-                }
-                error={formErrors.branding_fees.error}
               />
             </Grid>
             <Grid item xs={6} sm={4}>
@@ -484,9 +450,6 @@ const validateInputHandler = (e) => {
                 value={formValues.drop || ""}
                 inputRef={dropRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={formErrors.drop.error ? formErrors.drop.msg : null}
-                error={formErrors.drop.error}
               />
             </Grid>
 
@@ -503,11 +466,6 @@ const validateInputHandler = (e) => {
                 value={formValues.transp_cbm || ""}
                 inputRef={transp_cbmRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.transp_cbm.error ? formErrors.transp_cbm.msg : null
-                }
-                error={formErrors.transp_cbm.error}
               />
             </Grid>
             <Grid item xs={6} sm={4} md={3}>
@@ -520,13 +478,6 @@ const validateInputHandler = (e) => {
                 value={formValues.transp_for_1_unit || ""}
                 inputRef={transp_for_1_unitRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.transp_for_1_unit.error
-                    ? formErrors.transp_for_1_unit.msg
-                    : null
-                }
-                error={formErrors.transp_for_1_unit.error}
               />
             </Grid>
             <Grid item xs={6} sm={4} md={3}>
@@ -539,11 +490,6 @@ const validateInputHandler = (e) => {
                 value={formValues.min_charge || ""}
                 inputRef={min_chargeRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.min_charge.error ? formErrors.min_charge.msg : null
-                }
-                error={formErrors.min_charge.error}
               />
             </Grid>
             <Grid item xs={6} sm={4} md={3}>
@@ -556,13 +502,6 @@ const validateInputHandler = (e) => {
                 value={formValues.preventive_maintenance || ""}
                 inputRef={preventive_maintenanceRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.preventive_maintenance.error
-                    ? formErrors.preventive_maintenance.msg
-                    : null
-                }
-                error={formErrors.preventive_maintenance.error}
               />
             </Grid>
             <Grid item xs={6} sm={4} md={3}>
@@ -575,13 +514,6 @@ const validateInputHandler = (e) => {
                 value={formValues.exchange_corrective_reaction || ""}
                 inputRef={exchange_corrective_reactionRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.exchange_corrective_reaction.error
-                    ? formErrors.exchange_corrective_reaction.msg
-                    : null
-                }
-                error={formErrors.exchange_corrective_reaction.error}
               />
             </Grid>
             <Grid item xs={6} sm={4} md={3}>
@@ -594,16 +526,8 @@ const validateInputHandler = (e) => {
                 value={formValues.corrective_reaction || ""}
                 inputRef={corrective_reactionRef}
                 onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={
-                  formErrors.corrective_reaction.error
-                    ? formErrors.corrective_reaction.msg
-                    : null
-                }
-                error={formErrors.corrective_reaction.error}
               />
             </Grid>
-
             <Grid item xs={12}>
               <h3>Conditions</h3>
             </Grid>

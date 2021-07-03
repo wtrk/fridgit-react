@@ -131,10 +131,11 @@ const handleOnSubmit = async () => {
     });
   } else {
     const status=formValues.is_new ? "Operational" : "Needs test";
+    const prev_status=formValues.is_new ? "Not Due" : "Recommended";
     await axios({
       method: "post",
       url: `${process.env.REACT_APP_BASE_URL}/cabinets/`,
-      data: [{...formValues,status}],
+      data: [{...formValues,status,prev_status}],
     })
     .then(function (response) {
       setOpenAlertSuccess(true);

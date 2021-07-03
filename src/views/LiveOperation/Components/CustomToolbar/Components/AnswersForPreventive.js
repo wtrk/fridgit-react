@@ -32,16 +32,22 @@ const AnswersForPreventive = (props) => {
     const classes = useStyles(); //custom css
     const [fridgeTypeId,setFridgeTypeId]=useState()
     const [preventiveActionsIds,setPreventiveActionsIds]=useState()
-    const [isLoading, setIsloading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [items,setItems]=useState()
     const [preventiveActions,setPreventiveActions]=useState([])
+    const [errorMessage,setErrorMessage]=useState([])
 
     useEffect(() => {
       const fetchData = async () => {
         const actionsFromDb=await axios(`${process.env.REACT_APP_BASE_URL}/cabinets/${props.dataOfEntry.cabinet_id}`, {
           responseType: "json",
         }).then((response) => {
-          setFridgeTypeId(response.data.type)
+          const preventiveFilteredByON=response.data.preventive.filter(e=>e.operation_number===props.dataOfEntry.operation_id)
+          setPreventiveActions(preventiveFilteredByON)
+          setPreventiveActionsIds(preventiveFilteredByON.map(e=>e.preventiveActions_id))
+          return response.data
+        }).then((response) => {
+          setFridgeTypeId(response.type)
         })
       };
       fetchData();
@@ -49,19 +55,21 @@ const AnswersForPreventive = (props) => {
 
     const fridgesTypesFirstRun = useRef(true);
     useEffect(() => {
-      const fetchData = async () => {
-        if (fridgesTypesFirstRun.current) {
-          fridgesTypesFirstRun.current = false;
-        }else{
-          await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/${fridgeTypeId}`, {
-            responseType: "json",
-          }).then((response) => {
-            setPreventiveActions(response.data.preventive)
-            setPreventiveActionsIds(response.data.preventive.map(e=>e.preventiveActions_id))
-          })
-        }
-      };
-      fetchData();
+      if(preventiveActions.length===0){
+        const fetchData = async () => {
+          if (fridgesTypesFirstRun.current) {
+            fridgesTypesFirstRun.current = false;
+          }else{
+            await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/${fridgeTypeId}`, {
+              responseType: "json",
+            }).then((response) => {
+              setPreventiveActions(response.data.preventive)
+              setPreventiveActionsIds(response.data.preventive.map(e=>e.preventiveActions_id))
+            })
+          }
+        };
+        fetchData();
+      }
     }, [fridgeTypeId]);
     
 
@@ -72,13 +80,10 @@ const AnswersForPreventive = (props) => {
           preventiveActionsFirstRun.current = false;
         }else{
                const actionsFromDb = await axios(
-                 `${process.env.REACT_APP_BASE_URL}/preventiveActions`,
-                 {
-                   responseType: "json",
-                 }
+                 `${process.env.REACT_APP_BASE_URL}/preventiveActions`,{responseType: "json"}
                ).then((response) => {
                  setItems(response.data.filter((e, i) => preventiveActionsIds.includes(e._id)));
-                 return setIsloading(false);
+                 return setIsLoading(false);
                });
              }
       };
@@ -86,11 +91,17 @@ const AnswersForPreventive = (props) => {
     }, [preventiveActionsIds]);
 
     const handleChangeAnswer = (newValue,trueAnswer) =>{
-      setPreventiveActions(preventiveActions.map(e=>{
-        if(e.preventiveActions_id===trueAnswer) e.rightAnswer_id=newValue._id
-        return e
-      })
-      )
+      if(newValue){
+        setPreventiveActions(preventiveActions.map(e=>{
+          if(e.preventiveActions_id===trueAnswer){
+            e.rightAnswer_id=newValue._id
+            e.reportable=newValue.reportable
+            e.obligatory=newValue.obligatory
+          }
+          return e
+        })
+        )
+      }
     }
     
     const handleChangeForm = (e,rowId) => {
@@ -101,17 +112,30 @@ const AnswersForPreventive = (props) => {
       }))
     };
     const handleClickSave = async () => {
-      await axios({
-        method: "put",
-        url: `${process.env.REACT_APP_BASE_URL}/fridgesTypes/${fridgeTypeId}`,
-        data: [{"preventive":preventiveActions}],
-      })
-      .then(function (response) {
-        props.setOpenDialog(false)
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+      if(preventiveActions.filter(e=>!e.rightAnswer_id).length===0){
+        if(preventiveActions.filter(e=>e.obligatory===true&&!e.notes).length===0){
+          await axios({
+            method: "put",
+            url: `${process.env.REACT_APP_BASE_URL}/cabinets/${props.dataOfEntry.cabinet_id}`,
+            data: [{"preventive":preventiveActions.map(e=>{
+              e.operation_number=props.dataOfEntry.operation_id
+              e.date=new Date()
+              return e
+            })}],
+          })
+          .then(function (response) {
+            setErrorMessage("")
+            props.setOpenDialog(false)
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+        }else{
+          setErrorMessage("You should fill the notes for the answers you selected!")
+        }
+      }else{
+        setErrorMessage("Please fill all the answers!")
+      }
     }
     let columns = [
       {
@@ -120,10 +144,10 @@ const AnswersForPreventive = (props) => {
           display: false,
         },
       },
-      { name: "name" },
-      { name: "nameAr" },
+      { name: "name",label: "Name" },
+      { name: "nameAr",label: "Name Arabic" },
       {
-        name: "answers",
+        name: "answers",label: "Answers",
         options: {
           customBodyRender: (value, tableMeta, updateValue) => {
             let rightAnswerId=preventiveActions.filter(e=>e.preventiveActions_id===tableMeta.rowData[0])[0].rightAnswer_id
@@ -145,11 +169,10 @@ const AnswersForPreventive = (props) => {
         },
       },
       {
-        name: "notes",
+        name: "notes",label: "Notes",
         options: {
           customBodyRender: (value, tableMeta, updateValue) => {
             let rightAnswerNotes=preventiveActions.filter(e=>e.preventiveActions_id===tableMeta.rowData[0])[0].notes
-            
             return <TextField
             label="Notes"
             name="notes"
@@ -174,6 +197,7 @@ const AnswersForPreventive = (props) => {
     return (
       <>
         <AppBar className={classes.appBar}>
+                 {console.log("items",items)}
           <Toolbar>
             <Close
               onClick={() => props.setOpenDialog(false)}
@@ -199,6 +223,7 @@ const AnswersForPreventive = (props) => {
                   </MuiThemeProvider>
                 </Grid>
                 <Grid item xs={12} className="clientTables">
+                  <div className="text-danger font-weight-bold">{errorMessage}</div>
                   <Button
                     variant="contained"
                     color="primary"

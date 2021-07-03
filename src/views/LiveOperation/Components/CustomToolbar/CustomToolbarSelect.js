@@ -38,35 +38,24 @@ const CustomToolbarSelect = (props) => {
   const [totalAllForPdf,setTotalAllForPdf] = useState(0);
   const [preventiveActions, setPreventiveActions] = useState([]);
 
-
   useEffect(() => {
     const fetchData = async () => {
-
-      const sparePartsDb=await axios(`${process.env.REACT_APP_BASE_URL}/spareParts`, {
-        responseType: "json",
-      }).then((response) => {
-        setSpareParts(response.data)
-      })
-
-      const correctiveActionsDb=await axios(`${process.env.REACT_APP_BASE_URL}/correctiveActions`, {
-        responseType: "json",
-      }).then((response) => {
-        setCorrectiveActions(response.data)
-      })
-
-      const storesDb=await axios(`${process.env.REACT_APP_BASE_URL}/stores`, {
-        responseType: "json",
-      }).then((response) => {
-        setStores(response.data)
-      })
-      const warehousesDb=await axios(`${process.env.REACT_APP_BASE_URL}/warehouses`, {
-        responseType: "json",
-      }).then((response) => {
-        setWarehouses(response.data)
+      await axios.all([
+        axios.get(`${process.env.REACT_APP_BASE_URL}/spareParts`),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/correctiveActions`),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/warehouses`),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/stores`)
+      ]).then(response => {
+        setSpareParts(response[0].data)
+        setCorrectiveActions(response[1].data)
+        setWarehouses(response[2].data)
+        setStores(response[3].data)
       })
     };
     fetchData();
   }, []);
+
+
 
   const handleClickUpdateStatus = () => {
     setDataToUpdate(
@@ -252,17 +241,18 @@ useEffect(() => {
     preventiveActionsFirstRun.current = false;
   }else{
     const fetchData = async () => {
+
       await axios(`${process.env.REACT_APP_BASE_URL}/preventiveActions`, {
         responseType: "json",
       }).then((response) => {
         setPreventiveActions(correctiveReportDb.preventiveList.map(e=>{
-          let dataFromMainTbl=response.data.filter(eSub=>e.preventiveActions_id===eSub._id)[0]
-          let rightAnswer=dataFromMainTbl.answers.length?dataFromMainTbl.answers.filter(eSub=>e.rightAnswer_id===eSub._id)[0]:{}
+          let dataFromMainTbl=response.data.find(eSub=>e.preventiveActions_id===eSub._id)
+          let rightAnswer=dataFromMainTbl.answers.length?dataFromMainTbl.answers.find(eSub=>e.rightAnswer_id===eSub._id):{}
           return ({
             "_id":e.preventiveActions_id,
-            "name":dataFromMainTbl.name || "",
-            "answer":rightAnswer.name || "",
-            "notes":e.notes || ""
+            "name":dataFromMainTbl.name || "-",
+            "answer":rightAnswer.name || "-",
+            "notes":e.notes || "-"
           })
         })
         )
@@ -325,6 +315,19 @@ useEffect(() => {
             props.items[props.selectedRows.data[0].dataIndex].operation_type ===
               "Preventive Maintenance" ? (
               <>
+              <li className="breadcrumb-item">
+                <a href="#" onClick={handleClickAnswers}>
+                  Survey
+                </a>
+              </li>
+                <li className="breadcrumb-item">
+                  <a
+                    href="#"
+                    onClick={handleClickOperationInspections}
+                  >
+                    Inspections
+                  </a>
+                </li>
                 <li className="breadcrumb-item">
                   <a
                     href="#"
@@ -339,21 +342,8 @@ useEffect(() => {
                   </a>
                 </li>
                 <li className="breadcrumb-item">
-                  <a
-                    href="#"
-                    onClick={handleClickOperationInspections}
-                  >
-                    Inspections
-                  </a>
-                </li>
-                <li className="breadcrumb-item">
                   <a href="#" onClick={handleClickDownloadPdf}>
                     Download PDF
-                  </a>
-                </li>
-                <li className="breadcrumb-item">
-                  <a href="#" onClick={handleClickAnswers}>
-                    Answers
                   </a>
                 </li>
               </>
@@ -422,6 +412,7 @@ useEffect(() => {
           <OperationInspections
             setOpenDialog={setOpenOperationInspections}
             dataOfEntry={dataOfEntry}
+            fridgeType={props.fridgeType}
           />
         </div>
       </Dialog>

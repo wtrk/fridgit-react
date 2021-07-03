@@ -14,6 +14,7 @@ import {
   Select,
   MenuItem,
   FormHelperText,
+  TextField
 } from "@material-ui/core";
 import {Alert} from '@material-ui/lab';
 import {Close,Save} from '@material-ui/icons';
@@ -42,7 +43,7 @@ const OperationInspections = (props) => {
   const [allCorrectiveActions, setAllCorrectiveActions] = useState([]);
   const classes = useStyles();
   const [action, setAction] = useState("add");
-  const [isLoading, setIsloading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [inspection, setInspection] = useState();
   const cleanlinessRef = useRef()
   const temperatureRef = useRef()
@@ -78,7 +79,7 @@ const OperationInspections = (props) => {
             setAction("add")
             setFormValues({...props.dataOfEntry});
           }
-          setIsloading(false)
+          setIsLoading(false)
         });
       };
       fetchData();
@@ -303,21 +304,19 @@ const OperationInspections = (props) => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl className={classes.formControl} error={formErrors.temperature.error}>
-                  <InputLabel id="temperatureLabel">Temperature</InputLabel>
-                  <Select
-                    labelId="temperatureLabel"
-                    id="temperatureInput"
-                    name="temperature"
-                    inputRef={temperatureRef}
-                    value={formValues.temperature || ""}
-                    onChange={handleChangeForm}
-                    onKeyDown={keyPressHandler}
-                    onBlur={validateInputHandler}
-                  >
-                    <MenuItem value="Poor">Poor</MenuItem>
-                    <MenuItem value="Good">Good</MenuItem>
-                    <MenuItem value="Very Good">Very Good</MenuItem>
-                  </Select>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                id="temperatureInput"
+                name="temperature"
+                label="temperature"
+                inputRef={temperatureRef}
+                value={formValues.temperature || ""}
+                onChange={handleChangeForm}
+                onKeyDown={keyPressHandler}
+                onBlur={validateInputHandler}
+              />
                   {formErrors.temperature.error ? (
                     <FormHelperText>{formErrors.temperature.msg}</FormHelperText>
                   ) : null}
@@ -369,7 +368,7 @@ const OperationInspections = (props) => {
               </Grid>
               <Grid item xs={12}>
                 <div  className="mt-5">
-                <NestedTableInspections arrayName={inspection} setArrayName={setInspection} title="Corrective Inspections" dbTable="correctiveInspections" />
+                <NestedTableInspections arrayName={inspection} setArrayName={setInspection} title="Corrective Inspections" dbTable="correctiveInspections" fridgeType={props.fridgeType} />
                 </div>
                 </Grid>
               <Grid item xs={12} className="clientTables">

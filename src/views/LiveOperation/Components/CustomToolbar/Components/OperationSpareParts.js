@@ -27,7 +27,7 @@ formControl: {
 }));
 const OperationSpareParts = (props) => {
   const classes = useStyles();
-  const [isLoading, setIsloading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [insertedItems, setInsertedItems] = useState([]);
   const [quantityUpdated, setQuantityUpdated] = useState([]);
@@ -47,7 +47,7 @@ const OperationSpareParts = (props) => {
           })
         })
         setItems(sparePartsIncluded)
-        return setIsloading(false)
+        return setIsLoading(false)
       })
     };
     fetchData();

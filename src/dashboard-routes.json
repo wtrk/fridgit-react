@@ -51,6 +51,16 @@
     "haschild": false
   },
   {
+    "_id":51,
+    "path": "/finance_reports1",
+    "name": "Financial Report1",
+    "rtlname": "",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Finance",
+    "haschild": false
+  },
+  {
     "_id":6,
     "path": "/user",
     "name": "Invoice",

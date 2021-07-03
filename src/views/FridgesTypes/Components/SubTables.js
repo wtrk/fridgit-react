@@ -36,6 +36,7 @@ const SubTables = (props) => {
     const lengthRef = useRef()
     const widthRef = useRef()
     const heightRef = useRef()
+    const preventiveCountYearRef = useRef()
     const cbmRef = useRef()
     const submitRef = useRef()
     const [formValues, setFormValues] = useState({
@@ -45,6 +46,7 @@ const SubTables = (props) => {
       length: "",
       width: "",
       height: "",
+      preventive_count_year: 1,
       cbm: "",
     });
     const [formErrors, setFormErrors] = useState({
@@ -54,6 +56,7 @@ const SubTables = (props) => {
       length: {error:false,msg:""},
       width: {error:false,msg:""},
       height: {error:false,msg:""},
+      preventive_count_year: {error:false,msg:""},
       cbm: {error:false,msg:""}
     });
     const [image, setImage] = useState({ preview: "", file: "" });
@@ -114,7 +117,8 @@ const SubTables = (props) => {
         case "name": lengthRef.current.focus();break;
         case "length": widthRef.current.focus();break;
         case "width": heightRef.current.focus();break;
-        case "height": cbmRef.current.focus();break;
+        case "height": preventiveCountYearRef.current.focus();break;
+        case "preventiveCountYear": cbmRef.current.focus();break;
         case "cbm": submitRef.current.focus();break;
         default: refrigerant_typeRef.current.focus();
       }
@@ -142,6 +146,8 @@ const handleOnSubmit = async () => {
       })
         .then(function (response) {
           setOpenAlertSuccess(true);
+          props.setIsLoading(true)
+          props.setRefreshData(response.data)
           props.handleClose()
         })
         .catch((error) => {
@@ -162,8 +168,11 @@ const handleOnSubmit = async () => {
                 length: "",
                 width: "",
                 height: "",
+                preventive_count_year: "",
                 cbm: ""
                });
+               props.setIsLoading(true)
+               props.setRefreshData(response.data)
                props.handleClose()
              })
              .catch((error) => {
@@ -363,10 +372,27 @@ const validateInputHandler = (e) => {
               }
               error={formErrors.cbm.error}
             />
-          </Grid>
           </Grid> 
+          <Grid item xs={12} sm={6}>
+            <TextField
+              id="preventiveCountYearInput"
+              label="Preventive count/year"
+              name="preventive_count_year"
+              onChange={handleChangeForm}
+              fullWidth
+              type="number"
+              value={formValues.preventive_count_year || 1}
+              inputRef={preventiveCountYearRef}
+              onKeyDown={keyPressHandler}
+              onBlur={validateInputHandler}
+              helperText={
+                formErrors.preventive_count_year.error ? formErrors.preventive_count_year.msg : null
+              }
+              error={formErrors.preventive_count_year.error}
+            />
+          </Grid>
           
-          
+          </Grid>
           <Grid item xs={12} className="clientTables">
             <Button
               variant="contained"

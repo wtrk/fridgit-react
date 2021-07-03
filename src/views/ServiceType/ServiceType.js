@@ -42,7 +42,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const ServiceType = () => {
   const classes = useStyles(); //custom css
-  const [isLoading, setIsloading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [open, setOpen] = useState(false); //for modal
   const [RowID, setRowID] = useState(0); //current row
   const [modal_Title, setmodal_Title] = useState("Add"); //modal title
@@ -51,18 +51,23 @@ const ServiceType = () => {
   const [filterDialog,setFilterDialog] = useState(false)
   const [itemsBackup, setItemsBackup] = useState([]);
   const [items, setItems] = useState([]); //table items
+  const [pagingInfo, setPagingInfo] = useState({page:0,limit:20,skip:0,count:20}); //Pagination Info
+  const [searchEntry, setSearchEntry] = useState([]); //searchEntry
+
   useEffect(() => {
     const fetchData = async () => {
-      await axios(`${process.env.REACT_APP_BASE_URL}/serviceTypes`, {
+      console.log(searchEntry)
+      await axios(`${process.env.REACT_APP_BASE_URL}/serviceTypes?limit=${pagingInfo.limit}&skip=${pagingInfo.skip}&searchEntry=${searchEntry}`, {
         responseType: "json",
       }).then((response) => {
-        setItems(response.data)
-        setItemsBackup(response.data)
-        return setIsloading(false)
+        setPagingInfo({...pagingInfo,count:response.data.count});
+        setItems(response.data.data)
+        setItemsBackup(response.data.data)
+        return setIsLoading(false)
       });
     };
     fetchData();
-  }, [open]);
+  }, [open,pagingInfo.page,pagingInfo.limit,searchEntry]);
   
   const columns = [
     {
@@ -98,7 +103,7 @@ const ServiceType = () => {
   const options = {
     filter: false,
     onRowsDelete: null,
-    rowsPerPage: 20,
+    rowsPerPage: pagingInfo.limit,
     rowsPerPageOptions: [20, 50, 100],
     selectToolbarPlacement: "replace",
     customToolbar: () => {
@@ -119,6 +124,16 @@ const ServiceType = () => {
             noMatch: !isLoading && 'Sorry, there is no matching data to display'
         },
     },
+    serverSide: true,
+    count:pagingInfo.count, // Use total number of items
+    page: pagingInfo.page,
+    onTableChange: (action, tableState) => {
+      if (action === "changePage") {
+        setPagingInfo({...pagingInfo,page:tableState.page,skip:tableState.page*pagingInfo.limit});
+      }else if(action === "changeRowsPerPage"){
+        setPagingInfo({...pagingInfo,limit:tableState.rowsPerPage});
+      }
+    }
   };
   const handleFilter = () => {
     setFilterDialog(true)
@@ -144,19 +159,20 @@ const ServiceType = () => {
 
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
-    if(newValue.length===0) setItems(itemsBackup); else{
-      let valueToSearch=[]
-      newValue.forEach(newValueEntry=>{
-        valueToSearch.push(...itemsBackup.filter((e,i) => {
-          if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
-            if (e.name.toLowerCase().includes(newValueEntry.toLowerCase())){
-              return true;
-            }
-          }
-        }))
-      })
-      setItems(valueToSearch)
-    }
+    setSearchEntry(newValue)
+    // if(newValue.length===0) setItems(itemsBackup); else{
+    //   let valueToSearch=[]
+    //   newValue.forEach(newValueEntry=>{
+    //     valueToSearch.push(...itemsBackup.filter((e,i) => {
+    //       if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
+    //         if (e.name.toLowerCase().includes(newValueEntry.toLowerCase())){
+    //           return true;
+    //         }
+    //       }
+    //     }))
+    //   })
+    //   setItems(valueToSearch)
+    // }
   }
   //Search component ---------------END--------------
   return (

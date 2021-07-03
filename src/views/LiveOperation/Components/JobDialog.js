@@ -1,12 +1,12 @@
-import React, { useState,Fragment, useEffect } from "react";
+import React, { useState,useEffect } from "react";
 import {
-  Typography,
+  DialogContent,
   Button,
   Grid,
-  Avatar,
-  DialogActions, DialogContent,TableFooter, TableCell, TableRow
+  DialogActions
 } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
+import Moment from "react-moment";
 import MUIDataTable from "mui-datatables";
 import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import { makeStyles} from "@material-ui/core/styles";
@@ -14,8 +14,6 @@ import { Close} from "@material-ui/icons";
 import axios from 'axios';
 
 import "react-dropzone-uploader/dist/styles.css";
-import fridgeDummy from "assets/img/fridge-1.jpg";
-import clientDummy from "assets/img/clientDummy.png";
 
 import "../LiveOperation.css";
 
@@ -36,54 +34,63 @@ const JobDialog = (props) => {
     const [financialList, setFinancialList] = useState([]);
     const [clientsName, setClientsName] = useState();
     let columnsForPrices = [
-      { name: "job_number" },
-      { name: "operation_number" },
-      { name: "branding_fees" },
-      { name: "cabinet_testing_fees" },
-      { name: "corrective_reaction" },
-      { name: "corrective_service_in_house" },
-      { name: "drop" },
-      { name: "exchange_corrective_reaction" },
-      { name: "handling_in" },
-      { name: "in_house_preventive_maintenance" },
-      { name: "preventive_maintenance" },
-      { name: "promise_day" },
-      { name: "storage" },
-      { name: "transportation_fees" },
-      { name: "labor" },
-      { name: "spare" },
-      { name: "total" }
+      { name: "createdAt",label: "Date",
+        options: {
+          customBodyRender: (value, tableMeta, updateValue) => <Moment format="DD MMM YYYY">{value}</Moment>
+        },
+      },
+      { name: "location",label: "Location",
+        options: {
+          customBodyRender: (value, tableMeta, updateValue) => {
+          return value.shop_name
+          }
+        },
+      },
+      { name: "operation_type",label: "Operation Type" },
+      { name: "job_number",label: "Job Number" },
+      { name: "operation_number",label: "operation number" },
+      { name: "branding_fees",label: "branding fees" },
+      { name: "cabinet_testing_fees",label: "cabinet testing fees" },
+      { name: "corrective_reaction",label: "corrective reaction" },
+      { name: "corrective_service_in_house",label: "corrective service in house" },
+      { name: "drop",label: "drop" },
+      { name: "exchange_corrective_reaction",label: "exchange corrective reaction" },
+      { name: "handling_in",label: "handling in" },
+      { name: "in_house_preventive_maintenance",label: "in house preventive maintenance" },
+      { name: "preventive_maintenance",label: "preventive maintenance" },
+      { name: "promise_day",label: "promise day" },
+      { name: "storage",label: "storage" },
+      { name: "transportation_fees",label: "transportation fees" },
+      { name: "labor",label: "labor" },
+      { name: "spare",label: "spare" },
+      { name: "total",label: "total" },
     ]
     
-  const optionsForPrices = {
+  let optionsForPrices = {
     filter:false,
     selectableRows: false,
     rowsPerPage: 100,
     customFooter: () => {
-      return (
-        <div className="d-flex justify-content-end px-5 py-3"><strong>Total</strong>: {(financialList.length > 1)?financialList.reduce((a,b)=>a.total+b.total):financialList[0].total}</div>
-        );
+      return <div className="d-flex justify-content-end px-5 py-3">
+          {financialList.length?<><strong>Total</strong>: {(financialList.length > 1)?financialList.reduce((a,b)=>a.total+b.total):financialList[0].total}</>:"0"}
+          </div>
     }
   };
 
 
-    useEffect(() => {
-      const fetchData = async () => {
-        const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/byJobNumber/${props.jobNumber}`, {
-          responseType: "json",
-        }).then((response) => {
-          setFinancialList(response.data)
-          return response.data
-        });
-        const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/byJobNumber/${props.jobNumber}`, {
-          responseType: "json",
-        }).then((response) => {
-          setLiveOperationsList(response.data)
-          return response.data
-        });
-      };
-      fetchData();
-    }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+        await axios.all([
+          axios.get(`${process.env.REACT_APP_BASE_URL}/financial/byJobNumber/${props.jobNumber}`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/liveOperations/byJobNumber/${props.jobNumber}`)
+        ])
+        .then(response => {
+          setFinancialList(response[0].data)
+          setLiveOperationsList(response[1].data)
+        })
+    };
+    fetchData();
+  }, []);
     
     useEffect(() => {
       const fetchData = async () => {
@@ -104,61 +111,6 @@ const JobDialog = (props) => {
   const DialogTabsContent = (props) => {
     if (props.tab === 1) {
       return (
-        <Grid container className="infoTabContainer" spacing={3}>
-          <Grid item container xs={12} md={6} spacing={2}>
-            <Grid item xs={4}>
-              <img src={fridgeDummy} alt="" />
-            </Grid>
-            <Grid item xs={8}>
-              <h4><strong>Fridge</strong></h4>
-              <p>
-                <strong>Type</strong>: EPTA 482L EIS (Ver-6S18B)
-              </p>
-              <p>
-                <strong>Branding</strong>: Walls
-              </p>
-              <p>
-                <strong>SN</strong>: 18GE43245
-              </p>
-              <p>
-                <strong>Status</strong>: Needs Repair
-              </p>
-              <p>
-                <strong>Location</strong>: Bekaa - CHAFIC JAMIL FOR GENERAL
-                TRADING
-              </p>
-              <p>
-                <strong>CBM</strong>: 222346678
-              </p>
-            </Grid>
-          </Grid>
-
-          <Grid item container xs={12} md={6} spacing={2}>
-            <Grid item xs={4}>
-              <img src={clientDummy} alt="" />
-            </Grid>
-            <Grid item xs={8}>
-              <h4><strong>Client</strong></h4>
-              <p>
-                <strong>Company</strong>: Unilever Levant S.A.R.L.
-              </p>
-              <p>
-                <strong>Address</strong>: 3rd Floor, Dolphin Building, Fouad
-                Ammoun Street-Jisr El Wati, Sin El Fil PO Box 90-908 Beirut/
-                Lebanon
-              </p>
-              <p>
-                <strong>Phone</strong>: +961 1 497630
-              </p>
-              <p>
-                <strong>Email</strong>: Baker.Sibai@unilever.com
-              </p>
-            </Grid>
-          </Grid>
-        </Grid>
-      );
-    } else if (props.tab === 2) {
-      return (
         <MuiThemeProvider theme={pricesDataTableTheme}>
         <MUIDataTable
           title="Financial"
@@ -168,6 +120,17 @@ const JobDialog = (props) => {
         />
         </MuiThemeProvider>
       );
+    // } else if (props.tab === 2) {
+    //   return (
+    //     <MuiThemeProvider theme={pricesDataTableTheme}>
+    //     <MUIDataTable
+    //       title="Financial"
+    //       data={financialList}
+    //       columns={columnsForPrices}
+    //       options={optionsForPrices}
+    //     />
+    //     </MuiThemeProvider>
+    //   );
     }
   };
   /**************** -OnClickItemDialog END- **************/
@@ -175,7 +138,7 @@ const JobDialog = (props) => {
 
 
   return (
-    <Fragment>
+    <>
       <DialogContent dividers className="entryEditHeader">
         <Grid container>
           <Grid item xs={4}>
@@ -200,16 +163,6 @@ const JobDialog = (props) => {
               "ceeh__tabsCont--btn " + (dialogItemTab === 1 ? "selected" : "")
             }
             onClick={() => {
-              setDialogItemTab(1);
-            }}
-          >
-            Info
-          </Button>
-          <Button
-            className={
-              "ceeh__tabsCont--btn " + (dialogItemTab === 2 ? "selected" : "")
-            }
-            onClick={() => {
               setDialogItemTab(2);
             }}
           >
@@ -232,7 +185,7 @@ const JobDialog = (props) => {
           Close
         </Button>
       </DialogActions>
-    </Fragment>
+    </>
   );
 };
 

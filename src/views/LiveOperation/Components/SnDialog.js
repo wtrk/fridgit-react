@@ -1,4 +1,4 @@
-import React, { useState,Fragment, useEffect }  from "react";
+import React, { useState, useEffect }  from "react";
 import {
   Typography,
   Button,
@@ -24,8 +24,6 @@ import { Close} from "@material-ui/icons";
 import axios from 'axios';
 
 import "react-dropzone-uploader/dist/styles.css";
-import fridgeDummy from "assets/img/fridge-1.jpg";
-import clientDummy from "assets/img/clientDummy.png";
 
 import "../LiveOperation.css";
 
@@ -60,24 +58,42 @@ const SnDialog = (props) => {
     const [financialList, setFinancialList] = useState([]);
     const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
     const [citiesList, setCitiesList] = useState([]);
+    const [clientInfo, setClientInfo] = useState();
+    const [fridgeInfo, setFridgeInfo] = useState();
+    const [cabinetsSn, setCabinetsSn] = useState();
+    const [snHistory, setSnHistory] = useState([]);
     let columnsForPrices = [
-      { name: "job_number" },
-      { name: "operation_number" },
-      { name: "branding_fees" },
-      { name: "cabinet_testing_fees" },
-      { name: "corrective_reaction" },
-      { name: "corrective_service_in_house" },
-      { name: "drop" },
-      { name: "exchange_corrective_reaction" },
-      { name: "handling_in" },
-      { name: "in_house_preventive_maintenance" },
-      { name: "preventive_maintenance" },
-      { name: "promise_day" },
-      { name: "storage" },
-      { name: "transportation_fees" },
-      { name: "labor" },
-      { name: "spare" },
-      { name: "total" }
+      { name: "createdAt",label: "Date",
+        options: {
+          customBodyRender: (value, tableMeta, updateValue) => <Moment format="DD MMM YYYY">{value}</Moment>
+        },
+      },
+      { name: "location",label: "Location",
+        options: {
+          customBodyRender: (value, tableMeta, updateValue) => {
+          return value?value.shop_name:"";
+          }
+        },
+      },
+      { name: "operation_type",label: "Operation Type" },
+      { name: "price_rule_name",label: "Price Rule Name" },
+      { name: "job_number",label: "Job Number" },
+      { name: "operation_number",label: "operation number" },
+      { name: "branding_fees",label: "branding fees" },
+      { name: "cabinet_testing_fees",label: "cabinet testing fees" },
+      { name: "corrective_reaction",label: "corrective reaction" },
+      { name: "corrective_service_in_house",label: "corrective service in house" },
+      { name: "drop",label: "drop" },
+      { name: "exchange_corrective_reaction",label: "exchange corrective reaction" },
+      { name: "handling_in",label: "handling in" },
+      { name: "in_house_preventive_maintenance",label: "in house preventive maintenance" },
+      { name: "preventive_maintenance",label: "preventive maintenance" },
+      { name: "promise_day",label: "promise day" },
+      { name: "storage",label: "storage" },
+      { name: "transportation_fees",label: "transportation fees" },
+      { name: "labor",label: "labor" },
+      { name: "spare",label: "spare" },
+      { name: "total",label: "total" }
     ]
     
     const optionsForPrices = {
@@ -92,6 +108,19 @@ const SnDialog = (props) => {
       }
     };
     
+    useEffect(() => {
+      const fetchData = async () => {
+        await axios.all([
+          axios.get(`${process.env.REACT_APP_BASE_URL}/operations/history`),
+        ]).then(response => {
+          setSnHistory(response[0].data.filter(e=>e.sn===props.snId))
+        })
+      };
+      fetchData();
+    }, []);
+
+
+
     useEffect(() => {
       const fetchData = async () => {
         const neighbourhoods = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
@@ -132,15 +161,41 @@ const SnDialog = (props) => {
           }))
           return response.data
         });
-        const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/bySn/${props.snId}`, {
+        await axios(`${process.env.REACT_APP_BASE_URL}/financial/bySn/${props.snId}`, {
           responseType: "json",
         }).then((response) => {
           setFinancialList(response.data)
-          return response.data
+          console.log("ddddddddddddddddddddddd",response.data)
         });
       };
       fetchData();
     }, []);
+
+    
+    useEffect(() => {
+      const fetchData = async () => {
+        const sn=liveOperationsList.length?liveOperationsList[0].sn:null;
+        const clientId=liveOperationsList.length?liveOperationsList[0].client_id:null;
+        const findSn=sn?props.cabinetsList.find(e=>e._id===sn):null;
+        setCabinetsSn(findSn?findSn.sn:"")
+        if(clientId){
+          await axios(`${process.env.REACT_APP_BASE_URL}/clients/${clientId}`, {
+            responseType: "json",
+          }).then((response) => {
+            setClientInfo(response.data)
+          });
+        }
+        if(findSn){
+          await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/bySn/${liveOperationsList[0].sn}`, {
+            responseType: "json",
+          }).then((response) => {
+            setFridgeInfo(response.data)
+          });
+        }
+      };
+      fetchData();
+    }, [liveOperationsList]);
+
   /**************** -OnClickItemDialog START- **************/
   const [dialogItemTab, setDialogItemTab] = useState(1);
   const DialogTabsContent = (props) => {
@@ -150,11 +205,11 @@ const SnDialog = (props) => {
           {liveOperationsList
             ? liveOperationsList.map((e) => (
               <TimelineItem key={e._id} style={{minHeight:50}}>
-              <TimelineOppositeContent>
-                    <Typography>{e.operation_type} ({e.operation_number})</Typography>
-                    <Typography>{e.location.shop_name} - {e.location.mobile}</Typography>
-                    <Typography>{e.location.city} - {e.location.neighbourhood}</Typography>
-                  </TimelineOppositeContent>
+                <TimelineOppositeContent>
+                  <Typography>{e.operation_type} ({e.operation_number})</Typography>
+                  <Typography>{e.location.shop_name} - {e.location.mobile}</Typography>
+                  <Typography>{e.location.city} - {e.location.neighbourhood}</Typography>
+                </TimelineOppositeContent>
                   <TimelineSeparator>
                     <TimelineDot />
                     <TimelineConnector />
@@ -170,57 +225,37 @@ const SnDialog = (props) => {
     } else if (props.tab === 2) {
       return (
         <Grid container className="infoTabContainer" spacing={3}>
-          <Grid item container xs={12} md={6} spacing={2}>
+          {fridgeInfo?<Grid item container xs={12} md={6} spacing={2}>
             <Grid item xs={4}>
-              <img src={fridgeDummy} alt="" />
+              {fridgeInfo.photo?
+              <img src={require("assets/uploads/clients/"+fridgeInfo.photo)} alt="" /> 
+              :null}
             </Grid>
             <Grid item xs={8}>
               <h4><strong>Fridge</strong></h4>
-              <p>
-                <strong>Type</strong>: EPTA 482L EIS (Ver-6S18B)
-              </p>
-              <p>
-                <strong>Branding</strong>: Walls
-              </p>
-              <p>
-                <strong>SN</strong>: 18GE43245
-              </p>
-              <p>
-                <strong>Status</strong>: Needs Repair
-              </p>
-              <p>
-                <strong>Location</strong>: Bekaa - CHAFIC JAMIL FOR GENERAL
-                TRADING
-              </p>
-              <p>
-                <strong>CBM</strong>: 222346678
-              </p>
+              <p><strong>Type</strong>: {fridgeInfo.name}</p>
+              {liveOperationsList.length?<p><strong>Branding</strong>: {liveOperationsList[0].brand}</p>:null}
+              <p><strong>SN</strong>: {cabinetsSn}</p>
+              {liveOperationsList.length?<p><strong>Status</strong>: {liveOperationsList[0].status}</p>:null}
+              <p><strong>CBM</strong>: {fridgeInfo.cbm}</p>
             </Grid>
-          </Grid>
+          </Grid>:null}
 
-          <Grid item container xs={12} md={6} spacing={2}>
+        {clientInfo?<Grid item container xs={12} md={6} spacing={2}>
             <Grid item xs={4}>
-              <img src={clientDummy} alt="" />
+              {clientInfo.photo?
+              <img src={require("assets/uploads/clients/"+clientInfo.photo)} alt="" />
+              :null}
             </Grid>
             <Grid item xs={8}>
               <h4><strong>Client</strong></h4>
-              <p>
-                <strong>Company</strong>: Unilever Levant S.A.R.L.
-              </p>
-              <p>
-                <strong>Address</strong>: 3rd Floor, Dolphin Building, Fouad
-                Ammoun Street-Jisr El Wati, Sin El Fil PO Box 90-908 Beirut/
-                Lebanon
-              </p>
-              <p>
-                <strong>Phone</strong>: +961 1 497630
-              </p>
-              <p>
-                <strong>Email</strong>: Baker.Sibai@unilever.com
-              </p>
+              <p><strong>Company</strong>: {clientInfo.name}</p>
+              <p><strong>Address</strong>:  {clientInfo.address}</p>
+              <p><strong>Phone</strong>:  {clientInfo.phone}</p>
+              <p><strong>Email</strong>:  {clientInfo.email}</p>
             </Grid>
+          </Grid>:null}
           </Grid>
-        </Grid>
       );
     } else if (props.tab === 3) {
       return (
@@ -240,31 +275,32 @@ const SnDialog = (props) => {
 
 
   return (
-    <Fragment>
+    <>
         <DialogContent dividers className="entryEditHeader">
             <Grid container>
               <Grid item xs={4}>
-                <div className={classes.root_avatar}>
-                  <Avatar>JO</Avatar>
-
-                  <div>
-                    <strong>Client</strong>
-                    <br />
-                    Jollychic
+              <div className={classes.root_avatar}>
+              {clientInfo ? (
+                  <div className="avatar_circle">
+                    {clientInfo.name.substring(0, 2)}
                   </div>
-                </div>
+                ) : null}
+              <div>
+                <strong>Client</strong><br />
+                {clientInfo?clientInfo.name:null}
+              </div>
+            </div>
               </Grid>
-
               <Grid item xs={4}>
                 <strong>Sn:</strong> 18GE43250
-                <br />
-                <strong>Status:</strong> Operational
+                <br/>
+                <strong>Branding:</strong> {liveOperationsList.length?liveOperationsList[0].brand:""}
               </Grid>
 
               <Grid item xs={4}>
-                <strong>Branding:</strong> Walls
+                <strong>Location:</strong> {liveOperationsList.length?liveOperationsList[0].location.shop_name:""}
                 <br />
-                <strong>Type:</strong> Walls
+                <strong>Type:</strong> {fridgeInfo?fridgeInfo.name:""}
               </Grid>
             </Grid>
             <div className="entryEditHeader__tabsCont">
@@ -320,7 +356,7 @@ const SnDialog = (props) => {
           </DialogActions>
         
         
-    </Fragment>
+    </>
   );
 };
 

@@ -1,516 +1,429 @@
-import React, { Fragment, useState } from "react";
-import Container from "@material-ui/core/Container";
-import { makeStyles } from "@material-ui/core/styles";
-import Timeline from "@material-ui/lab/Timeline";
-import TimelineItem from "@material-ui/lab/TimelineItem";
-import TimelineSeparator from "@material-ui/lab/TimelineSeparator";
-import TimelineConnector from "@material-ui/lab/TimelineConnector";
-import TimelineContent from "@material-ui/lab/TimelineContent";
-import TimelineDot from "@material-ui/lab/TimelineDot";
-import TimelineOppositeContent from "@material-ui/lab/TimelineOppositeContent";
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  TextField,
+  Dialog,
+  CircularProgress,
+  Slide,
+} from "@material-ui/core";
+import { MuiThemeProvider } from "@material-ui/core/styles";
 import Autocomplete from "@material-ui/lab/Autocomplete";
-import TextField from "@material-ui/core/TextField";
+
 import MUIDataTable from "mui-datatables";
-import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
-import AppBar from "@material-ui/core/AppBar";
-import Tabs from "@material-ui/core/Tabs";
-import Tab from "@material-ui/core/Tab";
-import Typography from "@material-ui/core/Typography";
-import Button from "@material-ui/core/Button";
-import Grid from "@material-ui/core/Grid";
-import dataJson from "./data-reports.json";
-import { withStyles } from "@material-ui/core/styles";
-import Dialog from "@material-ui/core/Dialog";
-import MuiDialogContent from "@material-ui/core/DialogContent";
-import MuiDialogActions from "@material-ui/core/DialogActions";
-import Chip from "@material-ui/core/Chip";
-import Slide from "@material-ui/core/Slide";
-import { Close, SwapHoriz, LastPage } from "@material-ui/icons";
+import axios from 'axios';
+
+import Moment from "react-moment";
+import OperationDialog from "./Components/OperationDialog.js";
+import SnDialog from "./Components/SnDialog.js";
+
 import CustomToolbar from "../../CustomToolbar";
-import Avatar from "@material-ui/core/Avatar";
-import fridgeDummy from "../../assets/img/fridge-1.jpg";
-import clientDummy from "../../assets/img/clientDummy.png";
-import "./FinanceJobs.css";
-import AddFormDialog from "components/CustomComponents/AddFormDialog.js";
-
-const useStyles = makeStyles((theme) => ({
-  appBar: {
-    position: "relative",
-  },
-  title: {
-    marginLeft: theme.spacing(2),
-    flex: 1,
-  },
-
-  root_avatar: {
-    display: "flex",
-    "& > *": {
-      margin: theme.spacing(1),
-    },
-  },
-
-  root_modal: {
-    margin: 0,
-    padding: theme.spacing(2),
-  },
-}));
+import TabsOnTop from "./Components/TabsOnTop.js";
+import FilterComponent from "./Components/FilterComponent.js";
+import "./FinanceReports.css";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
-const ClientsList = () => {
-  const classes = useStyles(); //custom css
 
-  const [value, setValue] = useState(0);
-  const [itemsFiltered, setItemsFiltered] = useState(); //table items
-  const [openDialogItem, setOpenDialogItem] = useState(false); //for modal1
-  const [openDialog2, setOpenDialog2] = useState(false); //for modal2
-  const [modal_Title, setmodal_Title] = useState("Add"); //modal title
+const FinanceReport = () => {
+  const [isLoading, setIsLoading] = useState(true);  
+  const [filteredDate,setFilteredDate] = useState({"fromDate":"","toDate":""})
+  const [items, setItems] = useState([]); //table items
+  const [columns, setColumns] = useState(); //for modal2
+  const [itemsBackup, setItemsBackup] = useState([]);
+  const [clientsList, setClientsList] = useState([]);
+  const [citiesList, setCitiesList] = useState([]);
+  const [neighbourhoodsList, setNeighbourhoodsList] = useState([]);
+  const [cabinetsList, setCabinetsList] = useState([]);
+  const [fridgesTypesList, setFridgesTypesList] = useState([]);
+  const [itemsDaily, setItemsDaily] = useState([]);
+  const [itemsDetails, setItemsDetails] = useState([]);
+  const [tabIndex, setTabIndex] = useState(0);
+  const [filterDialog,setFilterDialog] = useState(false)
+  const [pagingInfo, setPagingInfo] = useState({page:0,limit:20,skip:0,count:20}); //Pagination Info
+  const [searchEntry, setSearchEntry] = useState([]); //searchEntry
+  const [openOperationDialog,setOpenOperationDialog] = useState(false);
+  const [operationNum,setOperationNum] = useState();
+  const [supplierName,setSupplierName] = useState("");
+  const [suppliersList,setSuppliersList] = useState("");
+  const [openSnDialog,setOpenSnDialog] = useState(false);
+  const [snId,setSnId] = useState();
 
-  /************ -Datatable START- **************/
-  const [items, setItems] = useState(dataJson); //table items
-  const columns = [
-    {
-      name: "Day",
-      label: "Day",
-    },
-    {
-      name: "Handling",
-      label: "Handling IN / OUT",
-    },
-    {
-      name: "Storage",
-      label: "Storage",
-    },
-    {
-      name: "InHousePrev",
-      label: "In House Prev",
-    },
-    {
-      name: "InHouseCorrective",
-      label: "In House Corrective",
-    },
-    {
-      name: "Testing",
-      label: "Testing",
-    },
-    {
-      name: "Branding",
-      label: "Branding",
-    },
-    {
-      name: "Transportation",
-      label: "Transportation",
-    },
-    {
-      name: "Preventive",
-      label: "Preventive",
-    },
-    {
-      name: "Corrective",
-      label: "Corrective",
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+        await axios.all([
+          axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/cities`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/financial/daily`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`),
+        ])
+        .then(response => {
+          setCabinetsList(response[0].data.data)
+          setClientsList(response[1].data)
+          setCitiesList(response[2].data)
+          setNeighbourhoodsList(response[3].data)
+          setFridgesTypesList(response[4].data)
+          setItemsDaily(response[5].data)
+          setSuppliersList(response[6].data)
+        })
+    };
+    fetchData();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await axios(`${process.env.REACT_APP_BASE_URL}/financial?limit=${pagingInfo.limit}&skip=${pagingInfo.skip}&searchEntry=${searchEntry}`, {
+        responseType: "json",
+      }).then((response) => {
+        setPagingInfo({...pagingInfo,count:response.data.count});
+        setItemsDetails(response.data.data)
+        return setIsLoading(false)
+      })
+      .catch((error) => {
+        console.log("error",error);
+      });
+    };
+    fetchData();
+  }, [pagingInfo.page,pagingInfo.limit,searchEntry]);
+
+
+
+  useEffect(()=>{
+    const fetchData = async () => {
+    if(tabIndex===1){
+        
+      setColumns([
+        {
+          name: "_id",
+          options: {
+            display: false,
+          },
+        },
+        {
+          name: "createdAt",
+          label: "Day",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => (
+              <Moment format="DD MMM YYYY">{value}</Moment>
+            ),
+          },
+        },
+        { label: "Handling IN / OUT", name: "handling_in" },
+        { label: "Storage", name: "storage" },
+        { label: "In House Prev", name: "in_house_preventive_maintenance" },
+        { label: "In House Corrective", name: "corrective_service_in_house" },
+        { label: "Testing", name: "cabinet_testing_fees" },
+        { label: "Branding", name: "branding_fees" },
+        { label: "Drop", name: "drop" },
+        { label: "Transportation", name: "transportation_fees" },
+        { label: "Preventive", name: "preventive_maintenance" },
+        { label: "Corrective", name: "exchange_corrective_reaction" },
+        { label: "Total", name: "total" },
+      ]);
+      setItems(itemsDaily)
+      setItemsBackup(itemsDaily)
+    }else{
+      setColumns([
+        {
+          name: "_id",
+          options: {
+            display: false,
+          },
+        },
+        {
+          name: "createdAt",
+          label: "Day",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => (
+              <Moment format="DD MMM YYYY">{value}</Moment>
+            ),
+          },
+        },
+        {
+          name: "location",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => {
+              if(value){
+              let cityValue = "-";
+              let neighbourhoodValue = "-";
+                if (citiesList.filter((e) => e._id == value.city_id)[0]) {
+                  cityValue = citiesList.filter((e) => e._id == value.city_id)[0].name;
+                }
+                if (neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0]) {
+                  neighbourhoodValue = neighbourhoodsList.filter((e) => e._id == value.neighbourhood_id)[0].name;
+                }
+              return (
+                <div style={{ width: 230, display: "flex", alignItems: "center" }}>
+                  <div className="avatar_circle">
+                    {cityValue.substring(0, 2)}
+                  </div>
+                  <div>
+                    {cityValue}
+                    <br />
+                    {neighbourhoodValue}
+                    <br />
+                    <strong>
+                      {value ? value.shop_name : "-"} / {value ? value.mobile : "-"}
+                    </strong>
+                  </div>
+                </div>
+              );
+            }
+            },
+          },
+        },
+        {
+          name: "operation_number",
+          label: "Operation #",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => {
+              let supplierName = "";
+              if (tableMeta.rowData[10]) {
+                let supplierValue = suppliersList.filter(
+                  (e) => e._id == tableMeta.rowData[10]
+                );
+                if (supplierValue.length) supplierName = supplierValue[0].name;
+              }
+              return (
+                <div>
+                  <a
+                    onClick={() =>
+                      handleOpenOperationDialog(value, supplierName)
+                    }
+                  >
+                    {value}
+                  </a>
+                </div>
+              );
+            },
+          },
+        },
+        { label: "Fridge", name: "sn",
+        options: {
+          customBodyRender: (value, tableMeta, updateValue) => {
+            if (value) {
+              let snValue = cabinetsList.filter((e) => e._id == value);
+              return (
+                <div>
+                  <a onClick={() => handleOpenSnDialog(value)}>{snValue.length ? snValue[0].sn : "-"}</a>
+                </div>
+              );
+            }
+          },
+        },},
+        { label: "Client", name: "sn",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => {
+              let client="";
+              if(cabinetsList.filter(e=>e._id===value).length){
+                let clientId=cabinetsList.filter(e=>e._id===value)[0].client
+                client=clientsList.filter(e=>e._id===clientId).length?clientsList.filter(e=>e._id===clientId)[0].name:""
+              }
+              return client;
+            },
+          },
+        },
+        // { label: "Fridge", name: "sn",
+        //   options: {
+        //     customBodyRender: (value, tableMeta, updateValue) => {
+        //       return cabinetsList.filter(e=>e._id===value).length?cabinetsList.filter(e=>e._id===value)[0].sn:"";
+        //     },
+        //   },
+        // },
+        { label: "Type", name: "sn",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => {
+              let type="";
+              if(cabinetsList.filter(e=>e._id===value).length){
+                let typeId=cabinetsList.filter(e=>e._id===value)[0].type
+                type=fridgesTypesList.filter(e=>e._id===typeId).length?fridgesTypesList.filter(e=>e._id===typeId)[0].name:""
+              }
+              return type;
+            },
+          },
+        },
+        { label: "Handling IN / OUT", name: "handling_in" },
+        { label: "Storage", name: "storage" },
+        { label: "In House Prev", name: "in_house_preventive_maintenance" },
+        { label: "In House Corrective", name: "corrective_service_in_house" },
+        { label: "Testing", name: "cabinet_testing_fees" },
+        { label: "Branding", name: "branding_fees" },
+        { label: "Transportation", name: "transportation_fees" },
+        { label: "Preventive", name: "preventive_maintenance" },
+        { label: "Corrective", name: "exchange_corrective_reaction" },
+        { label: "Total", name: "total" },
+      ]);
+      setItems(itemsDetails)
+      setItemsBackup(itemsDetails)
+    }
+  };
+  fetchData();
+  },[tabIndex,itemsDetails,itemsDaily])
 
   const options = {
-    filterType: "dropdown",
+    filter: false,
     onRowsDelete: null,
+    rowsPerPage: pagingInfo.limit,
+    rowsPerPageOptions: [20, 50, 100],
     selectToolbarPlacement: "replace",
-    customToolbarSelect: (selectedRows, displayData, setSelectedRows) => (
-      <div>
-        <Button
-          variant="outlined"
-          color="primary"
-          size="large"
-          className="btn btn--save"
-          onClick=""
-          startIcon={<SwapHoriz />}
-        >
-          Update status
-        </Button>
-        &nbsp;
-        <Button
-          variant="outlined"
-          color="primary"
-          size="large"
-          className="btn btn--save"
-          onClick=""
-          startIcon={<LastPage />}
-        >
-          Assign to supplier
-        </Button>
-        &nbsp; &nbsp; &nbsp; &nbsp;
-      </div>
-    ),
     customToolbar: () => {
-      return <CustomToolbar />;
+      return (
+        <CustomToolbar 
+          handleFilter={handleFilter}
+        />
+      );
     },
-    //this.deleteRows
-  };
-  /************ -Datatable END- **************/
-  const top100Films = [];
-
-  /************ -Tabs START- **************/
-  const dataLength = (status) => {
-    switch (status) {
-      case "Handling IN / OUT":
-        return 22000;
-      case "Storage":
-        return 32000;
-      case "In House Prev":
-        return 8000;
-      case "In House Corrective":
-        return 12000;
-      case "Testing":
-        return 15000;
-      case "Branding":
-        return 22000;
-      case "Transportation":
-        return 32000;
-      case "Preventive":
-        return 3000;
-      case "Corrective":
-        return 2000;
+    serverSide: true,
+    count:pagingInfo.count, // Use total number of items
+    page: pagingInfo.page,
+    onTableChange: (action, tableState) => {
+      if (action === "changePage") {
+        setPagingInfo({...pagingInfo,page:tableState.page,skip:tableState.page*pagingInfo.limit});
+      }else if(action === "changeRowsPerPage"){
+        setPagingInfo({...pagingInfo,limit:tableState.rowsPerPage});
+      }
     }
   };
-  const tabsTitle = [
-    "Handling IN / OUT",
-    "Storage",
-    "In House Prev",
-    "In House Corrective",
-    "Testing",
-    "Branding",
-    "Transportation",
-    "Preventive",
-    "Corrective",
-  ];
-  /************ -Tabs END- **************/
-
-  /**************** -OnClickItemDialog START- **************/
-  const [dialogItemTab, setDialogItemTab] = useState(1);
-  const DialogTabsContent = (props) => {
-    if (props.tab === 1) {
-      return (
-        <Timeline align="alternate">
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography>External Receipt</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography color="textSecondary">01/01/2020 09:30 am</Typography>
-            </TimelineContent>
-          </TimelineItem>
-
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">10/08/2020 10:00 am</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Deployment</Typography>
-            </TimelineContent>
-          </TimelineItem>
-
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography>Retrieval</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography color="textSecondary">01/10/2020 12:00 am</Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">10/10/2020 9:00 am</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Deployment</Typography>
-            </TimelineContent>
-          </TimelineItem>
-        </Timeline>
-      );
-    } else if (props.tab === 2) {
-      return (
-        <Grid container className="infoTabContainer" spacing={3}>
-          <Grid item container xs={12} md={6} spacing={2}>
-            <Grid item xs={4}>
-              <img src={fridgeDummy} alt="" />
-            </Grid>
-            <Grid item xs={8}>
-              <h3>Fridge</h3>
-              <p>
-                <strong>Type</strong>: EPTA 482L EIS (Ver-6S18B)
-              </p>
-              <p>
-                <strong>Branding</strong>: Walls
-              </p>
-              <p>
-                <strong>SN</strong>: 18GE43245
-              </p>
-              <p>
-                <strong>Status</strong>: Needs Repair
-              </p>
-              <p>
-                <strong>Location</strong>: Bekaa - CHAFIC JAMIL FOR GENERAL
-                TRADING
-              </p>
-            </Grid>
-          </Grid>
-
-          <Grid item container xs={12} md={6} spacing={2}>
-            <Grid item xs={4}>
-              <img src={clientDummy} alt="" />
-            </Grid>
-            <Grid item xs={8}>
-              <h3>Client</h3>
-              <p>
-                <strong>Company</strong>: Unilever Levant S.A.R.L.
-              </p>
-              <p>
-                <strong>Address</strong>: 3rd Floor, Dolphin Building, Fouad
-                Ammoun Street-Jisr El Wati, Sin El Fil PO Box 90-908 Beirut/
-                Lebanon
-              </p>
-              <p>
-                <strong>Phone</strong>: +961 1 497630
-              </p>
-              <p>
-                <strong>Email</strong>: Baker.Sibai@unilever.com
-              </p>
-            </Grid>
-          </Grid>
-        </Grid>
-      );
-    }
+  const handleFilter = () => {
+    setFilterDialog(true)
   };
-  const handleClickDialogItemTabs = (DialogItemTabSelected) => {
-    setDialogItemTab(DialogItemTabSelected);
-  };
-  const handleClickOnItem = () => {
-    setDialogItemTab(1);
-    setOpenDialogItem(true);
-  };
-  const handleCloseDialogItem = () => {
-    setOpenDialogItem(false);
-  };
-  /**************** -OnClickItemDialog END- **************/
+  
+  const handleOpenOperationDialog = (operationNum,supplierName)=>{
+    setOpenOperationDialog(true)
+    setOperationNum(operationNum)
+    setSupplierName(supplierName)
+  }
+  
+  const handleOpenSnDialog = (id)=>{
+    setOpenSnDialog(true)
+    setSnId(id)
+  }
+  //Search component ---------------START--------------
+  
+  // useEffect(() => {
+  //   const dateFromTimestamp = filteredDate.fromDate
+  //     ? new Date(filteredDate.fromDate).getTime() / 1000
+  //     : 0;
+  //   const dateToTimestamp = filteredDate.toDate
+  //     ? new Date(filteredDate.toDate).getTime() / 1000
+  //     : 100000000000000000000000000;
+  //   setItems(
+  //     itemsBackup.filter((e) => {
+  //       const dbDateTimestamp = new Date(e.createdAt).getTime() / 1000;
+  //       return (
+  //         dbDateTimestamp > dateFromTimestamp &&
+  //         dbDateTimestamp < dateToTimestamp
+  //       );
+  //     })
+  //   );
+  // }, [filteredDate]);
 
-  const handleCloseDialog2 = () => {
-    setOpenDialog2(false);
-  };
-  const DialogContent = withStyles((theme) => ({
-    root_modal: {
-      padding: theme.spacing(2),
-    },
-  }))(MuiDialogContent);
+  // const handleSearchDate = (e) => {
+  //   const {name,value} = e.target
+  //   setFilteredDate({...filteredDate,[name]:value})
+  // }
 
-  const DialogActions = withStyles((theme) => ({
-    root_modal: {
-      margin: 0,
-      padding: theme.spacing(1),
-    },
-  }))(MuiDialogActions);
-
-  const handleClickOpenDialog2 = (rowID, modal_Title) => {
-    setOpenDialog2(true);
-    setmodal_Title(modal_Title);
-  };
-
+    
+  //Search component ---------------START--------------
+  const handleChangeSearch = (e, newValue) => {
+    setSearchEntry(newValue)
+    // if(newValue.length===0) setItems(itemsBackup); else{
+    //   let valueToSearch=[]
+    //   newValue.forEach(newValueEntry=>{
+    //     valueToSearch.push(...itemsBackup.filter((e,i) => {
+    //       if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
+    //         if (e.job_number.toLowerCase().includes(newValueEntry.toLowerCase())){
+    //           return true;
+    //         }
+    //         if (e.operation_number.toLowerCase().includes(newValueEntry.toLowerCase())){
+    //           return true;
+    //         }
+    //         if (e.sn.toLowerCase().includes(newValueEntry.toLowerCase())){
+    //           return true;
+    //         }
+    //       }
+    //     }))
+    //   })
+    //   setItems(valueToSearch)
+    // }
+  }
+  //Search component ---------------END--------------
   return (
-    <div>
-      <AppBar position="static" color="default">
-        <Tabs
-          className="TabsOnTopFromStatus"
-          value={value}
-          textColor="primary"
-          variant="fullWidth"
-          aria-label="full width tabs example"
-        >
-          {tabsTitle.map((e, i) => (
-            <Tab
-              id={`full-width-tab-${i + 1}`}
-              aria-controls={`full-width-tabpanel-${i + 1}`}
-              key={i + 1}
-              className="tabs-text-color"
-              label={
-                <Fragment>
-                  <span>{e}</span>
-                  <div className="table-length-cont">{dataLength(e)}</div>
-                </Fragment>
-              }
-            />
-          ))}
-        </Tabs>
-      </AppBar>
-      <Container maxWidth="xl" style={{paddingTop:"4rem"}}>
+    <>
+      <TabsOnTop
+        tabIndex={tabIndex}
+        setTabIndex={setTabIndex}
+        setIsLoading={setIsLoading}
+      />
+      <Container maxWidth="xl" style={{ paddingTop: "4rem" }}>
         <Autocomplete
           multiple
-          id="tags-filled"
-          options={top100Films.map((option) => option.title)}
-          defaultValue={[]}
           freeSolo
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                variant="outlined"
-                label={option}
-                {...getTagProps({ index })}
-              />
-            ))
-          }
+          limitTags={3}
+          id="tags-standard"
+          options={[]}
+          getOptionLabel={(option) => option}
+          onChange={handleChangeSearch}
           renderInput={(params) => (
             <TextField
               {...params}
-              variant="filled"
-              label=""
+              variant="standard"
               placeholder="Search Data"
+              label="Filter by Job #, Operation # and Serial #"
             />
           )}
         />
-        <MuiThemeProvider theme={datatableThemeInTabsPage}>
-        <MUIDataTable
-          title=""
-          data={itemsFiltered ? itemsFiltered : items}
-          columns={columns}
-          options={options}
-        />
-        </MuiThemeProvider>
+        {!isLoading ? (
+          <MuiThemeProvider theme={datatableThemeInTabsPage}>
+            <MUIDataTable
+              title=""
+              data={items}
+              columns={columns}
+              options={options}
+            />
+          </MuiThemeProvider>
+        ) : (
+          <CircularProgress size={30} className="pageLoader" />
+        )}
       </Container>
-
-      <div>
-        {/*below Dialog opens when clicking on edit*/}
+      
+        {/*********************** -Operation Dialog START- ****************************/}
         <Dialog
-          fullScreen
-          open={openDialog2}
-          onClose={handleCloseDialog2}
+          maxWidth={"xl"}
+          fullWidth
           TransitionComponent={Transition}
+          open={openOperationDialog}
+          onClose={() => setOpenOperationDialog(false)}
         >
-          <AddFormDialog
-            title={modal_Title + " Fridge"}
-            handleClose={handleCloseDialog2}
-            inputs={[
-              {
-                labelText: "Client",
-                type: "select",
-                value: ["option 1", "option 2"],
-              },
-              {
-                labelText: "Client",
-                type: "select",
-                value: ["option 1", "option 2", "option 3"],
-              },
-              { labelText: "Sn", type: "text" },
-              { labelText: "Sn2", type: "text" },
-              { labelText: "Note", type: "text" },
-              { labelText: "Branding", type: "text" },
-              { labelText: "Preventive/Year", type: "text" },
-              { labelText: "Recieved new", type: "checkbox" },
-            ]}
-          />
+          <OperationDialog setOpenDialog={setOpenOperationDialog} operationNum={operationNum} supplierName={supplierName} cabinetsList={cabinetsList} />
         </Dialog>
-        {/*below Dialog opens when clicking on item in the list to edit*/}
+        
+        {/*********************** -Sn Dialog START- ****************************/}
         <Dialog
-          onClose={handleCloseDialogItem}
+          maxWidth={"xl"}
+          fullWidth
+          TransitionComponent={Transition}
+          open={openSnDialog}
+          onClose={() => setOpenSnDialog(false)}
+        >
+          <SnDialog setOpenDialog={setOpenSnDialog} snId={snId} cabinetsList={cabinetsList} />
+        </Dialog>
+        {/*********************** FILTER start ****************************/}
+        <Dialog
+          onClose={() => setFilterDialog(false)}
           maxWidth={"xl"}
           fullWidth
           aria-labelledby="customized-dialog-title"
-          open={openDialogItem}
+          open={filterDialog}
         >
-          <DialogContent dividers className="entryEditHeader">
-            <Grid container>
-              <Grid item xs={4}>
-                <div className={classes.root_avatar}>
-                  <Avatar>JO</Avatar>
-
-                  <div>
-                    <strong>Client</strong>
-                    <br />
-                    Jollychic
-                  </div>
-                </div>
-              </Grid>
-
-              <Grid item xs={4}>
-                <strong>Sn:</strong> 18GE43250
-                <br />
-                <strong>Status:</strong> Operational
-              </Grid>
-
-              <Grid item xs={4}>
-                <strong>Branding:</strong> Walls
-                <br />
-                <strong>Type:</strong> Walls
-              </Grid>
-            </Grid>
-            <div className="entryEditHeader__tabsCont">
-              <Button
-                className={
-                  "ceeh__tabsCont--btn " +
-                  (dialogItemTab === 1 ? "selected" : "")
-                }
-                onClick={() => {
-                  handleClickDialogItemTabs(1);
-                }}
-              >
-                History
-              </Button>
-              <Button
-                className={
-                  "ceeh__tabsCont--btn " +
-                  (dialogItemTab === 2 ? "selected" : "")
-                }
-                onClick={() => {
-                  handleClickDialogItemTabs(2);
-                }}
-              >
-                Info
-              </Button>
-              <Button
-                id="Edit"
-                className="ceeh__tabsCont--btn"
-                onClick={() => {
-                  handleClickOpenDialog2("1", "Edit");
-                }}
-              >
-                Edit
-              </Button>
-            </div>
-          </DialogContent>
-          <DialogContent dividers>
-            <DialogTabsContent tab={dialogItemTab} />
-          </DialogContent>
-          <DialogActions>
-            <Button
-              variant="outlined"
-              color="primary"
-              size="large"
-              className="btn btn--save"
-              onClick={handleCloseDialogItem}
-              startIcon={<Close />}
-            >
-              Close
-            </Button>
-          </DialogActions>
+          <FilterComponent setOpenDialog={setFilterDialog} setItems={setItems} setPagingInfo={setPagingInfo} pagingInfo={pagingInfo} />
         </Dialog>
-      </div>
-    </div>
+    </>
   );
-};
-
-export default ClientsList;
+}
+export default FinanceReport

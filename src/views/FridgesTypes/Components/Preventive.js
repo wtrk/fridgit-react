@@ -30,7 +30,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 const Preventive = (props) => {
     const classes = useStyles(); //custom css
-    const [isLoading, setIsloading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [items, setItems] = useState([]);
     const [checkedIndexes, setCheckedIndexes] = useState([]);
 
@@ -46,8 +46,8 @@ const Preventive = (props) => {
             }
           }).filter(e=>e!=undefined))
           console.log("response.data",response.data)
-          setItems(response.data)
-          return setIsloading(false)
+          setItems(response.data.filter(e=>e.answers.length))
+          return setIsLoading(false)
         })
       };
       fetchData();
@@ -84,7 +84,7 @@ const Preventive = (props) => {
               props.setPreventivesChosen([
                 ...props.preventivesChosen, ...selectedRowsTotal
               ]);
-              props.setIsloading(true)
+              props.setIsLoading(true)
             props.handleClose();
 
             }}

@@ -31,9 +31,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 const UpdateStatusForm = (props) => {
     const classes = useStyles(); //custom css
-    const [formValues,setFormValues] = useState({status: ""});
+    const [formValues,setFormValues] = useState({status: "",fridgeStatus: ""});
     const [operationNumberValue, setOperationNumberValue] = useState([]);
     const [suppliersList, setSuppliersList] = useState([]);
+    const [cabinetsList, setCabinetsList] = useState([]);
     const [supplierValue, setSupplierValue] = useState({});
     const [reportArray, setReportArray] = useState([]);
     const [saveClicked, setSaveClicked] = useState(1)
@@ -48,20 +49,24 @@ const UpdateStatusForm = (props) => {
     setSaveClicked(1)
     };
     useEffect(()=>{
+      console.log("props.dataToUpdate",props.selectedRows.data)
         setOperationNumberValue(props.dataToUpdate);
     },[])
     
     useEffect(()=>{
         const fetchData = async () => {
-          const suppliers = await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
-            responseType: "json",
-          }).then((response) => {
-            setSuppliersList(response.data)
-            return response.data
-          });
+          await axios.all([
+            axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`),
+            axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`)
+          ])
+          .then(response => {
+            setCabinetsList(response[0].data.data)
+            setSuppliersList(response[1].data)
+          })
         };
         fetchData();
     },[])
+    
     const handleChangeSupplier = (e, newValue) =>{
       setSupplierValue(newValue)
       if(newValue) setFormValues({ ...formValues, supplier_id: newValue._id });
@@ -80,6 +85,7 @@ const UpdateStatusForm = (props) => {
             setReportArray(itemsToUpdate.map(e=>{
                 let response="success"
                 let reason=""
+                let snValue = cabinetsList.filter((eSub) => eSub._id == e.sn)
                 if(e.status==="Completed"){
                     response="error";
                     reason="Cannot updated Completed operations"
@@ -90,6 +96,7 @@ const UpdateStatusForm = (props) => {
                 return {
                     "_id": e._id,
                     "operation_number": e.operation_number,
+                    "operation_type": e.operation_type,
                     "sn": e.sn,
                     "previous_status": e.status,
                     "new_status": formValues.status,
@@ -99,46 +106,56 @@ const UpdateStatusForm = (props) => {
             }))
             setSaveClicked(2)
         }else{
-          if(formValues.status==="assigned"){
-
-          }
           let idsToUpdate=reportArray.filter(e=>{
               return e.previous_status!="Completed" && e.previous_status!="Canceled"
           })
             idsToUpdate.forEach(async e=>{
-                await axios({
-                    method: "put",
-                    url: `${process.env.REACT_APP_BASE_URL}/liveOperations/${e._id}`,
-                    data: [{
+              await axios({
+                  method: "put",
+                  url: `${process.env.REACT_APP_BASE_URL}/liveOperations/${e._id}`,
+                  data: [{
+                  status: formValues.status,
+                  supplier_id: formValues.status==="Unassigned" ? "" : formValues.supplier_id,
+                  last_status_update: new Date(),
+                  
+                  }]
+              })
+              .then((response) => {
+                  props.setStatusUpdated(props.selectedRows)
+                  props.setSelectedRows([]);
+              });
+              await axios({
+                  method: "post",
+                  url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
+                  data: {
                     status: formValues.status,
-                    supplier_id: formValues.status==="Unassigned" ? "" : formValues.supplier_id,
-                    last_status_update: new Date(),
-                    
-                    }]
-                })
-                .then((response) => {
-                    props.setStatusUpdated(props.selectedRows)
-                    props.setSelectedRows([]);
-                });
-                await axios({
-                    method: "post",
-                    url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
-                    data: {
-                    status: formValues.status,
+                    fridge_status: formValues.fridgeStatus,
                     user: "User 1",
                     notes: "",
+                    supplier_id: formValues.status==="Unassigned" ? "" : formValues.supplier_id,
                     operation_number: e.operation_number,
-                    },
-                })
-                if(formValues.status==="Completed" || formValues.status==="Canceled"){
-                  axios({
-                    method: "put",
-                    url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e.sn}`,
-                    data: [{
-                      booked:false
-                    }]
-                  })
+                  },
+              })
+              if(formValues.status==="Completed" || formValues.status==="Canceled"){
+                let submitToCabinets=[]
+                if(e.operation_type==="Preventive Maintenance"){
+                  submitToCabinets=[{
+                    status: formValues.fridgeStatus,
+                    last_prev_date:new Date(),
+                    booked:false
+                  }]
+                }else{
+                  submitToCabinets=[{
+                    status: formValues.fridgeStatus,
+                    booked:false
+                  }]
                 }
+                axios({
+                  method: "put",
+                  url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e.sn}`,
+                  data: submitToCabinets
+                })
+              }
             })
         }
     };
@@ -173,7 +190,7 @@ const UpdateStatusForm = (props) => {
           </Grid>
           <Grid item xs={11}>
             <FormControl className={classes.formControl}>
-              <InputLabel id="statusLabel">Status</InputLabel>
+              <InputLabel id="statusLabel">Operation Status</InputLabel>
               <Select
                 labelId="statusLabel"
                 id="statusInput"
@@ -192,6 +209,24 @@ const UpdateStatusForm = (props) => {
               </Select>
             </FormControl>
           </Grid>
+          {formValues.status==="Completed"?
+          <Grid item xs={11}>
+            <FormControl className={classes.formControl}>
+              <InputLabel id="fridgeStatusLabel">Fridge Status</InputLabel>
+              <Select
+                labelId="fridgeStatusLabel"
+                id="fridgeStatus"
+                name="fridgeStatus"
+                value={formValues.fridgeStatus || ""}
+                onChange={handleChangeTextfield}
+              >
+                <MenuItem value="Damaged">Damaged</MenuItem>
+                <MenuItem value="Operational">Operational</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          :null}
+
           {formValues.status==="Assigned"?
           <Grid item xs={11}>
             <Autocomplete
@@ -223,7 +258,7 @@ const UpdateStatusForm = (props) => {
                     <th scope="col">Previous Status</th>
                     <th scope="col">New Status</th>
                     <th scope="col">Validation</th>
-                    <th scope="col">Reason</th>
+                    {(formValues.status==="Completed" || formValues.status==="Canceled")&&<th scope="col">Reason</th>}
                 </tr>
             </thead>
             <tbody>
@@ -234,7 +269,7 @@ const UpdateStatusForm = (props) => {
                     <td>{e.previous_status}</td>
                     <td>{e.new_status}</td>
                     <td className="text-center">{(e.response==="success") ? <Check className="text-success" /> : <Close className="text-danger" /> }</td>
-                    <td>{e.reason}</td>
+                    {(formValues.status==="Completed" || formValues.status==="Canceled")&&<td>{e.reason}</td>}
                 </tr>
                 )}
             </tbody>
@@ -251,7 +286,7 @@ const UpdateStatusForm = (props) => {
               onClick={handleSaveForm}
               startIcon={<Save />}
             >
-              Save
+              {saveClicked===1?"Validate":"Save"}
             </Button>
             <Button
               variant="outlined"

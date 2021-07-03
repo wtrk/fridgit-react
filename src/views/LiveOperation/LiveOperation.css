@@ -3,8 +3,9 @@
   position:fixed;
   width:100%;
 }
-.MuiTab-textColorPrimary.TabsOnTopFromStatus__tab {
+.MuiTab-textColorPrimary.TabsOnTopFromStatus__tab,.MuiTab-textColorPrimary.MuiTab-root {
   color: #fff;
+  font-size:.8rem !important
 }
 
 .MuiTab-textColorPrimary.TabsOnTopFromStatus__tab.Mui-selected {

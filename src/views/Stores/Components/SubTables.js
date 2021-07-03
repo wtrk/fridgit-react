@@ -79,9 +79,9 @@ const SubTables = (props) => {
             setFormValues(response.data);
             return response.data
           }).then((response)=>{
-            setCityValue(props.citiesList.filter(e=> e._id==response.location.city_id)[0])
-            setNeighbourhoodValue(props.neighbourhoodsList.filter(e=> e._id==response.location.neighbourhood_id)[0])
-            setFormLocationValues(response.location)
+            setCityValue(response.location&&props.citiesList.filter(e=> e._id==response.location.city_id)[0])
+            setNeighbourhoodValue(response.location&&props.neighbourhoodsList.filter(e=> e._id==response.location.neighbourhood_id)[0])
+            setFormLocationValues(response.location&&response.location)
           });
         }
       };
@@ -323,7 +323,7 @@ const validateInputHandler = (e) => {
               name="mobile"
               onChange={handleChangeLocation}
               fullWidth
-              value={formLocationValues.mobile || ""}
+              value={formLocationValues?formLocationValues.mobile:""}
               inputRef={mobileRef}
               onKeyDown={keyPressHandler}
               onBlur={validateInputHandler}

@@ -5,14 +5,15 @@ import {
   Dialog,
   Slide,
   TextField,
-  Chip,
-  CircularProgress,Button,Tooltip,Zoom
+  CircularProgress,
+  Switch,Tooltip,Zoom
 } from "@material-ui/core";
-import Moment from "react-moment";
+
+import { ControlPointDuplicate, Close ,Check } from "@material-ui/icons";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 
-import FilterComponent from "components/CustomComponents/FilterComponent.js";
+import FilterComponent from "./Components/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
@@ -24,36 +25,51 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const PriceRule = () => {
-  const [isLoading, setIsloading] = useState(true);  
+  const [isLoading, setIsLoading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
-  const [priceRuleId, setPriceRuleID] = useState(); //modal title
-  const [formTitle, setFormTitle] = useState("Add"); //modal title
+  const [priceRuleId, setPriceRuleId] = useState(); //modal title
+  const [actionDialog, setActionDialog] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
+  const [reloadData,setReloadData] = useState(0)
   const [items, setItems] = useState([]); //table items
   const [serviceTypesList, setServiceTypesList] = useState([]);
+  const [operationsList, setOperationsList] = useState([]);
   const [itemsBackup, setItemsBackup] = useState([]);
-  const [searchValue, setSearchValue] = useState({});
+  const [clicked,setClicked] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
-      const serviceTypesList = await axios(`${process.env.REACT_APP_BASE_URL}/serviceTypes`, {
-        responseType: "json",
-      }).then((response) => {
-        setServiceTypesList(response.data)
-        return response.data
-      });
-
-      await axios(`${process.env.REACT_APP_BASE_URL}/priceRules`, {
-        responseType: "json",
-      }).then((response) => {
-        setItems(response.data)
-        setItemsBackup(response.data)
-        return setIsloading(false)
-      });
+        await axios.all([
+          axios.get(`${process.env.REACT_APP_BASE_URL}/serviceTypes`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/priceRules`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/operations`)
+        ]).then(response => {
+          setServiceTypesList(response[0].data.data)
+          setItems(response[1].data)
+          setItemsBackup(response[1].data)
+          setOperationsList(response[2].data)
+          setClicked(0)
+        }).then(() => setIsLoading(false))
     };
     fetchData();
-  }, [openAddForm]);
+  }, [openAddForm,reloadData]);
 
+  const handleChangeSwitch = async (e, id) => {
+    setClicked(id)
+    const {name,checked}=e.target
+    const active=checked===true ? 1 : 0;
+    await axios({
+      method: "put",
+      url: `${process.env.REACT_APP_BASE_URL}/priceRules/${id}`,
+      data: [{active}],
+    })
+    .then(function (response) {
+      setReloadData(reloadData+1)
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }
   const columns = [
     {
       name: "_id",
@@ -66,12 +82,24 @@ const PriceRule = () => {
     },
     {
       name: "clients",
-      label: "Client",
+      label: "Clients",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
-          let clientsValue=value.map(e=>e.name).toString()
+          let clientsValue=value.map(e=>" "+e.name).toString()
           return  <Tooltip TransitionComponent={Zoom} placement="right" arrow title={clientsValue}>
-          <span>{clientsValue.slice(0, 15)}</span>
+          <span>{clientsValue} </span>
+        </Tooltip>
+        },
+      },
+    },
+    {
+      name: "operations",
+      label: "Operations",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          let operationsValue=value.map(e=>" "+e.name).toString()
+          return  <Tooltip TransitionComponent={Zoom} placement="right" arrow title={operationsValue}>
+          <span>{operationsValue} </span>
         </Tooltip>
         },
       },
@@ -82,17 +110,7 @@ const PriceRule = () => {
       options: {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
-          return (
-            <div>
-              <a
-                onClick={() => {
-                  handleAdd("Edit Price Rule - "+tableMeta.rowData[3],tableMeta.rowData[0]);
-                }}
-              >
-                {value}
-              </a>
-            </div>
-          );
+          return <a onClick={() => handleAdd("Edit",tableMeta.rowData[0])}>{value}</a>
         },
       },
     },
@@ -162,6 +180,23 @@ const PriceRule = () => {
     {
       name: "corrective_reaction",
       label: "Corrective Reaction",
+    },
+    {
+      name: "active",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          
+          return (value!=0) ? <Check className="text-success" /> : <Close className="text-danger" /> 
+        },
+      },
+    },
+    {
+      name: "clone",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return <a onClick={() => handleAdd("Clone",tableMeta.rowData[0])}><ControlPointDuplicate /></a>
+        },
+      },
     }
   ];
 
@@ -175,7 +210,7 @@ const PriceRule = () => {
       return (
         <CustomToolbar
           listener={() => {
-            handleAdd("Add New Price Rule");
+            handleAdd("Add");
           }}
           handleFilter={handleFilter}
         />
@@ -201,8 +236,8 @@ const PriceRule = () => {
 
   const handleAdd = (title, priceRuleId) => {
     setOpenAddForm(true);
-    setFormTitle(title);
-    setPriceRuleID(priceRuleId);
+    setActionDialog(title);
+    setPriceRuleId(priceRuleId);
   };
   const handleCloseAddForm = () => setOpenAddForm(false)
 
@@ -217,6 +252,9 @@ const PriceRule = () => {
               return true;
             }
             if (e.clients.map(eSub=>eSub.name).toString().toLowerCase().includes(newValueEntry.toLowerCase())){
+              return true;
+            }
+            if (e.operations.map(eSub=>eSub.name).toString().toLowerCase().includes(newValueEntry.toLowerCase())){
               return true;
             }
           }
@@ -241,7 +279,7 @@ const PriceRule = () => {
           {...params}
           variant="standard"
           placeholder="Search Data"
-          label="Filter by Name or Client"
+          label="Filter by Operations/Clients or Name"
         />
       )}
     />
@@ -267,7 +305,7 @@ const PriceRule = () => {
           TransitionComponent={Transition}
         >
           <SubTables
-            title={formTitle}
+            actionDialog={actionDialog}
             handleClose={handleCloseAddForm}
             priceRuleId={priceRuleId}
             serviceTypesList={serviceTypesList}
@@ -281,8 +319,9 @@ const PriceRule = () => {
           aria-labelledby="customized-dialog-title"
           open={filterDialog}
         >
-          <FilterComponent setOpenDialog={setFilterDialog} />
+          <FilterComponent setOpenDialog={setFilterDialog} setItems={setItems} />
         </Dialog>
+        
       </div>
     </Container>
   );

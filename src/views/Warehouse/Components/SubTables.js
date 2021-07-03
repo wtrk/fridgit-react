@@ -7,21 +7,13 @@ import {
   Button,
   Grid,
   Toolbar,
-  Collapse,
-  FormControlLabel,MenuItem,
-  Checkbox,
-  InputLabel,
-  FormControl,
-  Select,FormHelperText
+  Collapse
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
-import CustomInput from "components/CustomInput/CustomInput.js";
 import { makeStyles } from "@material-ui/core/styles";
 import CustomToolbar from "CustomToolbar";
 import {Autocomplete, Alert} from '@material-ui/lab';
-
-import MUIDataTable from "mui-datatables";
 
 
 const options = {
@@ -105,10 +97,12 @@ const SubTables = (props) => {
             setFormValues(response.data);
             return response.data
           }).then((response)=>{
-            setTierValue(tiers.filter(e=> e._id==response.tier_id)[0])
-            setCityValue(props.citiesList.filter(e=> e._id==response.location.city_id)[0])
-            setNeighbourhoodValue(props.neighbourhoodsList.filter(e=> e._id==response.location.neighbourhood_id)[0])
-            setFormLocationValues(response.location)
+            if(response.tier_id) setTierValue(tiers.filter(e=> e._id==response.tier_id)[0])
+            if(response.location) {
+              setCityValue(props.citiesList.filter(e=> e._id==response.location.city_id)[0])
+              setNeighbourhoodValue(props.neighbourhoodsList.filter(e=> e._id==response.location.neighbourhood_id)[0])
+              setFormLocationValues(response.location)
+            }
           });
         }
       };

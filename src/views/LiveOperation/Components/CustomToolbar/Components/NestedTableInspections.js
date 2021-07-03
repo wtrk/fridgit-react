@@ -16,11 +16,12 @@ const NestedTable = (props) => {
     else props.setArrayName([{ name: "" }]);
   };
     const handleChange = (e, newValue) =>{
-      newValue["quantity"]=1
-      console.log("newValue",newValue)
-      setValueSelected([])
-      if(newValue) props.setArrayName([...props.arrayName.filter(e=>e.name!==""), newValue]);
-    }
+      if(newValue){
+        newValue["quantity"]=1
+        setValueSelected([])
+        props.setArrayName([...props.arrayName.filter(e=>e.name!==""), newValue]);
+      }
+      }
   
   useEffect(()=>{
     const fetchData = () => {
@@ -29,8 +30,7 @@ const NestedTable = (props) => {
       axios(`${process.env.REACT_APP_BASE_URL}/${dbTable}`, {
         responseType: "json",
       }).then((response) => {
-        setDataList(response.data)
-        return response.data
+        setDataList(response.data.filter(e=>e.fridgesTypes.filter(eSub=>eSub._id===props.fridgeType).length?true:false))
       });
       };
     fetchData();
@@ -73,7 +73,7 @@ const NestedTable = (props) => {
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label={`Add new ${props.title}`}
+                          label={`${props.title}`}
                         />
                       )}
                     />

@@ -30,7 +30,7 @@ import { Close } from "@material-ui/icons";
   }));
 const Privilege = (props) => {
     const classes = useStyles(); //custom css
-    const [isLoading, setIsloading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [items, setItems] = useState([]); //table items
     const [currentItem, setCurrentItem] = useState(); //current items
     const [currentItemId, setCurrentItemId] = useState(""); //current items
@@ -42,7 +42,7 @@ const Privilege = (props) => {
           responseType: "json",
         }).then((response) => {
           setItems(response.data.privilege)
-          return setIsloading(false)
+          return setIsLoading(false)
         });
       };
       fetchData();

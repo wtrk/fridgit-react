@@ -43,7 +43,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const Tier = () => {
   const classes = useStyles(); //custom css
-  const [isLoading, setIsloading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [tierId, setTierId] = useState(); //modal title
   const [RowID, setRowID] = useState(0); //current row
@@ -58,7 +58,7 @@ const Tier = () => {
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
-        return setIsloading(false)
+        return setIsLoading(false)
       });
     };
     fetchData();
