@@ -218,7 +218,7 @@ useEffect(() => {
           {fridgeInfo?<Grid item container xs={12} md={6} spacing={2}>
             <Grid item xs={4}>
               {fridgeInfo.photo?
-              <img src={`${process.env.REACT_APP_BACKEND_FILES}/types/${fridgeInfo.photo}`} alt="" /> 
+              <img src={`/img/types/${fridgeInfo.photo}`} alt="" /> 
               :null}
             </Grid>
             <Grid item xs={8}>
@@ -242,7 +242,7 @@ useEffect(() => {
         {clientInfo?<Grid item container xs={12} md={6} spacing={2}>
             <Grid item xs={4}>
               {clientInfo.photo?
-              <img src={`${process.env.REACT_APP_BACKEND_FILES}/clients/${clientInfo.photo}`} alt="" />
+              <img src={`/img/clients/${clientInfo.photo}`} alt="" />
               :null}
             </Grid>
             <Grid item xs={8}>

@@ -206,7 +206,7 @@ const handleOnSubmit = async () => {
                 {!image.preview ? (
                   <label htmlFor="upload-button" style={{width:"100%"}}>
                   {props.data.photo ? (
-                    <img src={`${process.env.REACT_APP_BACKEND_FILES}/clients/${props.data.photo}`} alt="" style={{width:"100%"}} className="mb-4" /> 
+                    <img src={`/img/clients/${props.data.photo}`} alt="" style={{width:"100%"}} className="mb-4" /> 
                   ):(
                     <h5 className="text-center">Click here to upload a photo</h5>
                   )}
