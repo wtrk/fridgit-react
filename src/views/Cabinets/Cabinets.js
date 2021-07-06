@@ -126,7 +126,7 @@ const Cabinet = () => {
     const fetchData = async () => {
       const sn=liveOperationsList.length?liveOperationsList[0].sn:null;
       const clientId=liveOperationsList.length?liveOperationsList[0].client_id:null;
-      const findSn=sn?items.find(e=>e._id===sn):null;
+      const findSn=items?items.find(e=>e._id===sn):null;
       setCabinetsSn(findSn?findSn.sn:"")
       if(clientId){
         await axios(`${process.env.REACT_APP_BASE_URL}/clients/${clientId}`, {
@@ -135,7 +135,7 @@ const Cabinet = () => {
           setClientInfo(response.data)
         });
       }
-      if(findSn){
+      if(liveOperationsList.length){
         await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/bySn/${liveOperationsList[0].sn}`, {
           responseType: "json",
         }).then((response) => {
@@ -178,11 +178,13 @@ useEffect(() => {
 
   useEffect(() => {
     const fetchData = async () => {
-      await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${cabinetId}`, {
-        responseType: "json",
-      }).then((response) => {
-        setLiveOperationsList(response.data)
-      });
+      if(cabinetId){
+        await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${cabinetId}`, {
+          responseType: "json",
+        }).then((response) => {
+          setLiveOperationsList(response.data)
+        });
+      }
     };
     fetchData();
   }, [cabinetId]);
@@ -264,7 +266,7 @@ useEffect(() => {
           </Grid>
       );
     } else if (props.tab === 3) {
-      let preventive=items.find(e=>e._id===cabinetId).preventive
+      let preventive=items?items.find(e=>e._id===cabinetId).preventive:{}
       preventive=preventive?preventive.filter(e=>e.reportable===true):[]
       if(preventive.length){
         const columnsPreventive = [
