@@ -62,15 +62,14 @@
   },
   {
     "_id":6,
-    "path": "/user",
-    "name": "Invoice",
+    "path": "/invoices",
+    "name": "Invoices",
     "rtlname": "",
     "layout": "/admin",
     "type": "sub",
     "parent": "Finance",
     "haschild": false
   },
-
   {
     "_id":7,
     "path": "/Cabinets",

@@ -77,6 +77,7 @@ import CorrectiveActions from "views/CorrectiveActions/CorrectiveActions.js";
 import Stores from "views/Stores/Stores.js";
 
 import Supplier from "views/Supplier/Supplier.js";
+import Invoices from "views/Invoices/Invoices.js";
 // core components/views for RTL layout
 import RTLPage from "views/RTLPage/RTLPage.js";
 import dashboardRoutes from "./dashboard-routes.json";
@@ -120,10 +121,14 @@ const switchRoutes = (
             e.icon = Assessment;
             e.component = FinanceReports1;
             break;
-          case "Invoice":
-            e.icon = Receipt;
-            e.component = UserProfile;
-            break;
+          // case "Invoice":
+          //   e.icon = Receipt;
+          //   e.component = UserProfile;
+          //   break;
+            case "Invoices":
+              e.icon = AccountBox;
+              e.component = Invoices;
+              break;
           case "Master Data":
             e.icon = LibraryBooks;
             e.component = Cabinets;
@@ -148,10 +153,10 @@ const switchRoutes = (
             e.icon = GroupAdd;
             e.component = Userrole;
             break;
-          case "Supplier":
-            e.icon = AccountBox;
-            e.component = Supplier;
-            break;
+            case "Supplier":
+              e.icon = AccountBox;
+              e.component = Supplier;
+              break;
           case "Warehouse":
             e.icon = GroupWork;
             e.component = Warehouse;

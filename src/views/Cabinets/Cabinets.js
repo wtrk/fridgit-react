@@ -281,7 +281,8 @@ useEffect(() => {
           {name: "preventiveActions_id",label: "Preventive Actions",
             options: {
               customBodyRender: (value, tableMeta, updateValue) => {
-                return preventiveActions.find(e=>e._id===tableMeta.rowData[1]).name;
+                const preventiveAction=preventiveActions.find(e=>e._id===tableMeta.rowData[1]).name;
+                return preventiveAction?preventiveAction:"-";
               },
             },
           },
@@ -289,7 +290,6 @@ useEffect(() => {
           options: {
             customBodyRender: (value, tableMeta, updateValue) => {
               const preventiveAnswers=preventiveActions.find(e=>e._id===tableMeta.rowData[1]).answers.find(e=>e._id===value)
-              console.log("ddddddddddddddd",preventiveAnswers)
               return preventiveAnswers?preventiveAnswers.name:"-";
             },
           },
@@ -436,7 +436,7 @@ useEffect(() => {
           }else if(value==="warehouse"){
             locationValue=warehousesList.find(e=>e._id===tableMeta.rowData[12]).name
           }
-          return `${locationValue} (${value})`
+          return `${locationValue?locationValue:null} (${value})`
         }
       }
     },
@@ -472,11 +472,11 @@ useEffect(() => {
             }
           }
           return <div style={{ width: 200 }}>
-            <strong>City</strong>: {cityValue}
+            <strong>City</strong>: {cityValue?cityValue:"-"}
             <br />
-            <strong>Neighbourhood</strong>: {neighbourhoodValue}
+            <strong>Neighbourhood</strong>: {neighbourhoodValue?neighbourhoodValue:"-"}
             <br />
-            <strong>Mobile</strong>: {mobileValue}
+            <strong>Mobile</strong>: {mobileValue?mobileValue:"-"}
             <br />
           </div>
         }
@@ -670,13 +670,13 @@ useEffect(() => {
 
                     <div>
                       <strong>Client</strong><br />
-                      {clientsList.find(e=>e._id===liveOperationsList[0].client_id).name}
+                      {clientsList.find(e=>e._id===liveOperationsList[0].client_id)?clientsList.find(e=>e._id===liveOperationsList[0].client_id).name:"-"}
                     </div>
                   </div>
                 </Grid>
 
                 <Grid item xs={4}>
-                  <strong>Sn:</strong> {items.find(e=>e._id===liveOperationsList[0].sn).sn}<br />
+                  <strong>Sn:</strong> {items.find(e=>e._id===liveOperationsList[0].sn)?items.find(e=>e._id===liveOperationsList[0].sn).sn:"-"}<br />
                   <strong>Status:</strong> {liveOperationsList[0].status}
                 </Grid>
 
