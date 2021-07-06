@@ -137,7 +137,10 @@ const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
       if(value.error===true) return setOpenAlertError(true);
   }
-  
+  delete formValues._id
+  delete formValues.photo
+  delete formValues.preventive
+  // return console.log("formValues",formValues)
   if (props.fridgesTypeId) {
       await axios({
         method: "put",
@@ -211,7 +214,6 @@ const validateInputHandler = (e) => {
 
       <div style={{ padding: "10px 30px" }}>
         <Grid container spacing={3}>
-          
           <Grid item xs={12} sm={3}>
                 {openAlertSuccess?
                   <div className="alert alert-success" role="alert">
@@ -221,7 +223,7 @@ const validateInputHandler = (e) => {
                 {!image.preview ? (
                   <label htmlFor="upload-button" style={{width:"100%"}}>
                   {formValues.photo ? (
-                    <img src={require(`${process.env.REACT_PATH}/types/${formValues.photo}`)} alt="" style={{width:"100%"}} className="mb-4" /> 
+                    <img src={`${process.env.REACT_APP_BACKEND_FILES}/types/${formValues.photo}`} alt="" style={{width:"100%"}} className="mb-4" /> 
                   ):(
                     <h5 className="text-center">Click here to upload a photo</h5>
                   )}
