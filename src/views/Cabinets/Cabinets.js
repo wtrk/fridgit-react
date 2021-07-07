@@ -191,7 +191,6 @@ useEffect(() => {
 
   const [dialogItemTab, setDialogItemTab] = useState(1);
   const DialogTabsContent = (props) => {
-    console.log("1")
     if (props.tab === 1) {
       return (
         <Timeline align="left">
