@@ -433,11 +433,11 @@ useEffect(() => {
         customBodyRender: (value, tableMeta, updateValue) => {
           let locationValue
           if(value==="store"){
-            locationValue=storesList.find(e=>e._id===tableMeta.rowData[12]).name
+            locationValue=storesList.find(e=>e._id===tableMeta.rowData[12])
           }else if(value==="warehouse"){
-            locationValue=warehousesList.find(e=>e._id===tableMeta.rowData[12]).name
+            locationValue=warehousesList.find(e=>e._id===tableMeta.rowData[12])
           }
-          return `${locationValue?locationValue:null} (${value})`
+          return `${locationValue?locationValue.name:null} (${value})`
         }
       }
     },
