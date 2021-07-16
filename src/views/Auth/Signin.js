@@ -8,9 +8,9 @@ import { ToastContainer, toast } from 'react-toastify';
 
 const Signin = () => {
     const [values, setValues] = useState({
-        email: 'william@gmail.com',
-        password: '123456',
-        buttonText: 'Submit'
+        email: '',
+        password: '',
+        buttonText: 'Signin'
     });
 
     const { email, password, buttonText } = values;
@@ -44,32 +44,29 @@ const Signin = () => {
             });
     };
 
-    const signinForm = () => (
-        <form>
-            <div className="form-group">
-                <lable className="text-muted">Email</lable>
-                <input onChange={handleChange('email')} value={email} type="email" className="form-control" />
-            </div>
-
-            <div className="form-group">
-                <lable className="text-muted">Password</lable>
-                <input onChange={handleChange('password')} value={password} type="password" className="form-control" />
-            </div>
-
-            <div>
-                <button className="btn btn-primary" onClick={clickSubmit}>
-                    {buttonText}
-                </button>
-            </div>
-        </form>
-    );
-
     return (
         // <Layout>
-        isAuth()?<Redirect to="/" />:<div className="col-md-6 offset-md-3">
+        isAuth()?<Redirect to="/" />:<div className="signin-container">
                 {/* <ToastContainer /> */}
-                <h1 className="p-5 text-center">Signin</h1>
-                {signinForm()}
+                <img src={require("assets/img/logo.png")} alt="logo" className="signin-logo" />
+                <h1 className="pt-3 pb-5 text-center">FridgeIt</h1>
+                <form>
+                    <div className="form-group">
+                        <lable className="text-muted">Email</lable>
+                        <input onChange={handleChange('email')} value={email} type="email" className="form-control" />
+                    </div>
+
+                    <div className="form-group">
+                        <lable className="text-muted">Password</lable>
+                        <input onChange={handleChange('password')} value={password} type="password" className="form-control" />
+                    </div>
+                    
+                    <div>
+                        <button className="btn btn-primary w-100" onClick={clickSubmit}>
+                            {buttonText}
+                        </button>
+                    </div>
+                </form>
             </div>
         // </Layout>
     );

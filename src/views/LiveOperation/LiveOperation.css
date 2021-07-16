@@ -1,5 +1,5 @@
 .TabsOnTopFromStatus {
-  background: #3f51b5;
+  background: #007bff;
   position:fixed;
   width:100%;
 }
@@ -15,7 +15,7 @@
 
 .TabsOnTopFromStatus__tab--number {
   background: #fff;
-  color: #3f51b5;
+  color: #007bff;
   border-radius: 2.5rem;
   min-width: 1.5rem;
   padding: 0 4px;
@@ -24,4 +24,7 @@
 .BillContainer{
   background-color:#ccc;
   margin-bottom:.5rem !important;
+}
+.MuiAppBar-colorPrimary {
+  background-color: #007bff !important;
 }

@@ -111,21 +111,23 @@ const FinanceReport = () => {
           name: "createdAt",
           label: "Day",
           options: {
-            customBodyRender: (value, tableMeta, updateValue) => (
-              <Moment format="DD MMM YYYY">{value}</Moment>
-            ),
+            customBodyRender: (value, tableMeta, updateValue) => {
+              if(value==="Total") return value
+              else return <Moment format="DD MMM YYYY">{value}</Moment>
+            }
           },
         },
         { label: "Handling IN / OUT", name: "handling_in" },
         { label: "Storage", name: "storage" },
-        { label: "In House Prev", name: "in_house_preventive_maintenance" },
+        { label: "In House Preventive", name: "in_house_preventive_maintenance" },
         { label: "In House Corrective", name: "corrective_service_in_house" },
         { label: "Testing", name: "cabinet_testing_fees" },
         { label: "Branding", name: "branding_fees" },
         { label: "Drop", name: "drop" },
         { label: "Transportation", name: "transportation_fees" },
-        { label: "Preventive", name: "preventive_maintenance" },
-        { label: "Corrective", name: "exchange_corrective_reaction" },
+        { label: "Preventive Maintenance", name: "preventive_maintenance" },
+        { label: "Exchange Corrective Reaction", name: "exchange_corrective_reaction" },
+        { label: "Corrective Reaction", name: "corrective_reaction" },
         { label: "Total", name: "total" },
       ]);
       setItems(itemsDaily)

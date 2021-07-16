@@ -26,11 +26,11 @@ const useStyles = makeStyles((theme) => ({
   },
   selected: {
     paddingLeft: theme.spacing(4),
-    color: "#89229b !important",
+    color: "#007bff !important",
     backgroundColor: "rgba(0, 0, 0, 0.04)",
   },
   selectedMain: {
-    color: "#89229b !important",
+    color: "#007bff !important",
     backgroundColor: "rgba(0, 0, 0, 0.04)",
   },
 }));

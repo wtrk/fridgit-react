@@ -11,8 +11,8 @@ h3 {
   font-weight: 400;
   font-size: 2rem;
   margin: 2rem 0;
-  border-bottom: 1px solid #3f51b5;
-  color: #3f51b5;
+  border-bottom: 1px solid #007bff;
+  color: #007bff;
 }
 h3.pageTitle{
   color:#fff;
@@ -48,13 +48,13 @@ img {
 }
 .table-link,
 a, a:not([href]){
-  color: #89229b;
+  color: #007bff;
   transition: all 0.2s;
   cursor: pointer;
 }
 .table-link:hover,
 a:hover {
-  color: #89229b88;
+  color: #007bff88;
 }
 .MuiAutocomplete-root {
   width: 50%;
@@ -82,7 +82,7 @@ a:hover {
   width: 30px;
   fill: #fff;
 }
-a{color:#3f51b5}
+a{color:#007bff}
 .download-template-link{font-size:.8rem; font-weight:500}
 .MuiContainer-root{
   padding-top:1rem;
@@ -97,7 +97,7 @@ a{color:#3f51b5}
   border-radius: 50px;
 }
 .avatar_circle {
-  background: #673ab7;
+  background: #007bff;
   color: #fff;
   border-radius: 100%;
   text-align: center;
@@ -109,7 +109,7 @@ a{color:#3f51b5}
 }
 .table-length-cont {
   background: #fff9;
-  color: #3f51b5;
+  color: #007bff;
   border-radius: 25px;
   padding:0 15px
 }
@@ -123,7 +123,7 @@ a{color:#3f51b5}
   color: #fff !important;
 }
 .tabs-container {
-  background: #3f51b5;
+  background: #007bff;
 }
 .entryEditHeader {
   padding: 1rem 0 0 0 !important;
@@ -131,7 +131,7 @@ a{color:#3f51b5}
   position: relative;
 }
 .entryEditHeader__tabsCont {
-  background-color: #3f51b566;
+  background-color: #007bff66;
   position: absolute;
   bottom: 0;
   left: 0;
@@ -143,9 +143,25 @@ a{color:#3f51b5}
 }
 .MuiButton-text.ceeh__tabsCont--btn:hover,
 .MuiButton-text.ceeh__tabsCont--btn.selected {
-  color: #3f51b5 !important;
+  color: #007bff !important;
   background-color: rgba(0, 0, 0, 0.04);
 }
 #CompanyInput-label{
   color:#f00 !important;
+}
+.signin-container{
+  width:600px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  padding:50px;
+  box-shadow: 3px 3px 10px #ddd;
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform: translate(-50%,-50%);
+}
+.signin-logo{
+  display:block;
+  width:150px;
+  margin:0 auto;
 }

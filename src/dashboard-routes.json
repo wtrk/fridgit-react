@@ -52,8 +52,8 @@
   },
   {
     "_id":51,
-    "path": "/finance_reports1",
-    "name": "Financial Report1",
+    "path": "/daily_reports",
+    "name": "Daily Financial Reports",
     "rtlname": "",
     "layout": "/admin",
     "type": "sub",

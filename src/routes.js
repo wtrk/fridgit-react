@@ -54,7 +54,7 @@ import UserProfile from "views/UserProfile/UserProfile.js";
 import TableList from "views/TableList/TableList.js";
 import Cabinets from "views/Cabinets/Cabinets.js";
 import FinanceJobs from "views/Finance1/FinanceJobs.js";
-import FinanceReports1 from "views/Finance1/FinanceReports.js";
+import DailyReport from "views/Finance/DailyReport.js";
 import FinanceReports from "views/Finance/FinanceReports.js";
 import Country from "views/Country/Country.js";
 import City from "views/City/City.js";
@@ -125,9 +125,9 @@ const switchRoutes = (
               e.icon = Assessment;
               e.component = FinanceReports;
               break;
-          case "Financial Report1":
+          case "Daily Financial Reports":
             e.icon = Assessment;
-            e.component = FinanceReports1;
+            e.component = DailyReport;
             break;
           // case "Invoice":
           //   e.icon = Receipt;
