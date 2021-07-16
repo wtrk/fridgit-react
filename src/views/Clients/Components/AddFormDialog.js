@@ -12,6 +12,11 @@ import axios from 'axios';
 import { Close, Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import Alert from '@material-ui/lab/Alert';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 const useStyles = makeStyles((theme) => ({
   appBar: {
     position: "relative",
@@ -28,6 +33,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 const AddFormDialog = (props) => {
+  const token = getCookie('token');
   const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
   const classes = useStyles(); //custom css
@@ -82,8 +88,9 @@ const AddFormDialog = (props) => {
     }
 
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/clients`,
+      headers: {Authorization: `Bearer ${token}`},
       data: [formValues],
     })
       .then(function (response) {
@@ -93,7 +100,7 @@ const AddFormDialog = (props) => {
           phone: "",
           email: ""
         });
-        props.handleClose();
+        toast.success("Successfully Added", {onClose: () => props.handleClose()});
         return setOpenAlertSuccess(true);
       })
       .catch((error) => {
@@ -111,6 +118,7 @@ const AddFormDialog = (props) => {
   }
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />
@@ -135,7 +143,7 @@ const AddFormDialog = (props) => {
           <Grid item xs={12} sm={6}>
             <TextField
               id="nameInput"
-              label="Company name"
+              label="Name"
               name="name"
               value={formValues.name || ""}
               onChange={handleChangeForm}

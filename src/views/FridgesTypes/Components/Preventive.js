@@ -4,7 +4,6 @@ import {
   Typography,
   Toolbar,
   Grid,
-  Button,
   CircularProgress,
   IconButton,
 } from "@material-ui/core";
@@ -14,7 +13,7 @@ import MUIDataTable from "mui-datatables";
 import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from 'axios';
-import { isElementAccessExpression } from "typescript";
+import { getCookie } from 'components/auth/Helpers';
 
 const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -29,6 +28,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 const Preventive = (props) => {
+  const token = getCookie('token');
     const classes = useStyles(); //custom css
     const [isLoading, setIsLoading] = useState(true);
     const [items, setItems] = useState([]);
@@ -37,7 +37,7 @@ const Preventive = (props) => {
     useEffect(() => {
       const fetchData = async () => {
         const actionsFromDb=await axios(`${process.env.REACT_APP_BASE_URL}/preventiveActions`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           let idsOfSelected=props.preventivesChosen.map(e=>e.preventiveActions_id)
           setCheckedIndexes(response.data.map((e,i)=>{

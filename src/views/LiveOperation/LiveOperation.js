@@ -23,12 +23,14 @@ import SnDialog from "./Components/SnDialog.js";
 import OperationDialog from "./Components/OperationDialog.js";
 import JobDialog from "./Components/JobDialog.js";
 import CustomToolbarSelect from "./Components/CustomToolbar/CustomToolbarSelect.js";
+import { getCookie } from '../../components/auth/Helpers';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 export default function FullWidthTabs() {
+  const token = getCookie('token');
   let history = useHistory();
 const [tabIndex,setTabIndex] = useState(0); //tabs tabIndex
 const [isLoading, setIsLoading] = useState(true);  
@@ -52,16 +54,21 @@ const [itemsBackup, setItemsBackup] = useState([]); //Search
 const [statusUpdated, setStatusUpdated] = useState([]); //Status Updated
 const [pagingInfo, setPagingInfo] = useState({page:0,limit:20,skip:0,count:20}); //Pagination Info
 const [searchEntry, setSearchEntry] = useState([]); //searchEntry
+const [countLiveOperations, setCountLiveOperations] = useState({}); //countStatus
+const [countAll, setCountAll] = useState([]); //countAll
+
+
 
 useEffect(() => {
   const fetchData = async () => {
       await axios.all([
-        axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/clients`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/cities`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/liveOperations/export`)
+        axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/clients`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/cities`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/liveOperations/export`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/liveOperations/count`,{headers: {Authorization: `Bearer ${token}`}})
       ])
       .then(response => {
         setCabinetsList(response[0].data.data)
@@ -70,26 +77,17 @@ useEffect(() => {
         setNeighbourhoodsList(response[3].data)
         setSuppliersList(response[4].data)
         setLiveOperationsToExport(response[5].data)
+        setCountLiveOperations(response[6].data)
       })
   };
   fetchData();
-}, []);
+}, [statusUpdated]);
 
-
-// useEffect(() => {
-//   const fetchData = async () => {
-//     await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/export`, {responseType: "json"
-//     }).then((response) => {
-//       setLiveOperationsToExport(response.data)
-//     });
-//   };
-//   fetchData();
-// }, []);
 
 useEffect(() => {
   const fetchData = async () => {
     await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations?limit=${pagingInfo.limit}&skip=${pagingInfo.skip}&searchEntry=${searchEntry}`, {
-      responseType: "json",
+      responseType: "json", headers: {Authorization: `Bearer ${token}`},
     }).then((response) => {
       setPagingInfo({...pagingInfo,count:response.data.count});
       setItems(response.data.data)
@@ -414,12 +412,13 @@ useEffect(() => {
 
   return (
     <div>
-      <TabsOnTop
+      {countLiveOperations.total?<TabsOnTop
         items={items}
         setItemsFiltered={setItemsFiltered}
         tabIndex={tabIndex}
         setTabIndex={setTabIndex}
-      />
+        countLiveOperations={countLiveOperations}
+      />:null}
       <Container maxWidth="xl" style={{paddingTop:"4rem"}}>
       <Autocomplete
         multiple

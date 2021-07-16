@@ -12,9 +12,9 @@ import {
   Dialog,
   Slide,
   TextField,
-  Chip,
   Container,Box
 } from "@material-ui/core";
+import { getCookie } from 'components/auth/Helpers';
 
 import Moment from "react-moment";
 import axios from 'axios';
@@ -54,6 +54,7 @@ TabPanel.propTypes = {
 };
 
 export default function FullWidthTabs() {
+  const token = getCookie('token');
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]); //table items
   const [itemsBackup, setItemsBackup] = useState([]);
@@ -67,13 +68,13 @@ export default function FullWidthTabs() {
     const fetchData = async () => {
 
       const userProfile = await axios(`${process.env.REACT_APP_BASE_URL}/userProfile`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setUserProfileList(response.data)
         return response.data
       });
       const users = await axios(`${process.env.REACT_APP_BASE_URL}/users`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         let itemsDb=response.data.map((e) => {
           const userProfileItem= userProfile.filter(userProfileData=> e.profile_id===userProfileData._id)[0]
@@ -91,7 +92,7 @@ export default function FullWidthTabs() {
         return setIsLoading(false)
       });
       const userType = await axios(`${process.env.REACT_APP_BASE_URL}/userType`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setUserTypeList(response.data)
         return response.data
@@ -167,7 +168,7 @@ export default function FullWidthTabs() {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/users/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           console.log("deleted")
         });

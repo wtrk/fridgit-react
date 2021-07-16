@@ -14,6 +14,9 @@ import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import {Autocomplete, Alert} from '@material-ui/lab';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
   const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -25,6 +28,7 @@ import {Autocomplete, Alert} from '@material-ui/lab';
     }
   }));
 const SubTables = (props) => {
+  const token = getCookie('token');
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [clientValue, setClientValue] = useState({});
@@ -60,7 +64,7 @@ const SubTables = (props) => {
             const cabinet = await axios(
               `${process.env.REACT_APP_BASE_URL}/cabinets/${props.cabinetId}`,
               {
-                responseType: "json",
+                responseType: "json", headers: {Authorization: `Bearer ${token}`},
               }
             ).then((response) => {
               setFormValues(response.data);
@@ -106,11 +110,11 @@ const handleChangeFridgesType = (e, newValue) =>{
 }
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
+      if(value.error===true) return toast.error("Please validate the Form and submit it again");
   }
   if (props.cabinetId) {
     const liveOperationBySn = await axios(
-      `${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${props.cabinetId}`,{responseType: "json"}
+      `${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${props.cabinetId}`,{responseType: "json", headers: {Authorization: `Bearer ${token}`}}
     ).then((response) => response.data)
     if(liveOperationBySn.length || oldIsNew===formValues.is_new){
       formValues.is_new=formValues.oldIsNew;
@@ -118,13 +122,13 @@ const handleOnSubmit = async () => {
       formValues.status=formValues.is_new ? "Operational" : "Needs test";
     }
     await axios({
-      method: "put",
+      method: "PUT",
       url: `${process.env.REACT_APP_BASE_URL}/cabinets/${props.cabinetId}`,
+      headers: {Authorization: `Bearer ${token}`},
       data: [formValues],
     })
     .then(function (response) {
-      setOpenAlertSuccess(true);
-      props.handleClose()
+      toast.success("Successfully Updated", {onClose: () => props.handleClose()});
     })
     .catch((error) => {
       console.log(error);
@@ -132,8 +136,9 @@ const handleOnSubmit = async () => {
   } else {
     const status=formValues.is_new ? "Operational" : "Needs test";
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/cabinets/`,
+      headers: {Authorization: `Bearer ${token}`},
       data: [{...formValues,status}],
     })
     .then(function (response) {
@@ -145,7 +150,7 @@ const handleOnSubmit = async () => {
         brand: "",
         client: ""
       });
-      props.handleClose()
+      toast.success("Successfully Added", {onClose: () => props.handleClose()});
     })
     .catch((error) => {
       console.log(error);
@@ -164,6 +169,7 @@ const validateInputHandler = (e) => {
 }
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />

@@ -4,8 +4,10 @@ import {Autocomplete} from '@material-ui/lab';
 import CustomToolbar from "CustomToolbar";
 import MUIDataTable from "mui-datatables";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
 
 const NestedTable = (props) => {
+  const token = getCookie('token');
   const [valueSelected, setValueSelected] = useState("");
   const [dataList, setDataList] = useState([]);
 
@@ -22,7 +24,7 @@ const NestedTable = (props) => {
     const fetchData = async () => {
       let dbTable = props.dbTable
       await axios(`${process.env.REACT_APP_BASE_URL}/${dbTable}`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`}
       }).then((response) => {
         setDataList(response.data)
         return response.data

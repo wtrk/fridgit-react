@@ -6,8 +6,10 @@ import MUIDataTable from "mui-datatables";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
 
 const NestedTable = (props) => {
+  const token = getCookie('token');
   const [valueSelected, setValueSelected] = useState("");
   const [dataList, setDataList] = useState([]);
 
@@ -28,7 +30,7 @@ const NestedTable = (props) => {
       let dbTable = props.dbTable
       if(props.title==="operations") dbTable="cities"
       axios(`${process.env.REACT_APP_BASE_URL}/${dbTable}`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setDataList(response.data.filter(e=>e.fridgesTypes.filter(eSub=>eSub._id===props.fridgeType).length?true:false))
       });

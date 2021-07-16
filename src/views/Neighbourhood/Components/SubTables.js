@@ -1,25 +1,21 @@
 import React, { Fragment, useState, useRef, useEffect} from "react";
 import {
-  NativeSelect,
   TextField,
   AppBar,
   Typography,
   Button,
   Grid,
   Toolbar,
-  Collapse,
-  FormControlLabel,
-  Checkbox,
-  InputLabel,
-  FormControl,
-  Select,
+  Collapse
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
-import CustomInput from "components/CustomInput/CustomInput.js";
 import { makeStyles } from "@material-ui/core/styles";
 import CustomToolbar from "CustomToolbar";
 import {Autocomplete, Alert} from '@material-ui/lab';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import MUIDataTable from "mui-datatables";
 
@@ -38,6 +34,7 @@ import MUIDataTable from "mui-datatables";
     },
   }));
 const SubTables = (props) => {
+  const token = getCookie('token');
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [cityValue, setCityValue] = useState({});
@@ -65,7 +62,7 @@ const SubTables = (props) => {
         const neighbourhood = await axios(
           `${process.env.REACT_APP_BASE_URL}/neighbourhoods/${props.neighbourhoodId}`,
           {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }
         ).then((response) => {
           setFormValues(response.data);
@@ -116,26 +113,27 @@ const handleChangeCity = (e, newValue) =>{
 }
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
+      if(value.error===true) return toast.error("Please validate the Form and submit it again");
   }
   
   if (props.neighbourhoodId) {
       await axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/neighbourhoods/${props.neighbourhoodId}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [formValues],
       })
         .then(function (response) {
-          setOpenAlertSuccess(true);
-          props.handleClose()
+          toast.success("Successfully Updated", {onClose: () => props.handleClose()});
         })
         .catch((error) => {
           console.log(error);
         });
   } else {
            await axios({
-             method: "post",
+             method: "POST",
              url: `${process.env.REACT_APP_BASE_URL}/neighbourhoods/`,
+             headers: {Authorization: `Bearer ${token}`},
              data: [formValues],
            })
              .then(function (response) {
@@ -145,7 +143,8 @@ const handleOnSubmit = async () => {
                  name: "",
                  city_id: ""
                });
-               props.handleClose()
+               toast.success("Successfully Added", {onClose: () => props.handleClose()});
+
              })
              .catch((error) => {
                console.log(error);
@@ -165,6 +164,7 @@ const validateInputHandler = (e) => {
 
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />

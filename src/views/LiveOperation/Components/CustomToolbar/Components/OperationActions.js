@@ -11,6 +11,9 @@ import {
 import {Close,Save} from '@material-ui/icons';
 import NestedTableSpare from "./NestedTableSpare";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -26,6 +29,7 @@ formControl: {
 }
 }));
 const OperationActions = (props) => {
+  const token = getCookie('token');
   const classes = useStyles();
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]);
@@ -39,7 +43,7 @@ const OperationActions = (props) => {
     const fetchData = async () => {
 
       const actionsFromDb=await axios(`${process.env.REACT_APP_BASE_URL}/correctiveActions`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         const actionsIncluded=[]
         response.data.forEach(e=>{
@@ -71,14 +75,16 @@ const quantityUpdateFirstRun = useRef(true);
       const idOfUpdated=items.filter(e=>e.name==name).length?items.filter(e=>e.name==name)[0]._id:null
       
       await axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/operationActions/${idOfUpdated}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [{"quantity": quantity}]
       })
       
       await axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${props.dataOfEntry.operation_id}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [{ labor: totalPrice }],
       });
     };
@@ -96,14 +102,16 @@ const quantityUpdateFirstRun = useRef(true);
       const idOfUpdated=items.filter(e=>e.name==name).length?items.filter(e=>e.name==name)[0]._id:null
       
       await axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/operationActions/${idOfUpdated}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [{"price": price}]
       })
       
       await axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${props.dataOfEntry.operation_id}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [{ labor: totalPrice }],
       });
     };
@@ -119,8 +127,9 @@ const quantityUpdateFirstRun = useRef(true);
     const fetchData = async () => {
       
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/operationSpareParts`,
+      headers: {Authorization: `Bearer ${token}`},
       data: selectedSpareParts,
     })
       
@@ -153,7 +162,7 @@ const handleSaveForm = async () => {
   let sparePartsString=sparePartsIds.toString()
   if(sparePartsString){
     const sparePartsFromDb=await axios(`${process.env.REACT_APP_BASE_URL}/spareParts/${sparePartsString}`, {
-      responseType: "json",
+      responseType: "json", headers: {Authorization: `Bearer ${token}`},
     })
     setSelectedSpareParts(sparePartsFromDb.data.map(e=>{
       return {
@@ -167,20 +176,24 @@ const handleSaveForm = async () => {
   // make array with main_id quantity_id and actionsId
   //save data in db
   axios({
-    method: "post",
+    method: "POST",
     url: `${process.env.REACT_APP_BASE_URL}/operationActions`,
+    headers: {Authorization: `Bearer ${token}`},
     data: insertedItemsToSave,
   })
   .then(function (response) {
-    props.setOpenDialog(false)
+    toast.success("Successfully Added", {onClose: () => props.setOpenDialog(false)});
+
+
   })
   .catch((error) => {
     console.log(error);
   });
   
   axios({
-    method: "put",
+    method: "PUT",
     url: `${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${props.dataOfEntry.operation_id}`,
+    headers: {Authorization: `Bearer ${token}`},
     data: [{"labor": totalPrice}]
   })
 
@@ -190,6 +203,7 @@ const handleSaveForm = async () => {
 
     return (
       <>
+      <ToastContainer />
         <AppBar className={classes.appBar}>
           <Toolbar>
             <IconButton

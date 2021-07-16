@@ -12,6 +12,7 @@ import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import { makeStyles} from "@material-ui/core/styles";
 import { Close} from "@material-ui/icons";
 import axios from 'axios';
+import { getCookie } from '../../../components/auth/Helpers';
 
 import "react-dropzone-uploader/dist/styles.css";
 
@@ -28,6 +29,7 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 const JobDialog = (props) => {
+  const token = getCookie('token');
     const classes = useStyles(); //custom css
     const [dialogItemTab, setDialogItemTab] = useState(1);
     const [liveOperationsList, setLiveOperationsList] = useState([]);
@@ -81,8 +83,8 @@ const JobDialog = (props) => {
   useEffect(() => {
     const fetchData = async () => {
         await axios.all([
-          axios.get(`${process.env.REACT_APP_BASE_URL}/financial/byJobNumber/${props.jobNumber}`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/liveOperations/byJobNumber/${props.jobNumber}`)
+          axios.get(`${process.env.REACT_APP_BASE_URL}/financial/byJobNumber/${props.jobNumber}`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/liveOperations/byJobNumber/${props.jobNumber}`,{headers: {Authorization: `Bearer ${token}`}})
         ])
         .then(response => {
           setFinancialList(response[0].data)
@@ -95,7 +97,7 @@ const JobDialog = (props) => {
     useEffect(() => {
       const fetchData = async () => {
         const client = await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           if(liveOperationsList.length) {
             if("response.data",response.data.filter((e) => e._id == liveOperationsList[0].client_id).length){

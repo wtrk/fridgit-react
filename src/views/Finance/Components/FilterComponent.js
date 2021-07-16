@@ -6,8 +6,10 @@ import {Autocomplete} from '@material-ui/lab';
 import axios from 'axios';
 import { Close, Save } from "@material-ui/icons";
 import "react-dropzone-uploader/dist/styles.css";
+import { getCookie } from '../../../components/auth/Helpers';
 
 const FilterComponent = (props) => {
+  const token = getCookie('token');
   const [clientsList, setClientsList] = useState([]);
   const [fridgesTypesList, setFridgesTypesList] = useState([]);
   const [operationsList, setOperationsList] = useState([]);
@@ -25,9 +27,9 @@ const FilterComponent = (props) => {
   useEffect(() => {
     const fetchData = async () => {
         await axios.all([
-          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/operations`)
+          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/operations`,{headers: {Authorization: `Bearer ${token}`}})
         ]).then(response => {
           setClientsList(response[0].data)
           setFridgesTypesList(response[1].data)
@@ -56,7 +58,7 @@ const FilterComponent = (props) => {
     if(formValues.fromDate) filterArray.push(`fromDate=${formValues.fromDate}`)
     if(formValues.toDate) filterArray.push(`toDate =${formValues.toDate}`)
     await axios(
-      `${process.env.REACT_APP_BASE_URL}/financial?${filterArray.join('&')}`,{responseType: "json"}
+      `${process.env.REACT_APP_BASE_URL}/financial?${filterArray.join('&')}`,{responseType: "json", headers: {Authorization: `Bearer ${token}`}}
       ).then(function (response) {
         props.setPagingInfo({...props.pagingInfo,count:response.data.count});
       props.setItems(response.data.data)

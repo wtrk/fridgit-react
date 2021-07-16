@@ -15,6 +15,9 @@ import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import {Autocomplete} from '@material-ui/lab';
 import { makeStyles } from "@material-ui/core/styles";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -29,6 +32,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 const AnswersForPreventive = (props) => {
+  const token = getCookie('token');
     const classes = useStyles(); //custom css
     const [fridgeTypeId,setFridgeTypeId]=useState()
     const [preventiveActionsIds,setPreventiveActionsIds]=useState()
@@ -40,7 +44,7 @@ const AnswersForPreventive = (props) => {
     useEffect(() => {
       const fetchData = async () => {
         const actionsFromDb=await axios(`${process.env.REACT_APP_BASE_URL}/cabinets/${props.dataOfEntry.cabinet_id}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           const preventiveFilteredByON=response.data.preventive.filter(e=>e.operation_number===props.dataOfEntry.operation_id)
           setPreventiveActions(preventiveFilteredByON)
@@ -61,7 +65,7 @@ const AnswersForPreventive = (props) => {
             fridgesTypesFirstRun.current = false;
           }else{
             await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/${fridgeTypeId}`, {
-              responseType: "json",
+              responseType: "json", headers: {Authorization: `Bearer ${token}`},
             }).then((response) => {
               setPreventiveActions(response.data.preventive)
               setPreventiveActionsIds(response.data.preventive.map(e=>e.preventiveActions_id))
@@ -80,7 +84,7 @@ const AnswersForPreventive = (props) => {
           preventiveActionsFirstRun.current = false;
         }else{
                const actionsFromDb = await axios(
-                 `${process.env.REACT_APP_BASE_URL}/preventiveActions`,{responseType: "json"}
+                 `${process.env.REACT_APP_BASE_URL}/preventiveActions`,{responseType: "json", headers: {Authorization: `Bearer ${token}`}}
                ).then((response) => {
                  setItems(response.data.filter((e, i) => preventiveActionsIds.includes(e._id)));
                  return setIsLoading(false);
@@ -115,8 +119,9 @@ const AnswersForPreventive = (props) => {
       if(preventiveActions.filter(e=>!e.rightAnswer_id).length===0){
         if(preventiveActions.filter(e=>e.obligatory===true&&!e.notes).length===0){
           await axios({
-            method: "put",
+            method: "PUT",
             url: `${process.env.REACT_APP_BASE_URL}/cabinets/${props.dataOfEntry.cabinet_id}`,
+            headers: {Authorization: `Bearer ${token}`},
             data: [{"preventive":preventiveActions.map(e=>{
               e.operation_number=props.dataOfEntry.operation_id
               e.date=new Date()
@@ -125,7 +130,7 @@ const AnswersForPreventive = (props) => {
           })
           .then(function (response) {
             setErrorMessage("")
-            props.setOpenDialog(false)
+            toast.success("Successfully Updated", {onClose: () => props.setOpenDialog(false)});
           })
           .catch((error) => {
             console.log(error);
@@ -196,6 +201,7 @@ const AnswersForPreventive = (props) => {
 
     return (
       <>
+      <ToastContainer />
         <AppBar className={classes.appBar}>
                  {console.log("items",items)}
           <Toolbar>

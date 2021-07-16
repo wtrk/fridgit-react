@@ -10,6 +10,7 @@ import {
 } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
+import { getCookie } from 'components/auth/Helpers';
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
@@ -22,6 +23,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const Supplier = () => {
+  const token = getCookie('token');
   const [isLoading, setIsLoading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [supplierId, setSupplierID] = useState(); //modal title
@@ -33,7 +35,7 @@ const Supplier = () => {
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
@@ -96,7 +98,7 @@ const Supplier = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/suppliers/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           console.log("deleted")
         });

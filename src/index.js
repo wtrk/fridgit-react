@@ -18,12 +18,13 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { createHashHistory } from "history";
-import { Router, Route, Switch } from "react-router-dom";
+import { Router, Route, Switch, Redirect } from "react-router-dom";
 
 // core components
 import Admin from "layouts/Admin.js";
+import NoAuth from "layouts/NoAuth.js";
 //import RTL from "layouts/RTL.js";
-import SignInSide from "components/login_comp/SignInSide.js";
+import SignInSide from "components/auth/SignInSide.js";
 import "assets/css/material-dashboard-react.css?v=1.9.0";
 import "./assets/css/global-styles.css";
 
@@ -32,11 +33,9 @@ const hist = createHashHistory();
 ReactDOM.render(
   <Router history={hist}>
     <Switch>
+      <Route path="/signin" exact component={NoAuth} key="2321341" />
       {/* <SignInSide /> */}
-      <Route path="/login" exact component={SignInSide} key="2321341" />
       <Route path="/" component={Admin} key="212322" />
-
-      {/* <Redirect from="/" to="/login" />     */}
     </Switch>
   </Router>,
   document.getElementById("root")

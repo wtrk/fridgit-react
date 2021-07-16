@@ -8,22 +8,25 @@ import {
   Grid,
   Toolbar,
   Dialog,
-  Slide,
-  Collapse
+  Slide
 } from "@material-ui/core";
-import Alert from '@material-ui/lab/Alert';
+import {Autocomplete, Alert} from '@material-ui/lab';
 import MUIDataTable from "mui-datatables";
 import { Close, Save, ArrowBackIosOutlined,Publish } from "@material-ui/icons";
 import axios from 'axios';
 import SubTablesLegal from "./SubTablesLegal.js";
 import SubTablesContact from "./SubTablesContact.js";
 import "../Clients.css";
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 const Clients = (props) => {
+  const token = getCookie('token');
   const clientId=props.data._id
   const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
@@ -32,6 +35,25 @@ const Clients = (props) => {
   const [dataLegal, setDataLegal] = useState(props.data.legals);
   const [dataContacts, setDataContacts] = useState(props.data.contacts);
   const [image, setImage] = useState({ preview: "", file: "" });
+  const [companiesList, setCompaniesList] = useState([]);
+  const [companyValue, setCompanyValue] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await axios(`${process.env.REACT_APP_BASE_URL}/companies`, {
+        responseType: "json", headers: {Authorization: `Bearer ${token}`}
+      }).then((response) => {
+        setCompaniesList(response.data)
+        setCompanyValue(response.data.find(e=> e._id==formValues.company_id))
+      });
+    };
+    fetchData();
+  }, [formValues]);
+
+  const handleChangeCompany = (e, newValue) =>{
+    setCompanyValue(newValue)
+    if(newValue) setFormValues({ ...formValues, company_id: newValue._id });
+  }
 
   const handleChangeImg = e => {
     if (e.target.files.length) {
@@ -48,16 +70,16 @@ const Clients = (props) => {
   formData.append("file",image.file);
 
   for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
+      if(value.error===true) return toast.error("Please validate the Form and submit it again");
   }
     await axios({
-      method: "put",
+      method: "PUT",
       url: `${process.env.REACT_APP_BASE_URL}/clients/img/${clientId}`,
       data: formData,
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: { "Content-Type": "multipart/form-data", "Authorization": `Bearer ${token}`},
     })
       .then(function (response) {
-        setOpenAlertSuccess(true);
+        toast.success("Successfully Uploaded");
       })
       .catch((error) => {
         console.log(error);
@@ -76,7 +98,7 @@ const Clients = (props) => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => dataContacts[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/clientContacts/${clientId}/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           console.log("deleted")
         });
@@ -124,7 +146,7 @@ const Clients = (props) => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => dataLegal[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/clientLegals/${clientId}/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           console.log("deleted")
         });
@@ -144,12 +166,14 @@ const Clients = (props) => {
 
 const [formValues, setFormValues] = useState({
   name: props.data.name || "",
+  company_id: props.data.company_id || "",
   address: props.data.address || "",
   phone: props.data.phone || "",
   email: props.data.email || ""
 });
 const [formErrors, setFormErrors] = useState({
   name: {error:false,msg:""},
+  company_id: {error:false,msg:""},
   address: {error:false,msg:""},
   phone: {error:false,msg:""},
   email: {error:false,msg:""}
@@ -169,16 +193,16 @@ const validateInputHandler = (e) => {
 }
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
+      if(value.error===true) return toast.error("Please validate the Form and submit it again");
   }
     await axios({
-      method: "put",
+      method: "PUT",
       url: `${process.env.REACT_APP_BASE_URL}/clients/${clientId}`,
+      headers: {Authorization: `Bearer ${token}`},
       data: formValues
     })
       .then(function (response) {
-        setOpenAlertSuccess(true);
-        props.handleClose()
+        toast.success("Successfully Updated", {onClose: () => props.handleClose()});
       })
       .catch((error) => {
         console.log(error);
@@ -187,6 +211,7 @@ const handleOnSubmit = async () => {
 
   return (
     <>
+    <ToastContainer />
       <AppBar>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon mr-3" />
@@ -246,6 +271,19 @@ const handleOnSubmit = async () => {
                 }
                 error={formErrors.name.error}
               />
+              {/* <TextField
+                label="Company"
+                name="company"
+                className="mb-4"
+                fullWidth
+                value={formValues.company}
+                onChange={handleChangeForm}
+                onBlur={validateInputHandler}
+                helperText={
+                  formErrors.company.error ? formErrors.company.msg : null
+                }
+                error={formErrors.company.error}
+              /> */}
               <TextField
                 label="Address"
                 name="address"
@@ -284,6 +322,28 @@ const handleOnSubmit = async () => {
                   formErrors.email.error ? formErrors.email.msg : null
                 }
                 error={formErrors.email.error}
+              />
+              <Autocomplete
+                id="CompanyInput"
+                options={companiesList || {}}
+                value={companyValue || {}}
+                getOptionLabel={(option) => {
+                  return Object.keys(option).length!==0 ? option.name : "";
+                }}
+                fullWidth
+                onChange={handleChangeCompany}
+                className="mb-4"
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="billed from company"
+                    onBlur={validateInputHandler}
+                    helperText={
+                      formErrors.company_id.error ? formErrors.company_id.msg : null
+                    }
+                    error={formErrors.company_id.error}
+                  />
+                )}
               />
               <div className="d-flex justify-content-end">
               <Button

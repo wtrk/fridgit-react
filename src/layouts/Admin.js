@@ -5,6 +5,8 @@ import routes, { switchRoutes } from "routes.js";
 import styles from "assets/jss/material-dashboard-react/layouts/adminStyle.js";
 import bgImage from "assets/img/sidebar-2.jpg";
 import logo from "assets/img/logo.png";
+import { Redirect } from "react-router-dom";
+import {isAuth} from "components/auth/Helpers.js";
 import dashboardRoutes from "dashboard-routes.json";
 
 const useStyles = makeStyles(styles);
@@ -26,7 +28,7 @@ export default function Admin({ ...rest }) {
   const [color] = useState("blue");
   const [mobileOpen] = useState(false);
 
-  return (
+  return (isAuth()?
     <div className={classes.wrapper}>
       <Sidebar
       title={title}
@@ -41,6 +43,5 @@ export default function Admin({ ...rest }) {
       <div ref={mainPanel}>
         <div className={classes.map}>{switchRoutes} </div>
       </div>
-    </div>
-  );
+    </div>:<Redirect to="/signin" />);
 }

@@ -7,10 +7,11 @@ import axios from 'axios';
 import { Close, Save } from "@material-ui/icons";
 import { CSVReader } from 'react-papaparse';
 import "react-dropzone-uploader/dist/styles.css";
-import readXlsxFile  from 'read-excel-file'
+import { getCookie } from '../../../components/auth/Helpers';
 
 
 const ImportXlsx = (props) => {
+  const token = getCookie('token');
   const [showSaveLoader, setShowSaveLoader] = useState(false)
   const [clientValue, setClientValue] = useState({});
   const [dataInJson, setDataInJson] = useState(false)
@@ -21,9 +22,9 @@ const ImportXlsx = (props) => {
   useEffect(() => {
     const fetchData = async () => {
       await axios.all([
-        axios.get(`${process.env.REACT_APP_BASE_URL}/cities`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`)
+        axios.get(`${process.env.REACT_APP_BASE_URL}/cities`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`,{headers: {Authorization: `Bearer ${token}`}})
       ]).then(response => {
         setCitiesList(response[0].data)
         setNeighbourhoodsList(response[1].data)
@@ -37,13 +38,15 @@ const ImportXlsx = (props) => {
   const handleOnSubmit = async () => {
     setShowSaveLoader(true)
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/liveOperations/`,
+      headers: {Authorization: `Bearer ${token}`},
       data: dataInJson,
     })
     .then(function (response) {
       setShowSaveLoader(false)
-      props.setOpenDialog(false)
+      toast.success("Successfully Added", {onClose: () => props.setOpenDialog(false)})
+
     })
     .catch((error) => {
       console.log(error);
@@ -73,7 +76,7 @@ const ImportXlsx = (props) => {
 return <>
     <DialogTitle>
       Import Excel
-      <a href="/files/cabinetTable.csv" className="d-block float-right download-template-link" target="_blank"><i className="fa fa-file-excel-o"></i> Download Template</a>
+      <a href="files/cabinetTable.xlsx" className="d-block float-right download-template-link" target="_blank"><i className="fa fa-file-excel-o"></i> Download Template</a>
     </DialogTitle>
     <DialogContent dividers>
 <input type="file" id="input" />

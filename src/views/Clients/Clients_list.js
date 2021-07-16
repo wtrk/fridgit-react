@@ -4,7 +4,6 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import {
   Container,
   Slide,
-  Chip,
   TextField,
   Dialog,
   CircularProgress,
@@ -16,12 +15,14 @@ import ClientDetails from "./Components/ClientDetails.js";
 import AddFormDialog from "./Components/AddFormDialog.js";
 import axios from 'axios';
 import "./Clients.css";
+import { getCookie } from 'components/auth/Helpers';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const ClientsList = () => {
+  const token = getCookie('token');
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]); //table items
   const [itemsBackup, setItemsBackup] = useState([]);
@@ -33,7 +34,7 @@ const ClientsList = () => {
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/clients`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`}
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
@@ -52,7 +53,7 @@ const ClientsList = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/clients/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           console.log("deleted")
         });
@@ -77,7 +78,6 @@ const ClientsList = () => {
     },
     {
       name: "name",
-      label: "company",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
           return <a onClick={() => handleOpenDetails("Client Details",tableMeta.rowData[0])}>
@@ -146,7 +146,7 @@ const ClientsList = () => {
           {...params}
           variant="standard"
           placeholder="Search Data"
-          label="Filter by Company Name"
+          label="Filter by Name"
         />
       )}
     />

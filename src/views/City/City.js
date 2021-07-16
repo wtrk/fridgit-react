@@ -5,12 +5,11 @@ import {
   Dialog,
   Slide,
   TextField,
-  Chip,
-  CircularProgress,
-  Typography,
+  CircularProgress
 } from "@material-ui/core";
 import { makeStyles, MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
+import { getCookie } from 'components/auth/Helpers';
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
@@ -45,6 +44,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const City = () => {
+  const token = getCookie('token');
   const classes = useStyles(); //custom css
   const [isLoading, setIsLoading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
@@ -59,13 +59,13 @@ const City = () => {
   useEffect(() => {
     const fetchData = async () => {
       const countries = await axios(`${process.env.REACT_APP_BASE_URL}/countries`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`}
       }).then((response) => {
         setCountriesList(response.data)
         return response.data
       });
       await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`}
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
@@ -140,7 +140,7 @@ const City = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/cities/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           console.log("deleted")
         });

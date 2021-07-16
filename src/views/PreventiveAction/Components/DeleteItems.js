@@ -5,10 +5,12 @@ import {
   DialogContent,
   DialogContentText
 } from "@material-ui/core";
+import { getCookie } from 'components/auth/Helpers';
 import axios from 'axios';
 
 
 const DeleteItems = (props) => {
+  const token = getCookie('token');
 
   const handleConfirmToDelete = () =>{
       props.setAgreeToDelete({
@@ -20,7 +22,7 @@ const DeleteItems = (props) => {
     const fetchData = async () => {
       if(props.agreeToDelete.confirmDeletion===true&&props.agreeToDelete.open===true){
         await axios.delete(`${process.env.REACT_APP_BASE_URL}/${props.table}/${props.agreeToDelete.idToDelete}`, {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }).then((response) => {
             props.setAgreeToDelete({
               ...props.agreeToDelete,

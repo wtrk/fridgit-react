@@ -5,7 +5,6 @@ import {
   Dialog,
   Slide,
   TextField,
-  Chip,
   CircularProgress,
 } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
@@ -17,12 +16,14 @@ import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import Preventive from "./Components/Preventive.js";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const FridgesType = () => {
+  const token = getCookie('token');
   const [isLoading, setIsLoading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [openAddPreventive, setOpenAddPreventive] = useState(false); //for modal
@@ -37,7 +38,7 @@ const FridgesType = () => {
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
@@ -55,8 +56,9 @@ const FridgesType = () => {
         preventivesChosenFirstRun.current = false;
       }else{
         await axios({
-          method: "put",
+          method: "PUT",
           url: `${process.env.REACT_APP_BASE_URL}/fridgesTypes/${fridgesTypeId}`,
+          headers: {Authorization: `Bearer ${token}`},
           data: [{
             preventive: preventivesChosen,
           }]
@@ -162,7 +164,7 @@ const FridgesType = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           console.log("deleted")
         });

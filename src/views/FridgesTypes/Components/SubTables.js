@@ -12,6 +12,9 @@ import axios from 'axios';
 import { Close,Save,Publish } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import Alert from '@material-ui/lab/Alert';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
   const useStyles = makeStyles((theme) => ({
@@ -27,6 +30,7 @@ import Alert from '@material-ui/lab/Alert';
     },
   }));
 const SubTables = (props) => {
+  const token = getCookie('token');
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const classes = useStyles(); //custom css
@@ -75,16 +79,16 @@ const SubTables = (props) => {
     formData.append("file",image.file);
   
     for (const [key, value] of Object.entries(formErrors)) {
-        if(value.error===true) return setOpenAlertError(true);
+        if(value.error===true) return toast.error("Please validate the Form and submit it again");
     }
       await axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/fridgesTypes/img/${props.fridgesTypeId}`,
         data: formData,
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "multipart/form-data", "Authorization": `Bearer ${token}`},
       })
         .then(function (response) {
-          setOpenAlertSuccess(true);
+          toast.success("Successfully Uploaded");
         })
         .catch((error) => {
           console.log(error);
@@ -98,7 +102,7 @@ const SubTables = (props) => {
         const fridgesType = await axios(
           `${process.env.REACT_APP_BASE_URL}/fridgesTypes/${props.fridgesTypeId}`,
           {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }
         ).then((response) => {
           setFormValues(response.data);
@@ -126,16 +130,24 @@ const SubTables = (props) => {
 }
 const handleChangeForm = (e) => {
   const { name, value } = e.target;
-  setFormValues({ ...formValues, [name]: value });
+  if(name==="width"){
+    setFormValues({ ...formValues, [name]: value, cbm:(value * formValues.height * formValues.length).toFixed(2) });
+  }else if(name==="height"){
+    setFormValues({ ...formValues, [name]: value, cbm:(value * formValues.width * formValues.length).toFixed(2) });
+  }else if(name==="length"){
+    setFormValues({ ...formValues, [name]: value, cbm:(value * formValues.height * formValues.width).toFixed(2) });
+  }else{
+    setFormValues({ ...formValues, [name]: value });
+  }
 };
 
-useEffect(()=>{
-  formValues.cbm=(formValues.width * formValues.height * formValues.length).toFixed(2)
-},[formValues])
+// useEffect(()=>{
+//   formValues.cbm=(formValues.width * formValues.height * formValues.length).toFixed(2)
+// },[formValues])
 
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
+      if(value.error===true) return toast.error("Please validate the Form and submit it again");
   }
   delete formValues._id
   delete formValues.photo
@@ -143,23 +155,25 @@ const handleOnSubmit = async () => {
   // return console.log("formValues",formValues)
   if (props.fridgesTypeId) {
       await axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/fridgesTypes/${props.fridgesTypeId}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [formValues],
       })
         .then(function (response) {
           setOpenAlertSuccess(true);
           props.setIsLoading(true)
           props.setRefreshData(response.data)
-          props.handleClose()
+          toast.success("Successfully Updated", {onClose: () => props.handleClose()});
         })
         .catch((error) => {
           console.log(error);
         });
   } else {
            await axios({
-             method: "post",
+             method: "POST",
              url: `${process.env.REACT_APP_BASE_URL}/fridgesTypes/`,
+             headers: {Authorization: `Bearer ${token}`},
              data: [formValues],
            })
              .then(function (response) {
@@ -176,8 +190,8 @@ const handleOnSubmit = async () => {
                });
                props.setIsLoading(true)
                props.setRefreshData(response.data)
-               props.handleClose()
-             })
+               toast.success("Successfully Added", {onClose: () => props.handleClose()});
+              })
              .catch((error) => {
                console.log(error);
              });
@@ -197,6 +211,7 @@ const validateInputHandler = (e) => {
 
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />

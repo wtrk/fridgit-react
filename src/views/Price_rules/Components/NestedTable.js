@@ -3,9 +3,11 @@ import { TextField, CircularProgress } from "@material-ui/core";
 import {Autocomplete} from '@material-ui/lab';
 import CustomToolbar from "CustomToolbar";
 import MUIDataTable from "mui-datatables";
+import { getCookie } from 'components/auth/Helpers';
 import axios from 'axios';
 
 const NestedTable = (props) => {
+  const token = getCookie('token');
   const [valueSelected, setValueSelected] = useState("");
   const [dataList, setDataList] = useState([]);
 
@@ -23,7 +25,7 @@ const NestedTable = (props) => {
       let dbTable = props.dbTable
       if(props.title==="operations") dbTable="cities"
       axios(`${process.env.REACT_APP_BASE_URL}/${dbTable}`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setDataList(response.data)
         return response.data

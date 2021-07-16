@@ -14,8 +14,9 @@ import { makeStyles } from "@material-ui/core/styles";
 import CustomToolbar from "CustomToolbar";
 import Alert from '@material-ui/lab/Alert';
 import NestedTable from "./NestedTable.js";
-
-import MUIDataTable from "mui-datatables";
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const options = {
@@ -40,6 +41,7 @@ const options = {
     },
   }));
 const SubTables = (props) => {
+  const token = getCookie('token');
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [tierCity, setTierCity] = useState([]);
@@ -63,7 +65,7 @@ const SubTables = (props) => {
         const tier = await axios(
           `${process.env.REACT_APP_BASE_URL}/tiers/${props.tierId}`,
           {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }
         ).then((response) => {
           setFormValues(response.data);
@@ -88,8 +90,9 @@ const SubTables = (props) => {
     if(keyCode===13){
       if (props.tierId) {
         await axios({
-          method: "put",
+          method: "PUT",
           url: `${process.env.REACT_APP_BASE_URL}/tierCity/${props.tierId}`,
+          headers: {Authorization: `Bearer ${token}`},
           data: { name: target.value },
         })
           .then(function (response) {
@@ -129,31 +132,33 @@ const handleChangeForm = (e) => {
 };
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
+      if(value.error===true) return toast.error("Please validate the Form and submit it again");
   }
   if (props.tierId) {
       await axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/tiers/${props.tierId}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [formValues],
       })
       .then(function (response) {
-        setOpenAlertSuccess(true);
-        props.handleClose()
+        toast.success("Successfully Updated", {onClose: () => props.handleClose()});
       })
       .catch((error) => {
         console.log(error);
       });
   } else {
       await axios({
-        method: "post",
+        method: "POST",
         url: `${process.env.REACT_APP_BASE_URL}/tiers/`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [formValues],
       })
       .then(async function (response) {
         await axios({
-          method: "put",
+          method: "PUT",
           url: `${process.env.REACT_APP_BASE_URL}/tierCity/${response.data.id}`,
+          headers: {Authorization: `Bearer ${token}`},
           data: formValues.tierCity[0],
         })
         .then(function (response) {
@@ -162,7 +167,7 @@ const handleOnSubmit = async () => {
             code: "",
             name: ""
           });
-          props.handleClose()
+          toast.success("Successfully Added", {onClose: () => props.handleClose()});
         })
         .catch((error) => {
           console.log(error);
@@ -186,6 +191,7 @@ const validateInputHandler = (e) => {
 
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />

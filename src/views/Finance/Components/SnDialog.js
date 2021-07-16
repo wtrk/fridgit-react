@@ -22,6 +22,7 @@ import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import { makeStyles} from "@material-ui/core/styles";
 import { Close} from "@material-ui/icons";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
 
 import "react-dropzone-uploader/dist/styles.css";
 
@@ -51,6 +52,7 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 const SnDialog = (props) => {
+  const token = getCookie('token');
     const classes = useStyles(); //custom css
     const [liveOperationsList, setLiveOperationsList] = useState([]);
     const [financialList, setFinancialList] = useState([]);
@@ -108,20 +110,20 @@ const SnDialog = (props) => {
     useEffect(() => {
       const fetchData = async () => {
         const neighbourhoods = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           setNeighbourhoodsList(response.data)
           return response.data
         });
         const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           setCitiesList(response.data)
           return response.data
         });
 
         const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${props.snId}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           setLiveOperationsList(response.data.map(e=>{
             let location={}
@@ -146,7 +148,7 @@ const SnDialog = (props) => {
           return response.data
         });
         const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/bySn/${props.snId}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           setFinancialList(response.data)
           return response.data
@@ -164,14 +166,14 @@ const SnDialog = (props) => {
         setCabinetsSn(findSn?findSn.sn:"")
         if(clientId){
           await axios(`${process.env.REACT_APP_BASE_URL}/clients/${clientId}`, {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`}
           }).then((response) => {
             setClientInfo(response.data)
           });
         }
         if(findSn){
           await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/bySn/${liveOperationsList[0].sn}`, {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`}
           }).then((response) => {
             setFridgeInfo(response.data)
           });

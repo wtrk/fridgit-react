@@ -1,9 +1,8 @@
-import React, { useState,Fragment, useEffect }  from "react";
+import React, { useState, useEffect }  from "react";
 import {
   Typography,
   Button,
   Grid,
-  Avatar,
   DialogActions, DialogContent
 } from "@material-ui/core";
 import {
@@ -21,9 +20,11 @@ import MUIDataTable from "mui-datatables";
 import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import { makeStyles} from "@material-ui/core/styles";
 import { Close} from "@material-ui/icons";
+import { getCookie } from '../../../components/auth/Helpers';
 import axios from 'axios';
 
 import "react-dropzone-uploader/dist/styles.css";
+
 
 
 const useStyles = makeStyles((theme) => ({
@@ -51,6 +52,7 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 const SnDialog = (props) => {
+  const token = getCookie('token');
     const classes = useStyles(); //custom css
     const [liveOperationsList, setLiveOperationsList] = useState([]);
     const [financialList, setFinancialList] = useState([]);
@@ -60,6 +62,7 @@ const SnDialog = (props) => {
     const [fridgeInfo, setFridgeInfo] = useState();
     const [cabinetsSn, setCabinetsSn] = useState();
     const [snHistory, setSnHistory] = useState([]);
+    const [preventiveActions, setPreventiveActions] = useState();
     let columnsForPrices = [
       { name: "createdAt",label: "Date",
         options: {
@@ -74,6 +77,7 @@ const SnDialog = (props) => {
         },
       },
       { name: "operation_type",label: "Operation Type" },
+      { name: "price_rule_name",label: "Price Rule Name" },
       { name: "job_number",label: "Job Number" },
       { name: "operation_number",label: "operation number" },
       { name: "branding_fees",label: "branding fees" },
@@ -108,9 +112,11 @@ const SnDialog = (props) => {
     useEffect(() => {
       const fetchData = async () => {
         await axios.all([
-          axios.get(`${process.env.REACT_APP_BASE_URL}/operations/history`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/operations/history`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/preventiveActions`,{headers: {Authorization: `Bearer ${token}`}})
         ]).then(response => {
           setSnHistory(response[0].data.filter(e=>e.sn===props.snId))
+          setPreventiveActions(response[1].data)
         })
       };
       fetchData();
@@ -121,20 +127,20 @@ const SnDialog = (props) => {
     useEffect(() => {
       const fetchData = async () => {
         const neighbourhoods = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           setNeighbourhoodsList(response.data)
           return response.data
         });
         const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           setCitiesList(response.data)
           return response.data
         });
 
         const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${props.snId}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           setLiveOperationsList(response.data.map(e=>{
             let location={}
@@ -158,11 +164,10 @@ const SnDialog = (props) => {
           }))
           return response.data
         });
-        const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/bySn/${props.snId}`, {
-          responseType: "json",
+        await axios(`${process.env.REACT_APP_BASE_URL}/financial/bySn/${props.snId}`, {
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           setFinancialList(response.data)
-          return response.data
         });
       };
       fetchData();
@@ -177,14 +182,14 @@ const SnDialog = (props) => {
         setCabinetsSn(findSn?findSn.sn:"")
         if(clientId){
           await axios(`${process.env.REACT_APP_BASE_URL}/clients/${clientId}`, {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }).then((response) => {
             setClientInfo(response.data)
           });
         }
         if(findSn){
           await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/bySn/${liveOperationsList[0].sn}`, {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }).then((response) => {
             setFridgeInfo(response.data)
           });
@@ -195,8 +200,8 @@ const SnDialog = (props) => {
 
   /**************** -OnClickItemDialog START- **************/
   const [dialogItemTab, setDialogItemTab] = useState(1);
-  const DialogTabsContent = (props) => {
-    if (props.tab === 1) {
+  const DialogTabsContent = ({tab}) => {
+    if (tab === 1) {
       return (
         <Timeline align="left">
           {liveOperationsList
@@ -219,7 +224,7 @@ const SnDialog = (props) => {
             : null}
         </Timeline>
       );
-    } else if (props.tab === 2) {
+    } else if (tab === 2) {
       return (
         <Grid container className="infoTabContainer" spacing={3}>
           {fridgeInfo?<Grid item container xs={12} md={6} spacing={2}>
@@ -230,21 +235,11 @@ const SnDialog = (props) => {
             </Grid>
             <Grid item xs={8}>
               <h4><strong>Fridge</strong></h4>
-              <p>
-                <strong>Type</strong>: {fridgeInfo.name}
-              </p>
-              {liveOperationsList.length?
-                <p><strong>Branding</strong>: {liveOperationsList[0].brand}</p>
-              :null}
-              <p>
-                <strong>SN</strong>: {cabinetsSn}
-              </p>
-              {liveOperationsList.length?
-                <p><strong>Status</strong>: {liveOperationsList[0].status}</p>
-              :null}
-              <p>
-                <strong>CBM</strong>: {fridgeInfo.cbm}
-              </p>
+              <p><strong>Type</strong>: {fridgeInfo.name}</p>
+              {liveOperationsList.length?<p><strong>Branding</strong>: {liveOperationsList[0].brand}</p>:null}
+              <p><strong>SN</strong>: {cabinetsSn}</p>
+              {liveOperationsList.length?<p><strong>Status</strong>: {liveOperationsList[0].status}</p>:null}
+              <p><strong>CBM</strong>: {fridgeInfo.cbm}</p>
             </Grid>
           </Grid>:null}
 
@@ -256,23 +251,15 @@ const SnDialog = (props) => {
             </Grid>
             <Grid item xs={8}>
               <h4><strong>Client</strong></h4>
-              <p>
-                <strong>Company</strong>: {clientInfo.name}
-              </p>
-              <p>
-                <strong>Address</strong>:  {clientInfo.address}
-              </p>
-              <p>
-                <strong>Phone</strong>:  {clientInfo.phone}
-              </p>
-              <p>
-                <strong>Email</strong>:  {clientInfo.email}
-              </p>
+              <p><strong>Company</strong>: {clientInfo.name}</p>
+              <p><strong>Address</strong>:  {clientInfo.address}</p>
+              <p><strong>Phone</strong>:  {clientInfo.phone}</p>
+              <p><strong>Email</strong>:  {clientInfo.email}</p>
             </Grid>
           </Grid>:null}
           </Grid>
       );
-    } else if (props.tab === 3) {
+    } else if (tab === 3) {
       return (
         <MuiThemeProvider theme={pricesDataTableTheme}>
         <MUIDataTable
@@ -283,6 +270,47 @@ const SnDialog = (props) => {
         />
         </MuiThemeProvider>
       );
+    } else if (tab === 4) {
+      let preventive=props.cabinetsList?props.cabinetsList.find(e=>e.sn===cabinetsSn).preventive:{}
+      preventive=preventive?preventive.filter(e=>e.reportable===true):[]
+      if(preventive.length){
+        const columnsPreventive = [
+          {
+            name: "_id",
+            options: {display: false}
+          },
+          {
+            name: "preventiveActions_id",
+            options: {display: false}
+          },
+          {name: "date",label: "Date"},
+          {name: "operation_number",label: "Qperation Number"},
+          {name: "preventiveActions_id",label: "Preventive Actions",
+            options: {
+              customBodyRender: (value, tableMeta, updateValue) => {
+                const preventiveAction=preventiveActions.find(e=>e._id===tableMeta.rowData[1]).name;
+                return preventiveAction?preventiveAction:"-";
+              },
+            },
+          },
+          {name: "rightAnswer_id",label: "Right Answer",
+          options: {
+            customBodyRender: (value, tableMeta, updateValue) => {
+              const preventiveAnswers=preventiveActions.find(e=>e._id===tableMeta.rowData[1]).answers.find(e=>e._id===value)
+              return preventiveAnswers?preventiveAnswers.name:"-";
+            },
+          },
+        },
+          {name: "notes",label: "Notes",},
+        ];
+        return <MUIDataTable
+            title=""
+            data={preventive}
+            columns={columnsPreventive}
+          />
+      }else{
+        return <p>No Data Available</p>
+      }
     }
   };
   /**************** -OnClickItemDialog END- **************/
@@ -290,31 +318,32 @@ const SnDialog = (props) => {
 
 
   return (
-    <Fragment>
+    <>
         <DialogContent dividers className="entryEditHeader">
             <Grid container>
               <Grid item xs={4}>
-                <div className={classes.root_avatar}>
-                  <Avatar>JO</Avatar>
-
-                  <div>
-                    <strong>Client</strong>
-                    <br />
-                    Jollychic
+              <div className={classes.root_avatar}>
+              {clientInfo ? (
+                  <div className="avatar_circle">
+                    {clientInfo.name.substring(0, 2)}
                   </div>
-                </div>
+                ) : null}
+              <div>
+                <strong>Client</strong><br />
+                {clientInfo?clientInfo.name:null}
+              </div>
+            </div>
               </Grid>
-
               <Grid item xs={4}>
                 <strong>Sn:</strong> 18GE43250
-                <br />
-                <strong>Status:</strong> Operational
+                <br/>
+                <strong>Branding:</strong> {liveOperationsList.length?liveOperationsList[0].brand:""}
               </Grid>
 
               <Grid item xs={4}>
-                <strong>Branding:</strong> Walls
+                <strong>Location:</strong> {liveOperationsList.length?liveOperationsList[0].location.shop_name:""}
                 <br />
-                <strong>Type:</strong> Walls
+                <strong>Type:</strong> {fridgeInfo?fridgeInfo.name:""}
               </Grid>
             </Grid>
             <div className="entryEditHeader__tabsCont">
@@ -351,6 +380,23 @@ const SnDialog = (props) => {
               >
                 Financial History
               </Button>
+                <Button
+                  className={"ceeh__tabsCont--btn " + (dialogItemTab === 4 ? "selected" : "")}
+                  onClick={() => {
+                    setDialogItemTab(4);
+                  }}
+                >
+                  Reported Answers
+                </Button>
+                <Button
+                  id="Edit"
+                  className="ceeh__tabsCont--btn"
+                  onClick={() => {
+                    props.handleAdd("Edit Sn",props.snId)
+                  }}
+                >
+                  Edit
+                </Button>
             </div>
           </DialogContent>
           <DialogContent dividers>
@@ -370,7 +416,7 @@ const SnDialog = (props) => {
           </DialogActions>
         
         
-    </Fragment>
+    </>
   );
 };
 

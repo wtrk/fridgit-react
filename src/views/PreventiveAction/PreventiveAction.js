@@ -5,14 +5,11 @@ import {
   Dialog,
   Slide,
   TextField,
-  CircularProgress,
-  Button,
-  DialogActions,
-  DialogContent,
-  DialogContentText
+  CircularProgress
 } from "@material-ui/core";
 import { makeStyles, MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
+import { getCookie } from 'components/auth/Helpers';
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
@@ -48,6 +45,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const PreventiveAction = () => {
+  const token = getCookie('token');
   const classes = useStyles(); //custom css
   const [isLoading, setIsLoading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
@@ -66,13 +64,13 @@ const PreventiveAction = () => {
   useEffect(() => {
     const fetchData = async () => {
       const countries = await axios(`${process.env.REACT_APP_BASE_URL}/countries`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setCountriesList(response.data)
         return response.data
       });
       await axios(`${process.env.REACT_APP_BASE_URL}/preventiveActions`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
@@ -191,27 +189,7 @@ const PreventiveAction = () => {
     }
   }
   
-  // const handleConfirmToDelete = () =>{
-  //     setAgreeToDelete({
-  //       ...agreeToDelete,
-  //       confirmDeletion:true
-  //     }) 
-  // }
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     if(agreeToDelete.confirmDeletion===true&&agreeToDelete.open===true){
-  //       await axios.delete(`${process.env.REACT_APP_BASE_URL}/preventiveActions/${agreeToDelete.idToDelete}`, {
-  //           responseType: "json",
-  //         }).then((response) => {
-  //           setAgreeToDelete({
-  //             ...agreeToDelete,
-  //             open:false
-  //           }) 
-  //         });
-  //     }
-  //   };
-  //   fetchData();
-  // }, [agreeToDelete]);
+  
   
   //Search component ---------------END--------------
   return (

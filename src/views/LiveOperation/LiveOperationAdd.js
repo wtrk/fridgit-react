@@ -11,6 +11,7 @@ import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 import axios from 'axios';
 import { ArrowBackIosOutlined } from "@material-ui/icons";
+import { getCookie } from 'components/auth/Helpers';
 
 import MUIDataTable from "mui-datatables";
 import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
@@ -23,6 +24,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const LiveOperationAdd = () => {
+  const token = getCookie('token');
   const [items, setItems] = useState(); //table items
   const [itemsUpdated, setItemsUpdated] = useState(); //table items
   const [pricesToUse, setPricesToUse] = useState(); //table items
@@ -37,25 +39,25 @@ const LiveOperationAdd = () => {
     const fetchData = async () => {
       setJobNumber("JN"+Math.floor(Math.random() * 100000000) + 1)
       const cities = await axios(`${process.env.REACT_APP_BASE_URL}/cities`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setCitiesList(response.data)
         return response.data
       });
       const supplier = await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setSuppliersList(response.data)
         return response.data
       });
       const neighbourhood = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setNeighbourhoodsList(response.data)
         return response.data
       });
       const cabinet = await axios(`${process.env.REACT_APP_BASE_URL}/cabinets`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setCabinetsList(response.data.data)
         return response.data.data
@@ -174,7 +176,7 @@ const LiveOperationAdd = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/liveOperations/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           console.log("deleted")
         });
@@ -193,10 +195,10 @@ const LiveOperationAdd = () => {
       if (cabinetsFirstRun.current) {
         cabinetsFirstRun.current = false;
       }else{
-        console.log("itemsUpdateditemsUpdateditemsUpdateditemsUpdated",itemsUpdated)
         await axios({
-          method: "post",
+          method: "POST",
           url: `${process.env.REACT_APP_BASE_URL}/financial`,
+          headers: {Authorization: `Bearer ${token}`},
           data: itemsUpdated.map(e=> {
             return {
               sn: e.sn,
@@ -223,7 +225,7 @@ const LiveOperationAdd = () => {
         })
     
         const itemsByJobNumber = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/byJobNumber/${jobNumber}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           setItems(response.data)
         });  

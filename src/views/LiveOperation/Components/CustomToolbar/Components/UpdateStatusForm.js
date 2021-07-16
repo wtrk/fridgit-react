@@ -1,5 +1,4 @@
 import React, {useState,useRef,useEffect} from "react";
-import Moment from "react-moment";
 import {
   Select,
   MenuItem,
@@ -15,6 +14,7 @@ import {
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { makeStyles } from "@material-ui/core/styles";
 import { Close, Save, Check} from "@material-ui/icons";
+import { getCookie } from '../../../../../components/auth/Helpers';
 import axios from 'axios';
 
 const useStyles = makeStyles((theme) => ({
@@ -30,6 +30,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 const UpdateStatusForm = (props) => {
+  const token = getCookie('token');
     const classes = useStyles(); //custom css
     const [formValues,setFormValues] = useState({status: "",fridgeStatus: ""});
     const [operationNumberValue, setOperationNumberValue] = useState([]);
@@ -56,8 +57,8 @@ const UpdateStatusForm = (props) => {
     useEffect(()=>{
         const fetchData = async () => {
           await axios.all([
-            axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`),
-            axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`)
+            axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`,{headers: {Authorization: `Bearer ${token}`}}),
+            axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`,{headers: {Authorization: `Bearer ${token}`}})
           ])
           .then(response => {
             setCabinetsList(response[0].data.data)
@@ -111,8 +112,9 @@ const UpdateStatusForm = (props) => {
           })
             idsToUpdate.forEach(async e=>{
               await axios({
-                  method: "put",
+                  method: "PUT",
                   url: `${process.env.REACT_APP_BASE_URL}/liveOperations/${e._id}`,
+                  headers: {Authorization: `Bearer ${token}`},
                   data: [{
                   status: formValues.status,
                   supplier_id: formValues.status==="Unassigned" ? "" : formValues.supplier_id,
@@ -125,8 +127,9 @@ const UpdateStatusForm = (props) => {
                   props.setSelectedRows([]);
               });
               await axios({
-                  method: "post",
+                  method: "POST",
                   url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
+                  headers: {Authorization: `Bearer ${token}`},
                   data: {
                     status: formValues.status,
                     fridge_status: formValues.fridgeStatus,
@@ -151,8 +154,9 @@ const UpdateStatusForm = (props) => {
                   }]
                 }
                 axios({
-                  method: "put",
+                  method: "PUT",
                   url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e.sn}`,
+                  headers: {Authorization: `Bearer ${token}`},
                   data: submitToCabinets
                 })
               }

@@ -4,7 +4,6 @@ import {
   AppBar,
   Typography,
   Button,
-  Grid,
   Toolbar,
   Collapse,
   Switch,
@@ -13,10 +12,12 @@ import {
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
-import moment from "react-moment";
 import {Alert,Autocomplete} from '@material-ui/lab';
-import MUIDataTable from "mui-datatables";
-import GroupAllNested from "./GroupAllNested.js";
+import { getCookie } from 'components/auth/Helpers';
+import NestedTable from "./NestedTable.js";
+import { useForm } from "react-hook-form";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
   const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -31,6 +32,8 @@ import GroupAllNested from "./GroupAllNested.js";
     },
   }));
 const SubTables = (props) => {
+  const token = getCookie('token');
+  const { register, handleSubmit, watch } = useForm();
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [serviceTypeValue, setServiceTypeValue] = useState({});
@@ -67,30 +70,8 @@ const SubTables = (props) => {
     const corrective_reactionRef = useRef()
     const submitRef = useRef()
     const [formValues, setFormValues] = useState({
-      priority: "",
-      name: "",
-      promise_day: "",
       service: "",
-      active: "",
-      handling_in: "",
-      storage: "",
-      in_house_preventive_maintenance: "",
-      corrective_service_in_house: "",
-      cabinet_testing_fees: "",
-      branding_fees: "",
-      drop: "",
-      transp_cbm: "",
-      transp_for_1_unit: "",
-      min_charge: "",
-      preventive_maintenance: "",
-      exchange_corrective_reaction: "",
-      corrective_reaction: ""
-    });
-    const [formErrors, setFormErrors] = useState({
-      priority: {error:false,msg:""},
-      name: {error:false,msg:""},
-      promise_day: {error:false,msg:""},
-      service: {error:false,msg:""},
+      active: ""
     });
     
   useEffect(()=>{
@@ -98,7 +79,7 @@ const SubTables = (props) => {
         if (props.priceRuleId) {
           const priceRule = await axios(
             `${process.env.REACT_APP_BASE_URL}/priceRules/${props.priceRuleId}`,
-            {responseType: "json"}
+            {responseType: "json", headers: {Authorization: `Bearer ${token}`}}
           ).then((response) => {
             setFormValues(response.data);
             return response.data
@@ -120,43 +101,6 @@ const SubTables = (props) => {
       };
       fetchData();
   },[])
-
-  
-  useEffect(()=>{
-    setFormValues({ ...formValues,clients })
-  },[clients])
-  
-  useEffect(()=>{
-    setFormValues({ ...formValues,countries })
-  },[countries])
-
-  useEffect(()=>{
-    setFormValues({ ...formValues, citiesIn })
-  },[citiesIn])
-  
-  useEffect(()=>{
-    setFormValues({ ...formValues,neighbourhoodsIn })
-  },[neighbourhoodsIn])
-  
-  useEffect(()=>{
-    setFormValues({ ...formValues,tiersIn })
-  },[tiersIn])
-
-  useEffect(()=>{
-    setFormValues({ ...formValues, citiesOut })
-  },[citiesOut])
-  
-  useEffect(()=>{
-    setFormValues({ ...formValues,neighbourhoodsOut })
-  },[neighbourhoodsOut])
-  
-  useEffect(()=>{
-    setFormValues({ ...formValues,tiersOut })
-  },[tiersOut])
-  
-  useEffect(()=>{
-    setFormValues({ ...formValues,operations })
-  },[operations])
 
   const keyPressHandler = (e) => {
     const { keyCode, target } = e
@@ -189,28 +133,23 @@ const handleChangeServiceType = (e, newValue) =>{
   setServiceTypeValue(newValue)
   if(newValue) setFormValues({ ...formValues, service: newValue._id });
 }
-const handleChangeForm = (e) => {
-  const { name, value } = e.target;
-  setFormValues({ ...formValues, [name]: value });
-};
 const handleChangeSwitch = (e) => {
   const { name, checked } = e.target;
   const value=checked===true ? 1 : 0;
   setFormValues({ ...formValues, [name]: value });
 };
-const handleOnSubmit = async () => {
-  for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
-  }
+const handleOnSubmitForm = async (data,e) => {
+  const dataToSubmit = {...formValues,...data,clients,countries,citiesIn,neighbourhoodsIn,tiersIn,citiesOut,neighbourhoodsOut,tiersOut,operations}
+
   if (props.priceRuleId&&props.actionDialog==="Edit") {
     await axios({
-      method: "put",
+      method: "PUT",
       url: `${process.env.REACT_APP_BASE_URL}/priceRules/${props.priceRuleId}`,
-      data: [formValues],
+      headers: {Authorization: `Bearer ${token}`},
+      data: [dataToSubmit],
     })
     .then(function (response) {
-      setOpenAlertSuccess(true);
-      props.handleClose()
+      toast.success("Successfully Updated", {onClose: () => props.handleClose()});
     })
     .catch((error) => {
       console.log(error);
@@ -218,9 +157,10 @@ const handleOnSubmit = async () => {
   } else {
     delete formValues._id
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/priceRules`,
-      data: [formValues],
+      headers: {Authorization: `Bearer ${token}`},
+      data: [dataToSubmit],
     })
     .then(function (response) {
       setOpenAlertSuccess(true);
@@ -244,25 +184,17 @@ const handleOnSubmit = async () => {
         exchange_corrective_reaction: "",
         corrective_reaction: ""
       });
-      props.handleClose()
+      toast.success("Successfully Added", {onClose: () => props.handleClose()});
     })
     .catch((error) => {
       console.log(error);
     });
   }
-
-}
-const validateInputHandler = (e) => {
-  const { name, value } = e.target;
-  const requiredInput = value.toString().trim().length ? false : true;
-  setFormErrors({ ...formErrors, [name]: {error: requiredInput, msg: "This field is required"} });
-  if(name==="email"){
-      const invalidEmail = !/\S+@\S+\.\S+/.test(value);
-      setFormErrors({ ...formErrors, [name]: {error: invalidEmail, msg: "Enter a valid email address"} });
-  }
+  
 }
   return (
     <Fragment>
+      <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />
@@ -283,78 +215,47 @@ const validateInputHandler = (e) => {
       </Collapse>
       {!isLoading ? (
         <div style={{ padding: "10px 30px" }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                id="priorityInput"
-                label="Priority"
-                name="priority"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.priority || ""}
-                inputRef={priorityRef}
-                onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={formErrors.priority.error ? formErrors.priority.msg : null}
-                error={formErrors.priority.error}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                id="nameInput"
-                label="Name"
-                name="name"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.name || ""}
-                inputRef={nameRef}
-                onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={formErrors.name.error ? formErrors.name.msg : null}
-                error={formErrors.name.error}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                id="promise_dayInput"
-                label="Promise Day"
-                name="promise_day"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.promise_day || ""}
-                inputRef={promise_dayRef}
-                onKeyDown={keyPressHandler}
-                onBlur={validateInputHandler}
-                helperText={formErrors.promise_day.error ? formErrors.promise_day.msg : null}
-                error={formErrors.promise_day.error}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
+        <form onSubmit={handleSubmit(handleOnSubmitForm)}>
+          <div className="row">
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="priority">Priority</label>
+                <input type="number" className="form-control" name="priority" id="priority" placeholder="Priority"  ref={register} defaultValue={formValues.priority} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="name">Name</label>
+                <input type="text" className="form-control" name="name" id="name" placeholder="Name"  ref={register} defaultValue={formValues.name} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="promise_day">Promise Day</label>
+                <input type="text" className="form-control" name="promise_day" id="promise_day" placeholder="Promise Day"  ref={register} defaultValue={formValues.promise_day} />
+              </div>
+            </div>
+            <div className="col-sm-4">
               <Autocomplete
-                id="serviceTypeInput"
-                options={props.serviceTypesList || {}}
-                value={serviceTypeValue || {}}
-                getOptionLabel={(option) => {
-                  return Object.keys(option).length !== 0 ? option.name : "";
-                }}
-                fullWidth
-                onChange={handleChangeServiceType}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Service Type"
-                    inputRef={serviceRef}
-                    onKeyDown={keyPressHandler}
-                    onBlur={validateInputHandler}
-                    helperText={
-                      formErrors.service.error ? formErrors.service.msg : null
-                    }
-                    error={formErrors.service.error}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={3}>
+                  id="serviceTypeInput"
+                  options={props.serviceTypesList || {}}
+                  value={serviceTypeValue || {}}
+                  getOptionLabel={(option) => {
+                    return Object.keys(option).length !== 0 ? option.name : "";
+                  }}
+                  fullWidth
+                  onChange={handleChangeServiceType}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Service Type"
+                      inputRef={serviceRef}
+                      onKeyDown={keyPressHandler}
+                    />
+                  )}
+                />
+            </div>
+            <div className="col-sm-4">
               Active: <Switch
                 checked={formValues.active == 1 ? true : false}
                 color="primary"
@@ -363,213 +264,123 @@ const validateInputHandler = (e) => {
                 inputProps={{ "aria-label": "primary checkbox" }}
                 onChange={handleChangeSwitch}
               />
-            </Grid>
+            </div>
+            
+            <div className="col-12"><h3>Job Fees</h3></div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="handling_in">Handling IN / OUT ($)</label>
+                <input type="text" className="form-control" name="handling_in" id="handling_in" placeholder="Handling IN / OUT ($)"  ref={register} defaultValue={formValues.handling_in} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="storage">Storage/CBM/DAY ($)</label>
+                <input type="text" className="form-control" name="storage" id="storage" placeholder="Storage/CBM/DAY ($)"  ref={register} defaultValue={formValues.storage} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="in_house_preventive_maintenance">In House Preventive Maintenance ($)</label>
+                <input type="text" className="form-control" name="in_house_preventive_maintenance" id="in_house_preventive_maintenance" placeholder="In House Preventive Maintenance ($)"  ref={register} defaultValue={formValues.in_house_preventive_maintenance} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="corrective_service_in_house">Corrective Service In House ($)</label>
+                <input type="text" className="form-control" name="corrective_service_in_house" id="corrective_service_in_house" placeholder="Corrective Service In House ($)"  ref={register} defaultValue={formValues.corrective_service_in_house} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="cabinet_testing_fees">Cabinet Testing Fees</label>
+                <input type="text" className="form-control" name="cabinet_testing_fees" id="cabinet_testing_fees" placeholder="Cabinet Testing Fees"  ref={register} defaultValue={formValues.cabinet_testing_fees} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="branding_fees">Branding Fees/m2</label>
+                <input type="text" className="form-control" name="branding_fees" id="branding_fees" placeholder="Branding Fees/m2"  ref={register} defaultValue={formValues.branding_fees} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="drop">Drop</label>
+                <input type="text" className="form-control" name="drop" id="drop" placeholder="Drop"  ref={register} defaultValue={formValues.drop} />
+              </div>
+            </div>
+            
+            <div className="col-12"><h3>Transportation Fees</h3></div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="transp_cbm">Transp./CBM</label>
+                <input type="text" className="form-control" name="transp_cbm" id="transp_cbm" placeholder="Transp./CBM"  ref={register} defaultValue={formValues.transp_cbm} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="transp_for_1_unit">Transp. for 1 Unit</label>
+                <input type="text" className="form-control" name="transp_for_1_unit" id="transp_for_1_unit" placeholder="Transp. for 1 Unit"  ref={register} defaultValue={formValues.transp_for_1_unit} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="min_charge">Min Charge</label>
+                <input type="text" className="form-control" name="min_charge" id="min_charge" placeholder="Min Charge"  ref={register} defaultValue={formValues.min_charge} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="preventive_maintenance">Preventive Maintenance</label>
+                <input type="text" className="form-control" name="preventive_maintenance" id="preventive_maintenance" placeholder="Preventive Maintenance"  ref={register} defaultValue={formValues.preventive_maintenance} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="exchange_corrective_reaction">Exchange Corrective Reaction</label>
+                <input type="text" className="form-control" name="exchange_corrective_reaction" id="exchange_corrective_reaction" placeholder="Exchange Corrective Reaction"  ref={register} defaultValue={formValues.exchange_corrective_reaction} />
+              </div>
+            </div>
+            <div className="col-sm-4">
+              <div className="form-group">
+                <label htmlFor="corrective_reaction">Corrective Reaction</label>
+                <input type="text" className="form-control" name="corrective_reaction" id="corrective_reaction" placeholder="Corrective Reaction"  ref={register} defaultValue={formValues.corrective_reaction} />
+              </div>
+            </div>
+            <div className="col-12"><h3>Conditions</h3></div>
+            <div className="col-12 mb-5">
+              <NestedTable arrayName={clients} setArrayName={setClients} title="Clients" dbTable="clients" />
+            </div>
+            <div className="col-12 mb-5">
+              <NestedTable arrayName={countries} setArrayName={setCountries} title="Countries" dbTable="countries" />
+              </div>
+            <div className="col-12 mb-5">
+              <NestedTable arrayName={citiesIn} setArrayName={setCitiesIn} title="Cities In" dbTable="cities" />
+              </div>
+            <div className="col-12 mb-5">
+              <NestedTable arrayName={citiesOut} setArrayName={setCitiesOut} title="Cities Out" dbTable="cities" />
+              </div>
+            <div className="col-12 mb-5">
+              <NestedTable arrayName={neighbourhoodsIn} setArrayName={setNeighbourhoodsIn} title="Neighbourhoods In" dbTable="neighbourhoods" />
+              </div>
+            <div className="col-12 mb-5">
+              <NestedTable arrayName={neighbourhoodsOut} setArrayName={setNeighbourhoodsOut} title="Neighbourhoods Out" dbTable="neighbourhoods" />
+              </div>
+            <div className="col-12 mb-5">
+              <NestedTable arrayName={tiersIn} setArrayName={setTiersIn} title="Tiers In" dbTable="tiers" />
+              </div>
+            <div className="col-12 mb-5">
+              <NestedTable arrayName={tiersOut} setArrayName={setTiersOut} title="Tiers Out" dbTable="tiers" />
+              </div>
+            <div className="col-12 mb-5">
+              <NestedTable arrayName={operations} setArrayName={setOperations} title="Operations" dbTable="operations" />
+              </div>
 
-            <Grid item xs={12}>
-              <h3>Job Fees</h3>
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <TextField
-                id="handling_inInput"
-                label="Handling IN / OUT ($)"
-                name="handling_in"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.handling_in || ""}
-                inputRef={handling_inRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <TextField
-                id="storageInput"
-                label="Storage/CBM/DAY ($)"
-                name="storage"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.storage || ""}
-                inputRef={storageRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <TextField
-                id="in_house_preventive_maintenanceInput"
-                label="In House Preventive Maintenance ($)"
-                name="in_house_preventive_maintenance"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.in_house_preventive_maintenance || ""}
-                inputRef={in_house_preventive_maintenanceRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <TextField
-                id="corrective_service_in_houseInput"
-                label="Corrective Service In House ($)"
-                name="corrective_service_in_house"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.corrective_service_in_house || ""}
-                inputRef={corrective_service_in_houseRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <TextField
-                id="cabinet_testing_feesInput"
-                label="Cabinet Testing Fees"
-                name="cabinet_testing_fees"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.cabinet_testing_fees || ""}
-                inputRef={cabinet_testing_feesRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <TextField
-                id="branding_feesInput"
-                label="Branding Fees/m2"
-                name="branding_fees"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.branding_fees || ""}
-                inputRef={branding_feesRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4}>
-              <TextField
-                id="dropInput"
-                label="Drop"
-                name="drop"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.drop || ""}
-                inputRef={dropRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
+            <div className="col-12 d-flex flex-row-reverse">
+              <button type="button" className="btn btn-lg btn-primary d-flex" type="submit"><Save /> Save</button>
+                 &nbsp;&nbsp; 
 
-            <Grid item xs={12}>
-              <h3>Transportation Fees</h3>
-            </Grid>
-            <Grid item xs={6} sm={4} md={3}>
-              <TextField
-                id="transp_cbmInput"
-                label="Transp./CBM"
-                name="transp_cbm"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.transp_cbm || ""}
-                inputRef={transp_cbmRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={3}>
-              <TextField
-                id="transp_for_1_unitInput"
-                label="Transp. for 1 Unit"
-                name="transp_for_1_unit"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.transp_for_1_unit || ""}
-                inputRef={transp_for_1_unitRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={3}>
-              <TextField
-                id="min_chargeInput"
-                label="Min Charge"
-                name="min_charge"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.min_charge || ""}
-                inputRef={min_chargeRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={3}>
-              <TextField
-                id="preventive_maintenanceInput"
-                label="Preventive Maintenance"
-                name="preventive_maintenance"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.preventive_maintenance || ""}
-                inputRef={preventive_maintenanceRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={3}>
-              <TextField
-                id="exchange_corrective_reactionInput"
-                label="Exchange Corrective Reaction"
-                name="exchange_corrective_reaction"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.exchange_corrective_reaction || ""}
-                inputRef={exchange_corrective_reactionRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={6} sm={4} md={3}>
-              <TextField
-                id="corrective_reactionInput"
-                label="Corrective Reaction"
-                name="corrective_reaction"
-                onChange={handleChangeForm}
-                fullWidth
-                value={formValues.corrective_reaction || ""}
-                inputRef={corrective_reactionRef}
-                onKeyDown={keyPressHandler}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <h3>Conditions</h3>
-            </Grid>
-
-            <GroupAllNested
-              arrayNames={{
-                clients,
-                countries,
-                citiesIn,
-                citiesOut,
-                neighbourhoodsIn,
-                neighbourhoodsOut,
-                tiersIn,
-                tiersOut,
-                operations,
-              }}
-              setArrayNames={{
-                setClients,
-                setCountries,
-                setCitiesIn,
-                setCitiesOut,
-                setNeighbourhoodsIn,
-                setNeighbourhoodsOut,
-                setTiersIn,
-                setTiersOut,
-                setOperations,
-              }}
-            />
-            <Grid item xs={12} className="clientTables">
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                className="btn btn--save"
-                type="submit"
-                startIcon={<Save />}
-                ref={submitRef}
-                onClick={handleOnSubmit}
-              >
-                Save
-              </Button>
-              <Button
+                 <Button
                 variant="outlined"
                 color="primary"
                 size="large"
@@ -579,8 +390,11 @@ const validateInputHandler = (e) => {
               >
                 Close
               </Button>
-            </Grid>
-          </Grid>
+            </div>
+
+          </div>
+
+        </form>
         </div>
       ) : (
         <CircularProgress size={30} className="pageLoader" />

@@ -11,6 +11,9 @@ import {
 import {Close,Save} from '@material-ui/icons';
 import NestedTableSpare from "./NestedTableSpare";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -26,6 +29,7 @@ formControl: {
 }
 }));
 const OperationSpareParts = (props) => {
+  const token = getCookie('token');
   const classes = useStyles();
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]);
@@ -38,7 +42,7 @@ const OperationSpareParts = (props) => {
     const fetchData = async () => {
 
       const sparePartsFromDb=await axios(`${process.env.REACT_APP_BASE_URL}/spareParts`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         const sparePartsIncluded=[]
         response.data.forEach(e=>{
@@ -73,14 +77,16 @@ const OperationSpareParts = (props) => {
       const idOfUpdated=items.filter(e=>e.name==name).length?items.filter(e=>e.name==name)[0]._id:null
       
       axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/operationSpareParts/${idOfUpdated}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [{"quantity": quantity}]
       })
 
       axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${props.dataOfEntry.operation_id}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [{"spare": totalPrice}]
       })
     };
@@ -98,14 +104,16 @@ const OperationSpareParts = (props) => {
       const idOfUpdated=items.filter(e=>e.name==name).length?items.filter(e=>e.name==name)[0]._id:null
       
       axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/operationSpareParts/${idOfUpdated}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [{"price": price}]
       })
 
       axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${props.dataOfEntry.operation_id}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [{"spare": totalPrice}]
       })
     };
@@ -125,20 +133,22 @@ const handleSaveForm = () => {
   ))
   
   axios({
-    method: "post",
+    method: "POST",
     url: `${process.env.REACT_APP_BASE_URL}/operationSpareParts`,
+    headers: {Authorization: `Bearer ${token}`},
     data: insertedItemsToSave,
   })
   .then(function (response) {
-    props.setOpenDialog(false)
+    toast.success("Successfully Added", {onClose: () => props.setOpenDialog(false)});
   })
   .catch((error) => {
     console.log(error);
   });
   
   axios({
-    method: "put",
+    method: "PUT",
     url: `${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${props.dataOfEntry.operation_id}`,
+    headers: {Authorization: `Bearer ${token}`},
     data: [{"spare": totalPrice}]
   })
 
@@ -148,6 +158,7 @@ const handleSaveForm = () => {
 
     return (
       <>
+      <ToastContainer />
         <AppBar className={classes.appBar}>
           <Toolbar>
             <IconButton

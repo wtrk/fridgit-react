@@ -15,12 +15,14 @@ import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const SpareParts = () => {
+  const token = getCookie('token');
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]); //table items
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
@@ -32,7 +34,7 @@ const SpareParts = () => {
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/spareParts`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
@@ -96,7 +98,7 @@ const SpareParts = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/spareParts/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           console.log("deleted")
         });

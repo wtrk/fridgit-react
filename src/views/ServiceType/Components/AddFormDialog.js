@@ -12,6 +12,10 @@ import axios from 'axios';
 import { Close, Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import Alert from '@material-ui/lab/Alert';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 const useStyles = makeStyles((theme) => ({
   appBar: {
     position: "relative",
@@ -28,6 +32,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 const AddFormDialog = (props) => {
+  const token = getCookie('token');
   const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
   const classes = useStyles(); //custom css
@@ -51,7 +56,7 @@ const AddFormDialog = (props) => {
       const users = await axios(
         `${process.env.REACT_APP_BASE_URL}/serviceTypes/${props.userId}`,
         {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }
       ).then((response) => {
         setFormValues(response.data);
@@ -81,17 +86,17 @@ const AddFormDialog = (props) => {
   }
   const handleOnSubmit = async () => {
     for (const [key, value] of Object.entries(formErrors)) {
-        if(value.error===true) return setOpenAlertError(true);
+        if(value.error===true) return toast.error("Please validate the Form and submit it again");
     }
     if (props.userId) {
         await axios({
-          method: "put",
+          method: "PUT",
           url: `${process.env.REACT_APP_BASE_URL}/serviceTypes/${props.userId}`,
+          headers: {Authorization: `Bearer ${token}`},
           data: [formValues],
         })
           .then(function (response) {
-            props.handleClose()
-            return setOpenAlertSuccess(true);
+            toast.success("Successfully Updated", {onClose: () => props.handleClose()});
             
           })
           .catch((error) => {
@@ -99,8 +104,9 @@ const AddFormDialog = (props) => {
           });
     } else {
         await axios({
-          method: "post",
+          method: "POST",
           url: `${process.env.REACT_APP_BASE_URL}/serviceTypes/`,
+          headers: {Authorization: `Bearer ${token}`},
           data: [formValues],
         })
           .then(function (response) {
@@ -108,7 +114,7 @@ const AddFormDialog = (props) => {
               code: "",
               name: ""
             });
-            props.handleClose()
+            toast.success("Successfully Added", {onClose: () => props.handleClose()});
             return setOpenAlertSuccess(true);
           })
           .catch((error) => {
@@ -128,6 +134,7 @@ const AddFormDialog = (props) => {
   }
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />

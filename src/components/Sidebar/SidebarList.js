@@ -5,6 +5,7 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
+import {signout,isAuth} from "components/auth/Helpers.js";
 
 import Collapse from "@material-ui/core/Collapse";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -109,8 +110,11 @@ export default function SidebarList(props) {
         aria-label="secondary mailbox folders"
         className="signout-cont__btn"
       >
-        <ListItem button component="a" href="#simple-list"
-                  key="122311132">
+        <ListItem button onClick={()=>{
+          signout(()=>{
+            props.history.push("/signin")
+          })
+        }} key="122311132">
           <FontAwesomeIcon icon={faSignOutAlt} className="menu-icon" />
           <ListItemText primary="Signout" />
         </ListItem>

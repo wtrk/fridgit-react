@@ -6,8 +6,10 @@ import MUIDataTable from "mui-datatables";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {pricesDataTableTheme} from "assets/css/datatable-theme.js";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
 
 const NestedTable = (props) => {
+  const token = getCookie('token');
   const [valueSelected, setValueSelected] = useState("");
   const [dataList, setDataList] = useState([]);
 
@@ -28,7 +30,7 @@ const NestedTable = (props) => {
     const spareIdsUsed=props.arrayName.map(e=>e.main_id)
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/${props.dbTable}`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setDataList(response.data.filter(e=>!spareIdsUsed.includes(e._id)))
         return response.data
@@ -153,7 +155,7 @@ const NestedTable = (props) => {
         onRowsDelete: (rowsDeleted, dataRows) => {
           const idsToDelete = rowsDeleted.data.map(d => props.arrayName[d.dataIndex]._id);
           axios.delete(`${process.env.REACT_APP_BASE_URL}/${props.dbOperationTable}/${idsToDelete}`, {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }).then((response) => {
             const rowsToKeep=props.arrayName.filter(e=> !idsToDelete.includes(e._id))
             props.setArrayName(rowsToKeep)

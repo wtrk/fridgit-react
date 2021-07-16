@@ -12,6 +12,9 @@ import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import {Autocomplete, Alert} from '@material-ui/lab';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
   const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -23,6 +26,7 @@ import {Autocomplete, Alert} from '@material-ui/lab';
     }
   }));
 const SubTables = (props) => {
+  const token = getCookie('token');
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [cityValue, setCityValue] = useState({});
@@ -73,7 +77,7 @@ const SubTables = (props) => {
           const store = await axios(
             `${process.env.REACT_APP_BASE_URL}/stores/${props.storeId}`,
             {
-              responseType: "json",
+              responseType: "json", headers: {Authorization: `Bearer ${token}`},
             }
           ).then((response) => {
             setFormValues(response.data);
@@ -128,25 +132,26 @@ const handleChangeLocation = (e) => {
 };
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
+      if(value.error===true) return toast.error("Please validate the Form and submit it again");
   }
   if (props.storeId) {
     await axios({
-      method: "put",
+      method: "PUT",
       url: `${process.env.REACT_APP_BASE_URL}/stores/${props.storeId}`,
+      headers: {Authorization: `Bearer ${token}`},
       data: [formValues],
     })
     .then(function (response) {
-      setOpenAlertSuccess(true);
-      props.handleClose()
+      toast.success("Successfully Updated", {onClose: () => props.handleClose()});
     })
     .catch((error) => {
       console.log(error);
     });
   } else {
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/stores/`,
+      headers: {Authorization: `Bearer ${token}`},
       data: [formValues],
     })
     .then(function (response) {
@@ -164,7 +169,7 @@ const handleOnSubmit = async () => {
         finance: "",
         status: "",
       });
-      props.handleClose()
+      toast.success("Successfully Added", {onClose: () => props.handleClose()});
     })
     .catch((error) => {
       console.log(error);
@@ -183,6 +188,7 @@ const validateInputHandler = (e) => {
 }
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />

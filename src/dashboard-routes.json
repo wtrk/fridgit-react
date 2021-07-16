@@ -223,6 +223,16 @@
     "haschild": false
   },
   {
+    "_id":211,
+    "path": "/Companies",
+    "name": "Companies",
+    "rtlname": "",
+    "layout": "/admin",
+    "type": "sub",
+    "parent": "Master Data",
+    "haschild": false
+  },
+  {
     "_id":22,
     "path": "/CorrectiveInspections",
     "name": "Corrective Inspections",

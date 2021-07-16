@@ -1,6 +1,5 @@
 import React, { Fragment, useState, useRef, useEffect} from "react";
 import {
-  NativeSelect,
   TextField,
   AppBar,
   Typography,
@@ -8,20 +7,15 @@ import {
   Grid,
   Toolbar,
   Collapse,
-  FormControlLabel,MenuItem,
-  Checkbox,
-  InputLabel,
-  FormControl,
-  Select,FormHelperText
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
-import CustomInput from "components/CustomInput/CustomInput.js";
 import { makeStyles } from "@material-ui/core/styles";
 import CustomToolbar from "CustomToolbar";
 import {Autocomplete, Alert} from '@material-ui/lab';
-
-import MUIDataTable from "mui-datatables";
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const options = {
@@ -46,6 +40,7 @@ const options = {
     },
   }));
 const SubTables = (props) => {
+  const token = getCookie('token');
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [modal_Title, setmodal_Title] = useState("Add"); //modal title
@@ -74,7 +69,7 @@ const SubTables = (props) => {
     nameRef.current.focus()
       const fetchData = async () => {
         const users = await axios(`${process.env.REACT_APP_BASE_URL}/users/type/6010209ab93b480ee05bff82`, { //id of type driver
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           setUsersList(response.data)
           return response.data
@@ -84,7 +79,7 @@ const SubTables = (props) => {
           const supplier = await axios(
             `${process.env.REACT_APP_BASE_URL}/suppliers/${props.supplierId}`,
             {
-              responseType: "json",
+              responseType: "json", headers: {Authorization: `Bearer ${token}`},
             }
           ).then((response) => {
             setFormValues(response.data);
@@ -142,26 +137,27 @@ const handleChangeUser = (e, newValue) =>{
 }
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
+      if(value.error===true) return toast.error("Please validate the Form and submit it again");
   }
   
   if (props.supplierId) {
     await axios({
-      method: "put",
+      method: "PUT",
       url: `${process.env.REACT_APP_BASE_URL}/suppliers/${props.supplierId}`,
+      headers: {Authorization: `Bearer ${token}`},
       data: [formValues],
     })
     .then(function (response) {
-      setOpenAlertSuccess(true);
-      props.handleClose()
+      toast.success("Successfully Updated", {onClose: () => props.handleClose()});
     })
     .catch((error) => {
       console.log(error);
     });
   } else {
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/suppliers/`,
+      headers: {Authorization: `Bearer ${token}`},
       data: [formValues],
     })
     .then(function (response) {
@@ -172,7 +168,7 @@ const handleOnSubmit = async () => {
         phone: "",
         user_id:""
       });
-      props.handleClose()
+      toast.success("Successfully Added", {onClose: () => props.handleClose()});
     })
     .catch((error) => {
       console.log(error);
@@ -191,6 +187,7 @@ const validateInputHandler = (e) => {
 }
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />

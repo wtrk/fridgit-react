@@ -6,13 +6,16 @@ import {
   Button,
   Grid,
   Toolbar,
-  Collapse,CircularProgress
+  CircularProgress
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import {Autocomplete, Alert} from '@material-ui/lab';
 import NestedTable from "./NestedTable.js";
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
   const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -27,8 +30,7 @@ import NestedTable from "./NestedTable.js";
     },
   }));
 const SubTables = (props) => {
-    const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
-    const [openAlertError, setOpenAlertError] = useState(false);
+  const token = getCookie('token');
     const [suppliersList, setSuppliersList] = useState([]);
     const [supplierValue, setSupplierValue] = useState({});
     const [cities, setCities] = useState([]);
@@ -59,7 +61,7 @@ const SubTables = (props) => {
   useEffect(()=>{
       const fetchData = async () => {
         const suppliers = await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           setSuppliersList(response.data)
           return response.data
@@ -69,7 +71,7 @@ const SubTables = (props) => {
           const allocationRule = await axios(
             `${process.env.REACT_APP_BASE_URL}/allocationRules/${props.allocationRuleId}`,
             {
-              responseType: "json",
+              responseType: "json", headers: {Authorization: `Bearer ${token}`}
             }
           ).then((response) => {
             setFormValues(response.data);
@@ -128,36 +130,36 @@ const handleChangeSupplier = (e, newValue) =>{
 }
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
+    if(value.error===true) return toast.error("Please validate the Form and submit it again");
   }
   if (props.allocationRuleId) {
     await axios({
-      method: "put",
+      method: "PUT",
       url: `${process.env.REACT_APP_BASE_URL}/allocationRules/${props.allocationRuleId}`,
+      headers: {Authorization: `Bearer ${token}`},
       data: [formValues],
     })
     .then(function (response) {
-      setOpenAlertSuccess(true);
-      props.handleClose()
+      toast.success("Successfully Updated", {onClose: () => props.handleClose()});
     })
     .catch((error) => {
       console.log(error);
     });
   } else {
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/allocationRules/`,
+      headers: {Authorization: `Bearer ${token}`},
       data: [formValues],
     })
     .then(function (response) {
-      setOpenAlertSuccess(true);
       setFormValues({
         code: "",
         name: "",
         supplier_id:"",
         priority:""
       });
-      props.handleClose()
+      toast.success("Successfully Added", {onClose: () => props.handleClose()});
     })
     .catch((error) => {
       console.log(error);
@@ -176,6 +178,7 @@ const validateInputHandler = (e) => {
 }
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />
@@ -184,16 +187,6 @@ const validateInputHandler = (e) => {
           </Typography>
         </Toolbar>
       </AppBar>
-      <Collapse in={openAlertSuccess}>
-        <Alert severity="success" onClick={() => setOpenAlertSuccess(false)}>
-          The allocationRule is successfully created
-        </Alert>
-      </Collapse>
-      <Collapse in={openAlertError}>
-        <Alert severity="error" onClick={() => setOpenAlertError(false)}>
-          Please validate the Form and submit it again
-        </Alert>
-      </Collapse>
 
       {!isLoading ?
       <div style={{ padding: "10px 30px" }}>

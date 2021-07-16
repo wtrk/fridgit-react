@@ -47,6 +47,7 @@ import {
 } from "@material-ui/icons";
 
 // core components/views for Admin layout
+import Signin from "views/Auth/Signin.js";
 import Privilege from "views/Userrole/Privilege.js";
 import DashboardPage from "views/Dashboard/Dashboard.js";
 import UserProfile from "views/UserProfile/UserProfile.js";
@@ -66,6 +67,7 @@ import Allocation from "views/Allocation/Allocation.js";
 import Tier from "views/Tier/Tier.js";
 import ServiceType from "views/ServiceType/ServiceType.js";
 import FridgesTypes from "views/FridgesTypes/FridgesTypes.js";
+import Companies from "views/Companies/Companies.js";
 import LiveOperation from "views/LiveOperation/LiveOperation.js";
 import LiveOperationAdd from "views/LiveOperation/LiveOperationAdd.js";
 import Pdf from "views/LiveOperation/Components/CustomToolbar/Components/Pdf.js";
@@ -78,12 +80,18 @@ import Stores from "views/Stores/Stores.js";
 
 import Supplier from "views/Supplier/Supplier.js";
 import Invoices from "views/Invoices/Invoices.js";
+// import InvoicesPdf from "views/Invoices/InvoicesPdf.js";
 // core components/views for RTL layout
 import RTLPage from "views/RTLPage/RTLPage.js";
 import dashboardRoutes from "./dashboard-routes.json";
 
 const switchRoutes = (
   <Switch>
+  <Route
+    path="/signin"
+    component={Signin}
+    key="Signin1"
+  />
     <Route
       path="/admin/Privilege"
       component={Privilege}
@@ -189,6 +197,10 @@ const switchRoutes = (
             e.icon = Apps;
             e.component = FridgesTypes;
             break;
+            case "Companies":
+              e.icon = Apps;
+              e.component = Companies;
+              break;
           case "Spare Parts":
             e.icon = Compare;
             e.component = SpareParts;
@@ -209,10 +221,14 @@ const switchRoutes = (
             e.icon = Notifications;
             e.component = Price_rules;
             break;
-          case "Pdf":
-            e.icon = Dashboard;
-            e.component = Pdf;
-            break;
+            case "Pdf":
+              e.icon = Dashboard;
+              e.component = Pdf;
+              break;
+              // case "InvoicesPdf":
+              //   e.icon = Dashboard;
+              //   e.component = InvoicesPdf;
+              //   break;
           default:
             e.icon = Dashboard;
             e.component = DashboardPage;

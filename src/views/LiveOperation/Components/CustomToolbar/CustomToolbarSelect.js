@@ -1,14 +1,14 @@
 import React, {useState,useRef,useEffect} from "react";
 import { IconButton, Tooltip, Slide, Dialog } from "@material-ui/core";
 import axios from 'axios';
-import {Delete,Update,Pageview,Compare,CallToAction,PictureAsPdf} from "@material-ui/icons";
+import {Delete,Update} from "@material-ui/icons";
 import UpdateStatusForm from "./Components/UpdateStatusForm.js";
 import OperationActions from "./Components/OperationActions.js";
 import OperationInspections from "./Components/OperationInspections.js";
 import OperationSpareParts from "./Components/OperationSpareParts.js";
 import AnswersForPreventive from "./Components/AnswersForPreventive.js";
 import Pdf from "./Components/Pdf.js";
-import { set } from "date-fns";
+import { getCookie } from '../../../../components/auth/Helpers';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -17,6 +17,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 
 const CustomToolbarSelect = (props) => {
+  const token = getCookie('token');
   const [openUpdateStatusForm,setOpenUpdateStatusForm] = useState(false); //for modal
   const [openOperationSpareParts,setOpenOperationSpareParts] = useState(false); //for modal
   const [openOperationInspections,setOpenOperationInspections] = useState(false); //for modal
@@ -41,10 +42,10 @@ const CustomToolbarSelect = (props) => {
   useEffect(() => {
     const fetchData = async () => {
       await axios.all([
-        axios.get(`${process.env.REACT_APP_BASE_URL}/spareParts`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/correctiveActions`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/warehouses`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/stores`)
+        axios.get(`${process.env.REACT_APP_BASE_URL}/spareParts`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/correctiveActions`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/warehouses`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/stores`,{headers: {Authorization: `Bearer ${token}`}})
       ]).then(response => {
         setSpareParts(response[0].data)
         setCorrectiveActions(response[1].data)
@@ -73,7 +74,7 @@ const CustomToolbarSelect = (props) => {
     })
 
     await axios(`${process.env.REACT_APP_BASE_URL}/operationSpareParts/byOperationId/${operationIdChecked}`, {
-      responseType: "json",
+      responseType: "json", headers: {Authorization: `Bearer ${token}`},
     }).then((response) => {
       setSparePartsSelected(response.data)
       return response.data
@@ -113,7 +114,7 @@ const CustomToolbarSelect = (props) => {
 
     
     await axios(`${process.env.REACT_APP_BASE_URL}/operationActions/byOperationId/${operationIdChecked}`, {
-      responseType: "json",
+      responseType: "json", headers: {Authorization: `Bearer ${token}`},
     }).then((response) => {
       setActionsSelected(response.data)
       return response.data
@@ -138,7 +139,7 @@ useEffect(()=>{
       .delete(
         `${process.env.REACT_APP_BASE_URL}/liveOperations/${idsToDelete}`,
         {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }
       )
       .then((response) => {
@@ -153,14 +154,14 @@ useEffect(()=>{
     let operationNumber=props.items[props.selectedRows.data[0].index].operation_number
     
     const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${operationNumber}`, {
-      responseType: "json",
+      responseType: "json", headers: {Authorization: `Bearer ${token}`},
     }).then((response) => {
       setTotalAllForPdf(response.data[0].total)
       return response.data
     });
 
     const correctiveReportDb=await axios(`${process.env.REACT_APP_BASE_URL}/correctiveReport/${operationNumber}`, {
-      responseType: "json",
+      responseType: "json", headers: {Authorization: `Bearer ${token}`},
     }).then((response) => {
       if(response.data.location==="warehouse"){
         let warehouseInfo=warehouses.filter(e=>e._id===response.data.location_id)[0]
@@ -243,7 +244,7 @@ useEffect(() => {
     const fetchData = async () => {
 
       await axios(`${process.env.REACT_APP_BASE_URL}/preventiveActions`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setPreventiveActions(correctiveReportDb.preventiveList.map(e=>{
           let dataFromMainTbl=response.data.find(eSub=>e.preventiveActions_id===eSub._id)

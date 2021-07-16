@@ -22,6 +22,9 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import { Close, Save, Search, Check} from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import MUIDataTable from "mui-datatables";
+import { getCookie } from '../../../components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import "react-dropzone-uploader/dist/styles.css";
 import "../LiveOperation.css";
@@ -34,6 +37,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const AddOperationForm = (props) => {
+  const token = getCookie('token');
   const classes = useStyles(); //custom css
   const [formValues, setFormValues] = useState({
     operationType: "",
@@ -89,16 +93,16 @@ const AddOperationForm = (props) => {
   useEffect(() => {
     const fetchData = async () => {
       await axios.all([
-        axios.get(`${process.env.REACT_APP_BASE_URL}/tiers`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/cities`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/warehouses`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/stores`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/serviceTypes`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/clients`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/countries`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/operations`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/tiers`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/cities`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/warehouses`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/stores`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/serviceTypes`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/clients`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/countries`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/operations`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`,{headers: {Authorization: `Bearer ${token}`}}),
       ]).then(response => {
         setTiersList(response[0].data)
         setCitiesList(response[1].data)
@@ -208,9 +212,9 @@ const optionsForSn = {
   }
 };
 const handleChangeSn = (event, newValue) => {
-  //change Sn
-  setSnFilled(newValue);
-  setSelectedSn(cabinetsList.filter((e) => newValue.includes(e.id)));
+  const acceptedSn=cabinetsList.filter((e) => newValue.includes(e.sn))
+  setSnFilled(acceptedSn.map(e=>e.sn));
+  setSelectedSn(acceptedSn);
 }
 const cabinetFilterFirstRun = useRef(true);
 useEffect(()=>{
@@ -219,7 +223,7 @@ useEffect(()=>{
     cabinetFilterFirstRun.current = false;
   }else{
   const fetchData = async () => {
-      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets?operationType=${formValues.operationType}`, {responseType: "json"})
+      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets?operationType=${formValues.operationType}`, {responseType: "json", headers: {Authorization: `Bearer ${token}`}})
       .then((response) => {
         setCabinetsList(response.data.data)
       })
@@ -239,10 +243,10 @@ useEffect(()=>{
           label: "Valid Price Rule",
           options: {
             customBodyRender: (value, tableMeta, updateValue) => {
-              if (tableMeta.rowData[13] === "Total") {
+              if (tableMeta.rowData[14] === "Total") {
                 return "";
               }
-              return value != 0 ? (
+              return Object.keys(value).length ? (
                 <Check className="text-success" />
               ) : (
                 <Close className="text-danger" />
@@ -356,25 +360,18 @@ useEffect(()=>{
               client_id: e.client_id,
               client_name: e.client_name,
               branding_fees: e.branding_fees,
-              cabinet_testing_fees:
-                e.cabinet_testing_fees,
-              corrective_reaction:
-                e.corrective_reaction,
-              corrective_service_in_house:
-                e.corrective_service_in_house,
+              cabinet_testing_fees: e.cabinet_testing_fees,
+              corrective_reaction: e.corrective_reaction,
+              corrective_service_in_house: e.corrective_service_in_house,
               drop: e.drop,
-              exchange_corrective_reaction:
-                e.exchange_corrective_reaction,
+              exchange_corrective_reaction: e.exchange_corrective_reaction,
               handling_in: e.handling_in,
-              in_house_preventive_maintenance:
-                e.in_house_preventive_maintenance,
+              in_house_preventive_maintenance: e.in_house_preventive_maintenance,
               name: e.name,
-              preventive_maintenance:
-                e.preventive_maintenance,
+              preventive_maintenance: e.preventive_maintenance,
               priority: e.priority,
               storage: e.storage,
-              transportation_fees:
-                e.transportation_fees,
+              transportation_fees: e.transportation_fees,
               total:
                 e.transportation_fees +
                 e.branding_fees +
@@ -402,26 +399,21 @@ useEffect(()=>{
   }
 },[pricesForFinance])
 
-
-// useEffect(()=>{
-// console.log("valuesFiltered",valuesFiltered)
-// },[valuesFiltered])
 const handleSaveForm = async () => {
   if(saveClicked===1){
     selectedSn.forEach(async (e) => {
-      // console.log("eeeee",e)
       if(formValues.operationType === "Preventive Maintenance" || formValues.operationType === "Corrective Maintenance" || formValues.operationType === "Testing"){
         formValues[[e.location]]=e.location_id
       }
       let allocationRules2=[]
       let formValuesinString=Object.entries({...formValues,client:e.client}).map(e=> e.join("=")).join("&")
       let priceRules2= await axios(`${process.env.REACT_APP_BASE_URL}/priceRules/filterTop?${formValuesinString}`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`}
       }).then((response) => {
         return response.data
       })
       await axios(`${process.env.REACT_APP_BASE_URL}/allocationRules/filterTop?${formValuesinString}`,
-        {responseType: "json"
+        {responseType: "json", headers: {Authorization: `Bearer ${token}`}
       }).then((response) => {
         allocationRules2=response.data
       })
@@ -473,7 +465,7 @@ const handleSaveForm = async () => {
               }:{}
             };
         }
-        const cbm=fridgesTypesList.filter(eSub=>eSub._id==e.type)[0].cbm
+        const cbm=fridgesTypesList.find(eSub=>eSub._id==e.type)?fridgesTypesList.find(eSub=>eSub._id==e.type).cbm:0
         let pricesToSave={
           price_rule_name: priceRules2?priceRules2.name:"-",
           branding_fees: priceRules2?priceRules2.branding_fees:0,
@@ -529,14 +521,17 @@ const handleSaveForm = async () => {
   }else if(saveClicked===2){
     const fetchData = async () => {
       await axios({
-        method: "post",
+        method: "POST",
         url: `${process.env.REACT_APP_BASE_URL}/liveOperations`,
+        headers: {Authorization: `Bearer ${token}`},
         data: valuesFiltered,
       })
       .then(function (response) {
         props.setItemsUpdated(valuesFiltered);
         props.setOpenDialog(false);
-        handleCloseOpenPrices()
+        toast.success("Successfully Added", {onClose: () => handleCloseOpenPrices()});
+
+
       })
       .catch((error) => {
         console.log(error);
@@ -583,20 +578,23 @@ const handleSaveForm = async () => {
       // let statusHistory=[...statusHistoryAssigned,...statusHistoryUnassigned]
 
       await axios({
-        method: "post",
+        method: "POST",
         url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
+        headers: {Authorization: `Bearer ${token}`},
         data: statusHistoryUnassigned,
       })
       await axios({
-        method: "post",
+        method: "POST",
         url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
+        headers: {Authorization: `Bearer ${token}`},
         data: statusHistoryAssigned,
       })
       
     selectedSn.forEach((e) => {
       axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e._id}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [{
           location: locationToDb===""?e.location:locationToDb,
           location_id: locationIdToDb===""?e.location_id:locationIdToDb,
@@ -612,6 +610,7 @@ const handleSaveForm = async () => {
 }
  return (
     <Fragment>
+      <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close
@@ -777,7 +776,6 @@ const handleSaveForm = async () => {
             />
           </Grid>
         ) : null}
-        {/*saveClicked===2*/}
 
         {formValues.serviceType ? (
           <Grid item xs={11} className="clientTables">

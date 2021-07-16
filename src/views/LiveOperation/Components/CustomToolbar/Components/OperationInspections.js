@@ -20,6 +20,9 @@ import {Alert} from '@material-ui/lab';
 import {Close,Save} from '@material-ui/icons';
 import NestedTableInspections from "./NestedTableInspections.js";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -36,6 +39,7 @@ formControl: {
 }));
 
 const OperationInspections = (props) => {
+  const token = getCookie('token');
   const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
   const [dataForSpareAndLabor, setDataForSpareAndLabor] = useState([]);
@@ -68,7 +72,7 @@ const OperationInspections = (props) => {
         const tier = await axios(
           `${process.env.REACT_APP_BASE_URL}/operationInspections/byOperationId/${props.dataOfEntry.operation_id}`,
           {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }
         ).then((response) => {
           if (response.data.length){
@@ -92,7 +96,7 @@ const OperationInspections = (props) => {
   useEffect(() => {
     const fetchData = async () => {
       const sparePartsFromDb=await axios(`${process.env.REACT_APP_BASE_URL}/spareParts`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setAllSpareParts(response.data)
         return response.data
@@ -100,7 +104,7 @@ const OperationInspections = (props) => {
 
       
       const correctiveActionsFromDb=await axios(`${process.env.REACT_APP_BASE_URL}/correctiveActions`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setAllCorrectiveActions(response.data)
         return response.data
@@ -172,13 +176,15 @@ const OperationInspections = (props) => {
       })
       
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/operationSpareParts`,
+      headers: {Authorization: `Bearer ${token}`},
       data: dataForSpare,
     })
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/operationActions`,
+      headers: {Authorization: `Bearer ${token}`},
       data: dataForLabor,
     })
       
@@ -191,12 +197,12 @@ const OperationInspections = (props) => {
   const handleSaveForm = async () => {
 
     for (const [key, value] of Object.entries(formErrors)) {
-        if(value.error===true) return setOpenAlertError(true);
+        if(value.error===true) return toast.error("Please validate the Form and submit it again");
     }
     const idsOfCorrective=formValues.inspections.map(e=>e._id).toString()
     let dataWithQuantity=[]
     await axios(`${process.env.REACT_APP_BASE_URL}/correctiveInspections/${idsOfCorrective}`, {
-      responseType: "json",
+      responseType: "json", headers: {Authorization: `Bearer ${token}`},
     }).then((response) => {
       formValues.inspections.forEach(e => {
         response.data.forEach(eSub=>{
@@ -216,8 +222,9 @@ const OperationInspections = (props) => {
     setDataForSpareAndLabor(dataWithQuantity)
     if(action==="add"){
       await axios({
-        method: "post",
+        method: "POST",
         url: `${process.env.REACT_APP_BASE_URL}/operationInspections`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [formValues],
       })
       .then(function (response) {
@@ -228,20 +235,22 @@ const OperationInspections = (props) => {
           branding: "",
           stateOfGoods: "",
         });
-        props.setOpenDialog(false)
+        toast.success("Successfully Added", {onClose: () => props.setOpenDialog(false)});
+
       })
       .catch((error) => {
         console.log(error);
       });
     }else{
       await axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/operationInspections/${formValues._id}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [formValues],
       })
       .then(function (response) {
-        setOpenAlertSuccess(true);
-        props.setOpenDialog(false)
+        toast.success("Successfully Updated", {onClose: () => props.setOpenDialog(false)});
+
       })
       .catch((error) => {
         console.log(error);
@@ -251,6 +260,7 @@ const OperationInspections = (props) => {
   }
   return (
     <>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <IconButton

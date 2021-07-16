@@ -12,6 +12,7 @@ import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
+import { getCookie } from 'components/auth/Helpers';
 import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
@@ -22,6 +23,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const AllocationRule = () => {
+  const token = getCookie('token');
   const [isLoading, setIsLoading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [allocationRuleId, setAllocationRuleID] = useState(); //modal title
@@ -34,7 +36,7 @@ const AllocationRule = () => {
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/allocationRules`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`}
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
@@ -47,7 +49,7 @@ const AllocationRule = () => {
   useEffect(() => {
     const fetchData = async () => {
     const suppliers = await axios(`${process.env.REACT_APP_BASE_URL}/suppliers`, {
-      responseType: "json",
+      responseType: "json", headers: {Authorization: `Bearer ${token}`}
     }).then((response) => {
       setSuppliersList(response.data)
       return response.data
@@ -117,7 +119,7 @@ const AllocationRule = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/allocationRules/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           console.log("deleted")
         });

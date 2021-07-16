@@ -17,6 +17,7 @@ import AddAlert from "@material-ui/icons/AddAlert";
 import avatar from "assets/img/faces/marc.jpg";
 
 import Snackbar from "components/Snackbar/Snackbar.js";
+import { getCookie } from 'components/auth/Helpers';
 
 const styles = {
   cardCategoryWhite: {
@@ -87,9 +88,11 @@ class UserProfile extends React.Component {
   };
 
   Submitdata() {
+    const token = getCookie('token');
     const requestOptions = {
       method: "POST",
       body: JSON.stringify(this.state),
+      headers: {Authorization: `Bearer ${token}`},
     };
     fetch(
       `${process.env.REACT_APP_BASE_URL}ws_updateprofile.php`,

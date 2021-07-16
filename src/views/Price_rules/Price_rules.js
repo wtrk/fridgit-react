@@ -6,12 +6,13 @@ import {
   Slide,
   TextField,
   CircularProgress,
-  Switch,Tooltip,Zoom
+  Tooltip,Zoom
 } from "@material-ui/core";
 
 import { ControlPointDuplicate, Close ,Check } from "@material-ui/icons";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
+import { getCookie } from '../../components/auth/Helpers';
 
 import FilterComponent from "./Components/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
@@ -25,6 +26,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const PriceRule = () => {
+  const token = getCookie('token');
   const [isLoading, setIsLoading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [priceRuleId, setPriceRuleId] = useState(); //modal title
@@ -40,9 +42,9 @@ const PriceRule = () => {
   useEffect(() => {
     const fetchData = async () => {
         await axios.all([
-          axios.get(`${process.env.REACT_APP_BASE_URL}/serviceTypes`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/priceRules`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/operations`)
+          axios.get(`${process.env.REACT_APP_BASE_URL}/serviceTypes`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/priceRules`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/operations`,{headers: {Authorization: `Bearer ${token}`}})
         ]).then(response => {
           setServiceTypesList(response[0].data.data)
           setItems(response[1].data)
@@ -59,8 +61,9 @@ const PriceRule = () => {
     const {name,checked}=e.target
     const active=checked===true ? 1 : 0;
     await axios({
-      method: "put",
+      method: "PUT",
       url: `${process.env.REACT_APP_BASE_URL}/priceRules/${id}`,
+      headers: {Authorization: `Bearer ${token}`},
       data: [{active}],
     })
     .then(function (response) {
@@ -219,7 +222,7 @@ const PriceRule = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/priceRules/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           console.log("deleted")
         });

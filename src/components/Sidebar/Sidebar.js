@@ -38,7 +38,7 @@ export default function Sidebar(props) {
     setState(open);
   };
 
-  const list = <SidebarList routes={routes} toggleDrawer={toggleDrawer} />;
+  const list = <SidebarList routes={routes} toggleDrawer={toggleDrawer} history={props.history} />;
 
   const brand = (
     <div style={{ width: "100%" }}>
@@ -69,11 +69,12 @@ export default function Sidebar(props) {
             <h3 className="pageTitle">{props.title}</h3>
 
             <div className="avatarCont">
-              <div style={{ paddingRight: "5px" }}>
+              {/* <div style={{ paddingRight: "5px" }}>
+                {console.log("Ddddddddddddddddddddddddddddddddddd",}
                 {localStorage.getItem("Firstname") ? localStorage.getItem("Firstname") : "Tony"} &nbsp; 
                 {localStorage.getItem("Lastname") ? localStorage.getItem("Lastname") : "Smith"}
-              </div>
-              <img className="avatarRounded" src={avatar} alt={localStorage.getItem("Firstname")} />
+              </div> */}
+              Hello &nbsp; <strong>{JSON.parse(localStorage.getItem("user")).name}</strong>
             </div>
           </Toolbar>
         </AppBar>

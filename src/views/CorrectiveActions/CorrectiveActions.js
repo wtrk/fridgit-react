@@ -5,7 +5,6 @@ import {
   Dialog,
   Slide,
   TextField,
-  Chip,
   CircularProgress,
 } from "@material-ui/core";
 import { MuiThemeProvider } from "@material-ui/core/styles";
@@ -16,12 +15,14 @@ import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const CorrectiveActions = () => {
+  const token = getCookie('token');
   const [isLoading, setIsLoading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [correctiveActionsId, setCorrectiveActionsID] = useState(); //modal title
@@ -33,7 +34,7 @@ const CorrectiveActions = () => {
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/correctiveActions`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`}
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
@@ -94,7 +95,7 @@ const CorrectiveActions = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/correctiveActions/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           console.log("deleted")
         });

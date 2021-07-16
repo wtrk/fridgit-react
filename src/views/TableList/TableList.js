@@ -15,6 +15,7 @@ import Slide from "@material-ui/core/Slide";
 import { withStyles } from "@material-ui/core/styles";
 import AddAlert from "@material-ui/icons/AddAlert";
 import Snackbar from "components/Snackbar/Snackbar.js";
+import { getCookie } from 'components/auth/Helpers';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -82,8 +83,10 @@ class TableList extends React.Component {
   };
 
   deleterow(row) {
+    const token = getCookie('token');
     const requestOptions = {
       method: "POST",
+      headers: {Authorization: `Bearer ${token}`},
       body: JSON.stringify(row),
     };
     fetch(
@@ -116,10 +119,12 @@ class TableList extends React.Component {
   }
 
   save() {
+    const token = getCookie('token');
     if (this.state.rowID === 0) {
       const requestOptions = {
         method: "POST",
         body: JSON.stringify(this.state.single_user),
+        headers: {Authorization: `Bearer ${token}`},
       };
       fetch(
         `${process.env.REACT_APP_BASE_URL}ws_tusers.php?action=1`,
@@ -167,6 +172,7 @@ class TableList extends React.Component {
       const requestOptions = {
         method: "POST",
         body: JSON.stringify(this.state.single_user),
+        headers: {Authorization: `Bearer ${token}`},
       };
       fetch(
         `${process.env.REACT_APP_BASE_URL}ws_tusers.php?action=3`,
@@ -284,7 +290,7 @@ class TableList extends React.Component {
     // console.log(data); //Now you will get data
     // alert();
     // axios({
-    //   method: 'post',
+    //   method: "POST",
     //   url: 'http://localhost:5000/eliminado',
     //   data: RowsDeleted,
     // });

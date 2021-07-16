@@ -11,6 +11,16 @@ export const datatableTheme = createMuiTheme({
           textTransform: "capitalize"
         }
       },
+      MUIDataTableToolbarSelect: {
+        root: {
+          position: "absolute",
+          top: "-50px",
+          left: 0,
+          right: 0,
+          paddingTop:0,
+          paddingBottom:0
+        },
+      },
       MUIDataTableBodyCell: {
         root: {
           minWidth: "100px",
@@ -56,6 +66,16 @@ export const datatableThemeInTabsPage = createMuiTheme({
         data:{
           textTransform: "capitalize"
         }
+      },
+      MUIDataTableToolbarSelect: {
+        root: {
+          position: "absolute",
+          top: "-50px",
+          left: 0,
+          right: 0,
+          paddingTop:0,
+          paddingBottom:0
+        },
       },
       MUIDataTableBodyCell: {
         root: {
@@ -117,3 +137,6 @@ export const pricesDataTableTheme = createMuiTheme({
       },
   },
 });
+
+
+export const noToolbarTheme = createMuiTheme({ overrides: { MUIDataTableToolbar: { regular: { display: "none" } } } });

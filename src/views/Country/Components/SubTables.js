@@ -1,24 +1,20 @@
 import React, { Fragment, useState, useRef, useEffect} from "react";
 import {
-  NativeSelect,
   TextField,
   AppBar,
   Typography,
   Button,
   Grid,
   Toolbar,
-  Collapse,
-  FormControlLabel,
-  Checkbox,
-  InputLabel,
-  FormControl,
-  Select,
+  Collapse
 } from "@material-ui/core";
 import axios from 'axios';
 import { Close,Save } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
-import CustomToolbar from "CustomToolbar";
 import Alert from '@material-ui/lab/Alert';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
   const useStyles = makeStyles((theme) => ({
@@ -34,6 +30,7 @@ import Alert from '@material-ui/lab/Alert';
     },
   }));
 const SubTables = (props) => {
+  const token = getCookie('token');
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const classes = useStyles(); //custom css
@@ -56,7 +53,7 @@ const SubTables = (props) => {
         const country = await axios(
           `${process.env.REACT_APP_BASE_URL}/countries/${props.countryId}`,
           {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`}
           }
         ).then((response) => {
           setFormValues(response.data);
@@ -93,26 +90,27 @@ const handleChangeForm = (e) => {
 };
 const handleOnSubmit = async () => {
   for (const [key, value] of Object.entries(formErrors)) {
-      if(value.error===true) return setOpenAlertError(true);
+      if(value.error===true) return toast.error("Please validate the Form and submit it again");
   }
   
   if (props.countryId) {
       await axios({
-        method: "put",
+        method: "PUT",
         url: `${process.env.REACT_APP_BASE_URL}/countries/${props.countryId}`,
+        headers: {Authorization: `Bearer ${token}`},
         data: [formValues],
       })
         .then(function (response) {
-          setOpenAlertSuccess(true);
-          props.handleClose()
+          toast.success("Successfully Updated", {onClose: () => props.handleClose()});
         })
         .catch((error) => {
           console.log(error);
         });
   } else {
            await axios({
-             method: "post",
+             method: "POST",
              url: `${process.env.REACT_APP_BASE_URL}/countries/`,
+             headers: {Authorization: `Bearer ${token}`},
              data: [formValues],
            })
              .then(function (response) {
@@ -121,8 +119,8 @@ const handleOnSubmit = async () => {
                  code: "",
                  name: ""
                });
-               props.handleClose()
-             })
+               toast.success("Successfully Added", {onClose: () => props.handleClose()});
+              })
              .catch((error) => {
                console.log(error);
              });
@@ -142,6 +140,7 @@ const validateInputHandler = (e) => {
 
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />

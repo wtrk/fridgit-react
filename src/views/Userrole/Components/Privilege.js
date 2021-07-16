@@ -14,6 +14,7 @@ import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import axios from 'axios';
 import { Close } from "@material-ui/icons";
+import { getCookie } from 'components/auth/Helpers';
 
 
   const useStyles = makeStyles((theme) => ({
@@ -29,6 +30,7 @@ import { Close } from "@material-ui/icons";
     },
   }));
 const Privilege = (props) => {
+  const token = getCookie('token');
     const classes = useStyles(); //custom css
     const [isLoading, setIsLoading] = useState(true);
     const [items, setItems] = useState([]); //table items
@@ -39,7 +41,7 @@ const Privilege = (props) => {
     useEffect(() => {
       const fetchData = async () => {
         await axios(`${process.env.REACT_APP_BASE_URL}/userProfile/privilege/${props.userProfileId}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           setItems(response.data.privilege)
           return setIsLoading(false)
@@ -127,7 +129,7 @@ const Privilege = (props) => {
       onRowsDelete: (rowsDeleted, dataRows) => {
         const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
           axios.delete(`${process.env.REACT_APP_BASE_URL}/userProfile/${idsToDelete}`, {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }).then((response) => {
             console.log("deleted")
           });
@@ -154,8 +156,9 @@ useEffect(() => {
   setCurrentItem({...currentItem, role:currentItemRoles})
   if(currentItemId){
     axios({
-      method: "put",
+      method: "PUT",
       url: `${process.env.REACT_APP_BASE_URL}/userProfile/privilege/${props.userProfileId}/${currentItemId}`,
+      headers: {Authorization: `Bearer ${token}`},
       data: currentItemRoles,
     })
       .then(function (response) {})

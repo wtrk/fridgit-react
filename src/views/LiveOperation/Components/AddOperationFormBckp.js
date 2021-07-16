@@ -23,6 +23,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import { Close, Save, Search, Check} from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import MUIDataTable from "mui-datatables";
+import { getCookie } from '../../../components/auth/Helpers';
 
 import "react-dropzone-uploader/dist/styles.css";
 import "../LiveOperation.css";
@@ -35,6 +36,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const AddOperationForm = (props) => {
+  const token = getCookie('token');
   const classes = useStyles(); //custom css
   const [formValues, setFormValues] = useState({
     operationType: "",
@@ -91,16 +93,16 @@ const AddOperationForm = (props) => {
   useEffect(() => {
     const fetchData = async () => {
       await axios.all([
-        axios.get(`${process.env.REACT_APP_BASE_URL}/tiers`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/cities`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/warehouses`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/stores`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/serviceTypes`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/clients`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/countries`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/operations`),
-        axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/tiers`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/cities`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/warehouses`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/stores`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/serviceTypes`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/clients`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/countries`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/operations`,{headers: {Authorization: `Bearer ${token}`}}),
+        axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`,{headers: {Authorization: `Bearer ${token}`}}),
       ]).then(response => {
         setTiersList(response[0].data)
         setCitiesList(response[1].data)
@@ -143,14 +145,14 @@ useEffect(()=>{
     if(formValues.operationType === "External Receipt" || formValues.operationType === "Retrieval"){
       const fetchData = async () => {
         let cityQuery = await axios(`${process.env.REACT_APP_BASE_URL}/cities/${cityInId}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           setCountry(countriesList.filter(e=>e._id===response.data.country)[0].name)
           setCityOut(response.data)
           return response.data
         })
         let neighbourhoodQuery = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods/${neighbourhoodInId}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           setNeighbourhoodOut(response.data)
           return response.data
@@ -172,14 +174,14 @@ useEffect(()=>{
       let cityOutId=storeValue.location.city_id
       let neighbourhoodOutId=storeValue.location.neighbourhood_id
       let cityQuery = await axios(`${process.env.REACT_APP_BASE_URL}/cities/${cityOutId}`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setCountry(countriesList.filter(e=>e._id===response.data.country)[0].name)
         setCityOut(response.data)
         return response.data
       })
       let neighbourhoodQuery = await axios(`${process.env.REACT_APP_BASE_URL}/neighbourhoods/${neighbourhoodOutId}`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setNeighbourhoodOut(response.data)
         return response.data
@@ -277,7 +279,7 @@ useEffect(()=>{
     cabinetFilterFirstRun.current = false;
   }else{
   const fetchData = async () => {
-      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets?operationType=${formValues.operationType}`, {responseType: "json"})
+      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets?operationType=${formValues.operationType}`, {responseType: "json", headers: {Authorization: `Bearer ${token}`}})
       .then((response) => {
         console.log(formValues.operationType)
         console.log(response.data.data)
@@ -299,7 +301,7 @@ useEffect(()=>{
       serviceTypeFirstRun.current = false;
     }else{
       await axios(`${process.env.REACT_APP_BASE_URL}/priceRules`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         //console.log("response",response.data)
         let priceFromOperation=response.data.filter(e=>e.operations.length ? e.operations.map(eSub=>eSub.name).includes(formValues.operationType):true)
@@ -321,7 +323,7 @@ useEffect(()=>{
         setLoadingResult(false)
       });
       await axios(`${process.env.REACT_APP_BASE_URL}/allocationRules`,
-        {responseType: "json"
+        {responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         let allocationFromOperation=response.data.filter(e=>e.operations.length ? e.operations.map(eSub=>eSub.name).includes(formValues.operationType):true)
         let allocationFromTier=allocationFromOperation.filter(e=>e.tiers.length ? e.tiers.map(eSub=>eSub.name).includes(tierOut):true)
@@ -593,7 +595,7 @@ const handleSaveForm = async () => {
     const fetchData = async () => {
       console.log("formValuesToSave",formValuesToSave)
     //   await axios({
-    //     method: "post",
+    //     method: "POST",
     //     url: `${process.env.REACT_APP_BASE_URL}/liveOperations`,
     //     data: formValuesToSave,
     //   })
@@ -640,14 +642,14 @@ const handleSaveForm = async () => {
     //   let statusHistory=[...statusHistoryUnassigned, ...statusHistoryAssigned]
 
     //   await axios({
-    //     method: "post",
+    //     method: "POST",
     //     url: `${process.env.REACT_APP_BASE_URL}/operations/history`,
     //     data: statusHistory,
     //   })
       
     // selectedSn.forEach((e) => {
     //   axios({
-    //     method: "put",
+    //     method: "PUT",
     //     url: `${process.env.REACT_APP_BASE_URL}/cabinets/${e._id}`,
     //     data: [{
     //       location: locationToDb===""?e.location:locationToDb,

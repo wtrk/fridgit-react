@@ -15,6 +15,7 @@ import FilterComponent from "components/CustomComponents/FilterComponent.js";
 import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import AddFormDialog from "./Components/AddFormDialog.js";
+import { getCookie } from 'components/auth/Helpers';
 import axios from 'axios';
 
 const top100Films = [];
@@ -41,6 +42,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const ServiceType = () => {
+  const token = getCookie('token');
   const classes = useStyles(); //custom css
   const [isLoading, setIsLoading] = useState(true);
   const [open, setOpen] = useState(false); //for modal
@@ -58,7 +60,7 @@ const ServiceType = () => {
     const fetchData = async () => {
       console.log(searchEntry)
       await axios(`${process.env.REACT_APP_BASE_URL}/serviceTypes?limit=${pagingInfo.limit}&skip=${pagingInfo.skip}&searchEntry=${searchEntry}`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setPagingInfo({...pagingInfo,count:response.data.count});
         setItems(response.data.data)
@@ -80,19 +82,10 @@ const ServiceType = () => {
       name: "code",
       options: {
         filter: false,
-        customBodyRender: (value, tableMeta, updateValue) => {
-          return (
-            <div>
-              <a
-                onClick={() => {
-                  handleAdd("Edit Service Type - "+tableMeta.rowData[2],tableMeta.rowData[0]);
-                }}
-              >
-                {value}
-              </a>
-            </div>
-          );
-        },
+        customBodyRender: (value, tableMeta, updateValue) => <a
+            onClick={() => {
+              handleAdd("Edit Service Type - "+tableMeta.rowData[2],tableMeta.rowData[0]);
+            }}>{value}</a>
       },
     },
     {
@@ -114,7 +107,7 @@ const ServiceType = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/serviceTypes/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           console.log("deleted")
         });

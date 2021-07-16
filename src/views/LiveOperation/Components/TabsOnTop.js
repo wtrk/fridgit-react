@@ -3,15 +3,18 @@ import AppBar from "@material-ui/core/AppBar";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
 
-const TabsOnTopFromStatus = (props) => {
+const TabsOnTop = (props) => {
+  const token = getCookie('token');
   const [countStatus,setCountStatus] = useState(0);
   const [countAll,setCountAll] = useState(0);
   
 useEffect(() => {
+  console.log("countLiveOperations",props.countLiveOperations)
   const fetchData = async () => {
     await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/count`, {
-      responseType: "json",
+      responseType: "json", headers: {Authorization: `Bearer ${token}`},
     }).then((response) => {
       setCountStatus(response.data.data)
       setCountAll(response.data.total)
@@ -59,7 +62,7 @@ useEffect(() => {
           label={
             <Fragment>
               <span>All</span>
-              <div className="TabsOnTopFromStatus__tab--number">{countAll}</div>
+              <div className="TabsOnTopFromStatus__tab--number">{props.countLiveOperations.total}</div>
             </Fragment>
           }
         />
@@ -72,7 +75,7 @@ useEffect(() => {
             label={
               <Fragment>
                 <span>{e}</span>
-                <div className="table-length-cont">{countStatus[e] || 0}</div>
+                <div className="table-length-cont">{props.countLiveOperations.data[e] || 0}</div>
               </Fragment>
             }
           />
@@ -81,4 +84,4 @@ useEffect(() => {
     </AppBar>
   );
 };
-export default TabsOnTopFromStatus;
+export default TabsOnTop;

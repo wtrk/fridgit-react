@@ -5,39 +5,21 @@ import {
   Dialog,
   Slide,
   TextField,
-  Chip,
   CircularProgress,
 } from "@material-ui/core";
 import { Close ,Check} from "@material-ui/icons";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
-
-import { makeStyles } from "@material-ui/core/styles";
 import MUIDataTable from "mui-datatables";
 import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
 import FilterComponent from "./Components/FilterComponent.js";
 import SubTables from "./Components/SubTables.js";
 import ImportXlsx from "./Components/ImportXlsx.js";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
+import SnDialog from "./Components/SnDialog.js";
 
 import AddFormDialog from "components/CustomComponents/AddFormDialog.js";
-import {
-  Timeline,
-  TimelineItem,
-  TimelineSeparator,
-  TimelineConnector,
-  TimelineContent,
-  TimelineDot,
-  TimelineOppositeContent
-} from "@material-ui/lab";
-import {
-  Button,
-  DialogContent,
-  DialogActions,
-  Avatar,
-  Typography,
-  Grid,
-} from "@material-ui/core";
 import Moment from "react-moment";
 import moment from "moment";
 import TabsOnTop from "./Components/TabsOnTop.js";
@@ -47,38 +29,15 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const useStyles = makeStyles((theme) => ({
-  title: {
-    marginLeft: theme.spacing(2),
-    flex: 1,
-  },
-  root: {
-    backgroundColor: theme.palette.background.paper,
-  },
-
-  root_avatar: {
-    display: "flex",
-    "& > *": {
-      margin: theme.spacing(1),
-    },
-  },
-
-  root_modal: {
-    margin: 0,
-    padding: theme.spacing(2),
-  },
-}));
 const Cabinet = () => {
-  const classes = useStyles(); //custom css
+  const token = getCookie('token');
   const [isLoading, setIsLoading] = useState(true);  
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [cabinetId, setCabinetId] = useState(); //modal title
   const [formTitle, setFormTitle] = useState("Add"); //modal title
   const [filterDialog,setFilterDialog] = useState(false)
   const [items, setItems] = useState([]); //table items
-  const [openDialogItem, setOpenDialogItem] = useState(false); //for modal1
   const [openDialog2, setOpenDialog2] = useState(false); //for modal2
-  const [itemsBackup, setItemsBackup] = useState([]);
   const [cabinetsToExport, setCabinetsToExport] = useState([]);
   const [citiesList, setCitiesList] = useState([]);
   const [storesList, setStoresList] = useState([]);
@@ -89,26 +48,25 @@ const Cabinet = () => {
   const [modal_Title, setmodal_Title] = useState("Add"); //modal title
   const [itemsFiltered, setItemsFiltered] = useState(); //tabs items
   const [tabIndex, setTabIndex] = useState(0);
-  const [liveOperationsList, setLiveOperationsList] = useState([]);
   const [pagingInfo, setPagingInfo] = useState({page:0,limit:10,skip:0,count:0}); //Pagination Info
   const [searchEntry, setSearchEntry] = useState([]); //searchEntry
   const [importXlsx, setImportXlsx] = useState(false); //Import Excel
-  const [cabinetsSn, setCabinetsSn] = useState();
-  const [clientInfo, setClientInfo] = useState();
-  const [fridgeInfo, setFridgeInfo] = useState();
-  const [preventiveActions, setPreventiveActions] = useState();
+  const [cabinetsList, setCabinetsList] = useState([]);
+  const [openSnDialog,setOpenSnDialog] = useState(false);
+  const [snId,setSnId] = useState();
   
 
   useEffect(() => {
     const fetchData = async () => {
         await axios.all([
-          axios.get(`${process.env.REACT_APP_BASE_URL}/cities`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/stores`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/warehouses`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/preventiveActions`)
+          axios.get(`${process.env.REACT_APP_BASE_URL}/cities`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/stores`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/warehouses`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`,{headers: {Authorization: `Bearer ${token}`}}),
+          // axios.get(`${process.env.REACT_APP_BASE_URL}/preventiveActions`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`,{headers: {Authorization: `Bearer ${token}`}}),
         ]).then(response => {
           setCitiesList(response[0].data)
           setNeighbourhoodsList(response[1].data)
@@ -116,40 +74,16 @@ const Cabinet = () => {
           setStoresList(response[3].data)
           setWarehousesList(response[4].data)
           setFridgesTypesList(response[5].data)
-          setPreventiveActions(response[6].data)
+          setCabinetsList(response[6].data.data)
         })
     };
     fetchData();
   }, [openAddForm]);
-  
-  useEffect(() => {
-    const fetchData = async () => {
-      const sn=liveOperationsList.length?liveOperationsList[0].sn:null;
-      const clientId=liveOperationsList.length?liveOperationsList[0].client_id:null;
-      const findSn=items?items.find(e=>e._id===sn):null;
-      setCabinetsSn(findSn?findSn.sn:"")
-      if(clientId){
-        await axios(`${process.env.REACT_APP_BASE_URL}/clients/${clientId}`, {
-          responseType: "json",
-        }).then((response) => {
-          setClientInfo(response.data)
-        });
-      }
-      if(liveOperationsList.length){
-        await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/bySn/${liveOperationsList[0].sn}`, {
-          responseType: "json",
-        }).then((response) => {
-          setFridgeInfo(response.data)
-        });
-      }
-    };
-    fetchData();
-  }, [liveOperationsList]);
 
 
   useEffect(() => {
     const fetchData = async () => {
-      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets/export`, {responseType: "json"
+      await axios(`${process.env.REACT_APP_BASE_URL}/cabinets/export`, {responseType: "json", headers: {Authorization: `Bearer ${token}`}
       }).then((response) => {
         setCabinetsToExport(response.data)
       });
@@ -161,11 +95,10 @@ const Cabinet = () => {
 useEffect(() => {
   const fetchData = async () => {
     await axios(`${process.env.REACT_APP_BASE_URL}/cabinets?limit=${pagingInfo.limit}&skip=${pagingInfo.skip}&searchEntry=${searchEntry}`, {
-      responseType: "json",
+      responseType: "json", headers: {Authorization: `Bearer ${token}`}
     }).then((response) => {
       setPagingInfo({...pagingInfo,count:response.data.count});
       setItems(response.data.data)
-      setItemsBackup(response.data.data)
       return setIsLoading(false)
     })
     .catch((error) => {
@@ -176,152 +109,13 @@ useEffect(() => {
 }, [openAddForm,pagingInfo.page,pagingInfo.limit,searchEntry]);
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if(cabinetId){
-        await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/bySn/${cabinetId}`, {
-          responseType: "json",
-        }).then((response) => {
-          setLiveOperationsList(response.data)
-        });
-      }
-    };
-    fetchData();
-  }, [cabinetId]);
-
-  const [dialogItemTab, setDialogItemTab] = useState(1);
-  const DialogTabsContent = (props) => {
-    if (props.tab === 1) {
-      return (
-        <Timeline align="left">
-        {liveOperationsList
-          ? liveOperationsList.map((e) => (
-            <TimelineItem key={e._id} style={{minHeight:50}}>
-            <TimelineOppositeContent>
-                  <Typography>{e.operation_type} ({e.operation_number})</Typography>
-                </TimelineOppositeContent>
-                <TimelineSeparator>
-                  <TimelineDot />
-                  <TimelineConnector />
-                </TimelineSeparator>
-                <TimelineContent>
-                <Moment format="DD MMM YYYY - HH:mm">{e.createdAt}</Moment>
-                </TimelineContent>
-              </TimelineItem>
-            ))
-          : null}
-      </Timeline>
-
-      );
-    } else if (props.tab === 2) {
-      return (
-        <Grid container className="infoTabContainer" spacing={3}>
-          {fridgeInfo?<Grid item container xs={12} md={6} spacing={2}>
-            <Grid item xs={4}>
-              {fridgeInfo.photo?
-              <img src={`/img/types/${fridgeInfo.photo}`} alt="" /> 
-              :null}
-            </Grid>
-            <Grid item xs={8}>
-              <h4><strong>Fridge</strong></h4>
-              <p><strong>Type</strong>: {fridgeInfo.name}</p>
-              {liveOperationsList.length?
-                <p><strong>Branding</strong>: {liveOperationsList[0].brand}</p>
-              :null}
-              <p>
-                <strong>SN</strong>: {cabinetsSn}
-              </p>
-              {liveOperationsList.length?
-                <p><strong>Status</strong>: {liveOperationsList[0].status}</p>
-              :null}
-              <p>
-                <strong>CBM</strong>: {fridgeInfo.cbm}
-              </p>
-            </Grid>
-          </Grid>:null}
-
-        {clientInfo?<Grid item container xs={12} md={6} spacing={2}>
-            <Grid item xs={4}>
-              {clientInfo.photo?
-              <img src={`/img/clients/${clientInfo.photo}`} alt="" />
-              :null}
-            </Grid>
-            <Grid item xs={8}>
-              <h4><strong>Client</strong></h4>
-              <p>
-                <strong>Company</strong>: {clientInfo.name}
-              </p>
-              <p>
-                <strong>Address</strong>:  {clientInfo.address}
-              </p>
-              <p>
-                <strong>Phone</strong>:  {clientInfo.phone}
-              </p>
-              <p>
-                <strong>Email</strong>:  {clientInfo.email}
-              </p>
-            </Grid>
-          </Grid>:null}
-          </Grid>
-      );
-    } else if (props.tab === 3) {
-      let preventive=items?items.find(e=>e._id===cabinetId).preventive:{}
-      preventive=preventive?preventive.filter(e=>e.reportable===true):[]
-      if(preventive.length){
-        const columnsPreventive = [
-          {
-            name: "_id",
-            options: {display: false}
-          },
-          {
-            name: "preventiveActions_id",
-            options: {display: false}
-          },
-          {name: "date",label: "Date"},
-          {name: "operation_number",label: "Qperation Number"},
-          {name: "preventiveActions_id",label: "Preventive Actions",
-            options: {
-              customBodyRender: (value, tableMeta, updateValue) => {
-                const preventiveAction=preventiveActions.find(e=>e._id===tableMeta.rowData[1]).name;
-                return preventiveAction?preventiveAction:"-";
-              },
-            },
-          },
-          {name: "rightAnswer_id",label: "Right Answer",
-          options: {
-            customBodyRender: (value, tableMeta, updateValue) => {
-              const preventiveAnswers=preventiveActions.find(e=>e._id===tableMeta.rowData[1]).answers.find(e=>e._id===value)
-              return preventiveAnswers?preventiveAnswers.name:"-";
-            },
-          },
-        },
-          {name: "notes",label: "Notes",},
-        ];
-        return <MUIDataTable
-            title=""
-            data={preventive}
-            columns={columnsPreventive}
-          />
-      }else{
-        return <p>No Data Available</p>
-      }
-    }
-  };
-  const handleClickDialogItemTabs = (DialogItemTabSelected) => {
-    setDialogItemTab(DialogItemTabSelected);
-  };
-  const handleClickOnItem = (title,cabinetId) => {
-    setDialogItemTab(1);
-    setOpenDialogItem(true);
-    setCabinetId(cabinetId);
-    setFormTitle(title);
-  };
-  const handleCloseDialogItem = () => {
-    setOpenDialogItem(false);
-  };
-
   const handleImportXlsx = () => {
     setImportXlsx(true)
+  }
+  
+  const handleOpenSnDialog = (id)=>{
+    setOpenSnDialog(true)
+    setSnId(id)
   }
   /**************** -OnClickItemDialog END- **************/
   const columns = [
@@ -342,7 +136,7 @@ useEffect(() => {
           }
           return (
             <div>
-              <a onClick={() => handleClickOnItem("Edit Cabinet - "+typeValue,tableMeta.rowData[0])}>
+              <a onClick={() => handleOpenSnDialog(tableMeta.rowData[0])}>
                 {value}
               </a>
             </div>
@@ -525,7 +319,7 @@ useEffect(() => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/cabinets/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`}
         }).then((response) => {
           console.log("deleted")
         });
@@ -567,6 +361,7 @@ useEffect(() => {
     setOpenAddForm(true);
     setCabinetId(cabinetId);
     setFormTitle(title);
+    setOpenSnDialog(false)
   };
   const handleCloseAddForm = () => setOpenAddForm(false)
 
@@ -624,6 +419,15 @@ useEffect(() => {
         )}
 
         <div>
+        <Dialog
+          maxWidth={"xl"}
+          fullWidth
+          TransitionComponent={Transition}
+          open={openSnDialog}
+          onClose={() => setOpenSnDialog(false)}
+        >
+          <SnDialog setOpenDialog={setOpenSnDialog} snId={snId} cabinetsList={cabinetsList} handleAdd={handleAdd} />
+        </Dialog>
           {/*below Dialog opens when clicking on edit*/}
           <Dialog
             fullScreen
@@ -654,90 +458,6 @@ useEffect(() => {
             />
           </Dialog>
 
-          {/*below Dialog opens when clicking on item in the list to edit*/}
-          <Dialog
-            onClose={handleCloseDialogItem}
-            maxWidth={"xl"}
-            fullWidth
-            aria-labelledby="customized-dialog-title"
-            open={openDialogItem}
-          >
-            {liveOperationsList.length?
-            <DialogContent dividers className="entryEditHeader">
-              <Grid container>
-                <Grid item xs={4}>
-                  <div className={classes.root_avatar}>
-                    <Avatar>JO</Avatar>
-
-                    <div>
-                      <strong>Client</strong><br />
-                      {clientsList.find(e=>e._id===liveOperationsList[0].client_id)?clientsList.find(e=>e._id===liveOperationsList[0].client_id).name:"-"}
-                    </div>
-                  </div>
-                </Grid>
-
-                <Grid item xs={4}>
-                  <strong>Sn:</strong> {items.find(e=>e._id===liveOperationsList[0].sn)?items.find(e=>e._id===liveOperationsList[0].sn).sn:"-"}<br />
-                  <strong>Status:</strong> {liveOperationsList[0].status}
-                </Grid>
-
-                <Grid item xs={4}>
-                  <strong>Branding:</strong> {liveOperationsList[0].brand}<br />
-                  <strong>Price Rule:</strong> {liveOperationsList[0].price_rule.name}
-                </Grid>
-              </Grid>
-              <div className="entryEditHeader__tabsCont">
-                <Button
-                  className={"ceeh__tabsCont--btn " + (dialogItemTab === 1 ? "selected" : "")}
-                  onClick={() => {
-                    handleClickDialogItemTabs(1);
-                  }}
-                >
-                  History
-                </Button>
-                <Button
-                  className={"ceeh__tabsCont--btn " + (dialogItemTab === 2 ? "selected" : "")}
-                  onClick={() => {
-                    handleClickDialogItemTabs(2);
-                  }}
-                >
-                  Info
-                </Button>
-                <Button
-                  className={"ceeh__tabsCont--btn " + (dialogItemTab === 3 ? "selected" : "")}
-                  onClick={() => {
-                    handleClickDialogItemTabs(3);
-                  }}
-                >
-                  Reported Answers
-                </Button>
-                <Button
-                  id="Edit"
-                  className="ceeh__tabsCont--btn"
-                  onClick={() => {
-                    handleAdd(formTitle,cabinetId)
-                  }}
-                >
-                  Edit
-                </Button>
-              </div> 
-            </DialogContent>:null}
-            <DialogContent dividers>
-              <DialogTabsContent tab={dialogItemTab} />
-            </DialogContent>
-            <DialogActions>
-              <Button
-                variant="outlined"
-                color="primary"
-                size="large"
-                className="btn btn--save"
-                onClick={handleCloseDialogItem}
-                startIcon={<Close />}
-              >
-                Close
-              </Button>
-            </DialogActions>
-          </Dialog>
           <Dialog
             fullScreen
             open={openAddForm}

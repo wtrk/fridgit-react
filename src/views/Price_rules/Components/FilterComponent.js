@@ -5,12 +5,14 @@ import { Button, Grid } from "@material-ui/core";
 import {Autocomplete} from '@material-ui/lab';
 import axios from 'axios';
 import { Close, Save } from "@material-ui/icons";
+import { getCookie } from '../../../components/auth/Helpers';
 
 import "react-dropzone-uploader/dist/styles.css";
 
 
 
 const FilterComponent = (props) => {
+  const token = getCookie('token');
   const [clientsList, setClientsList] = useState([]);
   const [operationsList, setOperationsList] = useState([]);
   const [citiesList, setCitiesList] = useState([]);
@@ -33,11 +35,11 @@ const FilterComponent = (props) => {
   useEffect(() => {
     const fetchData = async () => {
         await axios.all([
-          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/operations`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/cities`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/tiers`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/operations`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/cities`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/tiers`,{headers: {Authorization: `Bearer ${token}`}}),
         ]).then(response => {
           setClientsList(response[0].data)
           setOperationsList(response[1].data)
@@ -67,7 +69,7 @@ const FilterComponent = (props) => {
     if(formValues.tiersIn._id) filterArray.push(`tiersInId=${formValues.tiersIn._id}`)
     if(formValues.tiersOut._id) filterArray.push(`tiersOutId=${formValues.tiersOut._id}`)
     await axios(
-      `${process.env.REACT_APP_BASE_URL}/priceRules?${filterArray.join('&')}`,{responseType: "json"}
+      `${process.env.REACT_APP_BASE_URL}/priceRules?${filterArray.join('&')}`,{responseType: "json", headers: {Authorization: `Bearer ${token}`}}
       ).then(function (response) {
       props.setItems(response.data)
       props.setOpenDialog(false)

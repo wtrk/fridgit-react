@@ -23,6 +23,7 @@ import { makeStyles} from "@material-ui/core/styles";
 import { Close } from "@material-ui/icons";
 import axios from 'axios';
 import "react-dropzone-uploader/dist/styles.css";
+import { getCookie } from '../../../components/auth/Helpers';
 
 import "../LiveOperation.css";
 
@@ -37,6 +38,7 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 const OperationDialog = (props) => {
+  const token = getCookie('token');
     const classes = useStyles(); //custom css
     const [dialogItemTab, setDialogItemTab] = useState(1);
     const [liveOperationsList, setLiveOperationsList] = useState([]);
@@ -89,23 +91,12 @@ const OperationDialog = (props) => {
       }
     };
     
-    // useEffect(() => {
-    //   const fetchData = async () => {
-    //     const liveOperation = await axios(`${process.env.REACT_APP_BASE_URL}/liveOperations/${props.operationId}`, {
-    //       responseType: "json",
-    //     }).then((response) => {
-    //       setLiveOperationsList(response.data)
-    //       return response.data
-    //     });
-    //   };
-    //   fetchData();
-    // }, []);
     
   useEffect(() => {
     const fetchData = async () => {
         await axios.all([
-          axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/liveOperations/${props.operationId}`)
+          axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/liveOperations/${props.operationId}`,{headers: {Authorization: `Bearer ${token}`}})
         ]).then(response => {
           setSuppliersList(response[0].data)
           setLiveOperationsList(response[1].data)
@@ -121,7 +112,7 @@ const OperationDialog = (props) => {
         setCabinetsSn(findSn?findSn.sn:"")
 
         const history = await axios(`${process.env.REACT_APP_BASE_URL}/operations/history/${liveOperationsList.operation_number}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           
           setHistoryList(response.data.map(e=>{
@@ -132,21 +123,21 @@ const OperationDialog = (props) => {
           return response.data
         });
         const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${liveOperationsList.operation_number}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           setFinancialList(response.data)
           return response.data
         });
         if(liveOperationsList.client_id){
           const client = await axios(`${process.env.REACT_APP_BASE_URL}/clients/${liveOperationsList.client_id}`, {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }).then((response) => {
             setClientInfo(response.data)
           });
         }
         if(liveOperationsList.sn){
           const client = await axios(`${process.env.REACT_APP_BASE_URL}/fridgesTypes/bySn/${liveOperationsList.sn}`, {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }).then((response) => {
             setFridgeInfo(response.data)
           });

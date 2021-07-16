@@ -17,6 +17,7 @@ import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import Privilege from "./Components/Privilege.js";
 import axios from 'axios';
+import { getCookie } from 'components/auth/Helpers';
 
 // Top 100 films as rated by IMDb userProfile. http://www.imdb.com/chart/top
 const top100Films = [];
@@ -43,6 +44,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const UserProfile = () => {
+  const token = getCookie('token');
   const classes = useStyles(); //custom css
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]); //table items
@@ -56,7 +58,7 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/userProfile`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
         setItems(response.data)
         setItemsBackup(response.data)
@@ -129,7 +131,7 @@ const UserProfile = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/userProfile/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           console.log("deleted")
         });

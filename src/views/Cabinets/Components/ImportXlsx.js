@@ -5,11 +5,12 @@ import { Button, Grid } from "@material-ui/core";
 import {Autocomplete} from '@material-ui/lab';
 import axios from 'axios';
 import { Close, Save } from "@material-ui/icons";
-import { CSVReader } from 'react-papaparse';
+import { getCookie } from '../../../components/auth/Helpers';
 import "react-dropzone-uploader/dist/styles.css";
 import readXlsxFile  from 'read-excel-file'
 
 const ImportXlsx = (props) => {
+  const token = getCookie('token');
   const [showSaveLoader, setShowSaveLoader] = useState(false)
   const [notValidData, setNotValidData] = useState([])
   const [validData, setValidData] = useState([])
@@ -20,8 +21,9 @@ const ImportXlsx = (props) => {
   const handleOnSubmit = async () => {
     setShowSaveLoader(true)
     await axios({
-      method: "post",
+      method: "POST",
       url: `${process.env.REACT_APP_BASE_URL}/cabinets/`,
+      headers: {Authorization: `Bearer ${token}`},
       data: dataInJson,
     })
     .then(function (response) {
@@ -36,7 +38,7 @@ const ImportXlsx = (props) => {
   useEffect(() => {
     const fetchData = async () => {
         await axios.all([
-          axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`)
+          axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`,{headers: {Authorization: `Bearer ${token}`}})
         ])
         .then(response => {
           setFridgesTypes(response[0].data)
@@ -58,7 +60,7 @@ const ImportXlsx = (props) => {
     readXlsxFile(e.target.files[0], { schema }).then((rows) => {
       let data=rows.rows
       setDataInJson(data.map(eSub=>{
-        const type=fridgesTypes.filter(sss=>(sss.name===eSub.type))[0]._id
+        const type=fridgesTypes.find(sss=>(sss.name===eSub.type))?fridgesTypes.find(sss=>(sss.name===eSub.type))._id:null;
 
         const status="Needs test";
         const prev_status="Recommended";
@@ -77,7 +79,7 @@ return (
     <DialogTitle>
       Import Excel
       <a
-        href="/files/cabinetTable.csv"
+        href="files/cabinetTable.xlsx"
         className="d-block float-right download-template-link"
         target="_blank"
       >

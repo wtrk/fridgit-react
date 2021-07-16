@@ -15,6 +15,9 @@ import { Close,Save,Check } from "@material-ui/icons";
 import { makeStyles } from "@material-ui/core/styles";
 import CustomToolbar from "CustomToolbar";
 import {Alert} from '@material-ui/lab';
+import { getCookie } from 'components/auth/Helpers';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import MUIDataTable from "mui-datatables";
 
@@ -41,6 +44,7 @@ const options = {
     },
   }));
 const SubTables = (props) => {
+  const token = getCookie('token');
     const [openAlertSuccess, setOpenAlertSuccess] = useState(false);
     const [openAlertError, setOpenAlertError] = useState(false);
     const [submit, setSubmit] = useState(0); //modal title
@@ -77,7 +81,7 @@ const SubTables = (props) => {
         const preventiveAction = await axios(
           `${process.env.REACT_APP_BASE_URL}/preventiveActions/${props.preventiveActionId}`,
           {
-            responseType: "json",
+            responseType: "json", headers: {Authorization: `Bearer ${token}`},
           }
         ).then((response) => {
           setFormValues(response.data[0]);
@@ -140,25 +144,26 @@ useEffect(()=>{
     }else{
       if(submit!==1){
         for (const [key, value] of Object.entries(formErrors)) {
-          if(value.error===true) return setOpenAlertError(true);
+          if(value.error===true) return toast.error("Please validate the Form and submit it again");
         }
         if (props.preventiveActionId) {
             await axios({
-              method: "put",
+              method: "PUT",
               url: `${process.env.REACT_APP_BASE_URL}/preventiveActions/${props.preventiveActionId}`,
+              headers: {Authorization: `Bearer ${token}`},
               data: [formValues],
             })
               .then(function (response) {
-                setOpenAlertSuccess(true);
-                props.handleClose()
+                toast.success("Successfully Updated", {onClose: () => props.handleClose()});
               })
               .catch((error) => {
                 console.log(error);
               });
         } else {
           await axios({
-            method: "post",
+            method: "POST",
             url: `${process.env.REACT_APP_BASE_URL}/preventiveActions/`,
+            headers: {Authorization: `Bearer ${token}`},
             data: [formValues],
           })
             .then(function (response) {
@@ -171,7 +176,7 @@ useEffect(()=>{
                 subCategory: "",
                 subCategoryAr: ""
               });
-              props.handleClose()
+              toast.success("Successfully Added", {onClose: () => props.handleClose()});
             })
             .catch((error) => {
               console.log(error);
@@ -212,6 +217,7 @@ const validateInputHandler = (e) => {
 
   return (
     <Fragment>
+    <ToastContainer />
       <AppBar className={classes.appBar}>
         <Toolbar>
           <Close onClick={props.handleClose} className="btnIcon" />

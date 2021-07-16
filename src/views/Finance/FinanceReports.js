@@ -20,6 +20,7 @@ import SnDialog from "./Components/SnDialog.js";
 import CustomToolbar from "../../CustomToolbar";
 import TabsOnTop from "./Components/TabsOnTop.js";
 import FilterComponent from "./Components/FilterComponent.js";
+import { getCookie } from '../../components/auth/Helpers';
 import "./FinanceReports.css";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -27,6 +28,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const FinanceReport = () => {
+  const token = getCookie('token');
   const [isLoading, setIsLoading] = useState(true);  
   const [filteredDate,setFilteredDate] = useState({"fromDate":"","toDate":""})
   const [items, setItems] = useState([]); //table items
@@ -53,13 +55,13 @@ const FinanceReport = () => {
   useEffect(() => {
     const fetchData = async () => {
         await axios.all([
-          axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/cities`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/financial/daily`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/cabinets`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/cities`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/neighbourhoods`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/fridgesTypes`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/financial/daily`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/suppliers`,{headers: {Authorization: `Bearer ${token}`}}),
         ])
         .then(response => {
           setCabinetsList(response[0].data.data)
@@ -78,10 +80,11 @@ const FinanceReport = () => {
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/financial?limit=${pagingInfo.limit}&skip=${pagingInfo.skip}&searchEntry=${searchEntry}`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`}
       }).then((response) => {
         setPagingInfo({...pagingInfo,count:response.data.count});
         setItemsDetails(response.data.data)
+        console.log("sssssssssssssssssssssssssssssssssssssssssssss",response.data.data)
         return setIsLoading(false)
       })
       .catch((error) => {
@@ -184,10 +187,10 @@ const FinanceReport = () => {
             customBodyRender: (value, tableMeta, updateValue) => {
               let supplierName = "";
               if (tableMeta.rowData[10]) {
-                let supplierValue = suppliersList.filter(
+                let supplierValue = suppliersList.length?suppliersList.find(
                   (e) => e._id == tableMeta.rowData[10]
-                );
-                if (supplierValue.length) supplierName = supplierValue[0].name;
+                ):[];
+                supplierName = supplierValue?supplierValue.name:"";
               }
               return (
                 <div>
@@ -305,52 +308,11 @@ const FinanceReport = () => {
   }
   //Search component ---------------START--------------
   
-  // useEffect(() => {
-  //   const dateFromTimestamp = filteredDate.fromDate
-  //     ? new Date(filteredDate.fromDate).getTime() / 1000
-  //     : 0;
-  //   const dateToTimestamp = filteredDate.toDate
-  //     ? new Date(filteredDate.toDate).getTime() / 1000
-  //     : 100000000000000000000000000;
-  //   setItems(
-  //     itemsBackup.filter((e) => {
-  //       const dbDateTimestamp = new Date(e.createdAt).getTime() / 1000;
-  //       return (
-  //         dbDateTimestamp > dateFromTimestamp &&
-  //         dbDateTimestamp < dateToTimestamp
-  //       );
-  //     })
-  //   );
-  // }, [filteredDate]);
-
-  // const handleSearchDate = (e) => {
-  //   const {name,value} = e.target
-  //   setFilteredDate({...filteredDate,[name]:value})
-  // }
-
     
   //Search component ---------------START--------------
   const handleChangeSearch = (e, newValue) => {
     setSearchEntry(newValue)
-    // if(newValue.length===0) setItems(itemsBackup); else{
-    //   let valueToSearch=[]
-    //   newValue.forEach(newValueEntry=>{
-    //     valueToSearch.push(...itemsBackup.filter((e,i) => {
-    //       if(!valueToSearch.map(eSearch=>eSearch._id).includes(e._id)){
-    //         if (e.job_number.toLowerCase().includes(newValueEntry.toLowerCase())){
-    //           return true;
-    //         }
-    //         if (e.operation_number.toLowerCase().includes(newValueEntry.toLowerCase())){
-    //           return true;
-    //         }
-    //         if (e.sn.toLowerCase().includes(newValueEntry.toLowerCase())){
-    //           return true;
-    //         }
-    //       }
-    //     }))
-    //   })
-    //   setItems(valueToSearch)
-    // }
+
   }
   //Search component ---------------END--------------
   return (

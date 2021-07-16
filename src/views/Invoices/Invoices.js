@@ -8,14 +8,15 @@ import {
   Chip,
   CircularProgress,
 } from "@material-ui/core";
-import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 
 import FilterComponent from "components/CustomComponents/FilterComponent.js";
+import { MuiThemeProvider } from "@material-ui/core/styles";
 import MUIDataTable from "mui-datatables";
 import {datatableTheme} from "assets/css/datatable-theme.js";
 import SubTables from "./Components/SubTables.js";
 import Moment from "react-moment";
+import { getCookie } from '../../components/auth/Helpers';
 import axios from 'axios';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -23,7 +24,8 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const Invoices = () => {
-  const [isLoading, setIsLoading] = useState(true);  
+  const token = getCookie('token');
+  const [isLoading, setIsLoading] = useState(true);
   const [openAddForm, setOpenAddForm] = useState(false); //for modal
   const [invoiceId, setInvoiceID] = useState(); //modal title
   const [formTitle, setFormTitle] = useState("Add"); //modal title
@@ -32,16 +34,15 @@ const Invoices = () => {
   const [clientsList, setClientsList] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [itemsBackup, setItemsBackup] = useState([]);
+  const [newRefNum, setNewRefNum] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
         await axios.all([
-          axios.get(`${process.env.REACT_APP_BASE_URL}/users`),
-          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`)
+          axios.get(`${process.env.REACT_APP_BASE_URL}/users`,{headers: {Authorization: `Bearer ${token}`}}),
+          axios.get(`${process.env.REACT_APP_BASE_URL}/clients`,{headers: {Authorization: `Bearer ${token}`}})
         ])
         .then(response => {
-          console.log("ddddddddddddddddddddddddddd",response[0].data)
-          console.log("eeeeeeeeeeeeeeeeeeeeeeeeee",response[1].data)
           setUsersList(response[0].data)
           setClientsList(response[1].data)
         })
@@ -53,8 +54,9 @@ const Invoices = () => {
   useEffect(() => {
     const fetchData = async () => {
       await axios(`${process.env.REACT_APP_BASE_URL}/invoices`, {
-        responseType: "json",
+        responseType: "json", headers: {Authorization: `Bearer ${token}`},
       }).then((response) => {
+        setNewRefNum(Math.max(...response.data.map(e=>e.reference_number))+1)
         setItems(response.data)
         setItemsBackup(response.data)
         return setIsLoading(false)
@@ -71,7 +73,12 @@ const Invoices = () => {
       }
     },
     {
+      name: "reference_number",
+      label:"Reference #"
+    },
+    {
       name: "name",
+      label: "Notes",
       options: {
         filter: false,
         customBodyRender: (value, tableMeta, updateValue) => {
@@ -92,9 +99,6 @@ const Invoices = () => {
         customBodyRender: (value, tableMeta, updateValue) => {
           if (value) {
             let userValue = usersList.find((e) => e._id == value);
-            console.log("usersList",usersList)
-            console.log("value",value)
-            console.log("userValue",userValue)
             return userValue ? userValue.name : "-";
           }
         },
@@ -107,9 +111,6 @@ const Invoices = () => {
         customBodyRender: (value, tableMeta, updateValue) => {
           if (value) {
             let clientValue = clientsList.find((e) => e._id == value);
-            console.log("clientsList",clientsList)
-            console.log("value",value)
-            console.log("clientValue",clientValue)
             return clientValue ? clientValue.name : "-";
           }
         },
@@ -161,7 +162,7 @@ const Invoices = () => {
     onRowsDelete: (rowsDeleted, dataRows) => {
       const idsToDelete = rowsDeleted.data.map(d => items[d.dataIndex]._id); // array of all ids to to be deleted
         axios.delete(`${process.env.REACT_APP_BASE_URL}/invoices/${idsToDelete}`, {
-          responseType: "json",
+          responseType: "json", headers: {Authorization: `Bearer ${token}`},
         }).then((response) => {
           console.log("deleted")
         });
@@ -246,6 +247,7 @@ const Invoices = () => {
             invoiceId={invoiceId}
             usersList={usersList}
             clientsList={clientsList}
+            newRefNum={newRefNum}
           />
         </Dialog>
         {/*********************** FILTER start ****************************/}
