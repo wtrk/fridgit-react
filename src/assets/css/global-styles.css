@@ -151,7 +151,7 @@ a{color:#007bff}
 }
 .signin-container{
   width:600px;
-  border:1px solid #ddd;
+  background:#fff;
   border-radius:10px;
   padding:50px;
   box-shadow: 3px 3px 10px #ddd;

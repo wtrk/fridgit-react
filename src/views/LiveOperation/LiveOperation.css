@@ -5,7 +5,7 @@
 }
 .MuiTab-textColorPrimary.TabsOnTopFromStatus__tab,.MuiTab-textColorPrimary.MuiTab-root {
   color: #fff;
-  font-size:.8rem !important
+  font-size:.7rem !important
 }
 
 .MuiTab-textColorPrimary.TabsOnTopFromStatus__tab.Mui-selected {
@@ -27,4 +27,7 @@
 }
 .MuiAppBar-colorPrimary {
   background-color: #007bff !important;
+}
+.MuiTab-root {
+  min-width: 100px !important;
 }
