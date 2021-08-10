@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
     minWidth: "100%",
   }
 }));
-const AnswersForPreventive = (props) => {
+const SurveyForPreventive = (props) => {
   const token = getCookie('token');
     const classes = useStyles(); //custom css
     const [fridgeTypeId,setFridgeTypeId]=useState()
@@ -136,7 +136,7 @@ const AnswersForPreventive = (props) => {
             console.log(error);
           });
         }else{
-          setErrorMessage("You should fill the notes for the answers you selected!")
+          setErrorMessage("You should fill the notes for every answer  with asterisks(*) selected!")
         }
       }else{
         setErrorMessage("Please fill all the answers!")
@@ -159,8 +159,13 @@ const AnswersForPreventive = (props) => {
             
             return <Autocomplete
             options={value || {}}
-            value={value.filter(e=>e._id===rightAnswerId)[0] || {}}
-            getOptionLabel={(option) => Object.keys(option).length!==0 ? option.name : ""}
+            value={value.find(e=>e._id===rightAnswerId) || {}}
+            getOptionLabel={(option) =>{
+              if(Object.keys(option).length!==0){
+                return option.obligatory===true ? option.name+"*" : option.name
+              }
+              return ""
+            }}
             style={{width:"300px"}}
             onChange={(e,newValue)=>handleChangeAnswer(newValue,tableMeta.rowData[0])}
             renderInput={(params) => (
@@ -229,7 +234,10 @@ const AnswersForPreventive = (props) => {
                   </MuiThemeProvider>
                 </Grid>
                 <Grid item xs={12} className="clientTables">
-                  <div className="text-danger font-weight-bold">{errorMessage}</div>
+                  <div className="font-weight-bold">
+                    When any answer with asterisks(*) is chosen, notes are required to be filled<br/>
+                    <span className="text-danger">{errorMessage}</span>
+                  </div>
                   <Button
                     variant="contained"
                     color="primary"
@@ -261,4 +269,4 @@ const AnswersForPreventive = (props) => {
       </>
     );
 }
-export default AnswersForPreventive;
+export default SurveyForPreventive;

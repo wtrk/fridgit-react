@@ -11,7 +11,7 @@ import { MuiThemeProvider } from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 import axios from 'axios';
 import { ArrowBackIosOutlined } from "@material-ui/icons";
-import { getCookie } from 'components/auth/Helpers';
+import { isAuth,getCookie } from 'components/auth/Helpers';
 
 import MUIDataTable from "mui-datatables";
 import {datatableThemeInTabsPage} from "assets/css/datatable-theme.js";
@@ -219,7 +219,8 @@ const LiveOperationAdd = () => {
               corrective_reaction: pricesToUse[0].corrective_reaction,
               total: pricesToUse[0].total,
               location: e.execution_address?e.execution_address:e.initiation_address,
-              operation_type:e.operation_type
+              operation_type:e.operation_type,
+              user_id:isAuth()._id
             }
           }),
         })

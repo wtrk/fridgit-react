@@ -21,6 +21,7 @@ const Signin = () => {
     };
 
     const clickSubmit = event => {
+        console.log("fffffffffffffff",email)
         event.preventDefault();
         setValues({ ...values, buttonText: 'Submitting' });
         axios({
@@ -38,7 +39,7 @@ const Signin = () => {
                 // toast.success(`Hey ${response.data.user.name}, Welcome back!`);
             })
             .catch(error => {
-                console.log('SIGNIN ERROR', error.response.data);
+                console.log('SIGNIN ERROR', error);
                 setValues({ ...values, buttonText: 'Submit' });
                 // toast.error(error.response.data.error);
             });

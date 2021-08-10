@@ -6,7 +6,7 @@ import UpdateStatusForm from "./Components/UpdateStatusForm.js";
 import OperationActions from "./Components/OperationActions.js";
 import OperationInspections from "./Components/OperationInspections.js";
 import OperationSpareParts from "./Components/OperationSpareParts.js";
-import AnswersForPreventive from "./Components/AnswersForPreventive.js";
+import SurveyForPreventive from "./Components/SurveyForPreventive.js";
 import Pdf from "./Components/Pdf.js";
 import { getCookie } from '../../../../components/auth/Helpers';
 
@@ -21,7 +21,7 @@ const CustomToolbarSelect = (props) => {
   const [openUpdateStatusForm,setOpenUpdateStatusForm] = useState(false); //for modal
   const [openOperationSpareParts,setOpenOperationSpareParts] = useState(false); //for modal
   const [openOperationInspections,setOpenOperationInspections] = useState(false); //for modal
-  const [openAnswersForPreventive,setOpenAnswersForPreventive] = useState(false); //for modal
+  const [openSurveyForPreventive,setOpenSurveyForPreventive] = useState(false); //for modal
   const [openOpenOperationActions,setOpenOperationActions] = useState(false); //for modal
   const [dataToUpdate,setDataToUpdate] = useState({});
   const [correctiveReportDb,setCorrectiveReportDb] = useState();
@@ -101,7 +101,7 @@ const CustomToolbarSelect = (props) => {
       job_id:props.items[props.selectedRows.data[0].index].job_number,
       cabinet_id:props.items[props.selectedRows.data[0].index].sn
     })
-    setOpenAnswersForPreventive(true)
+    setOpenSurveyForPreventive(true)
   };
   const handleClickOperationActions = async (e) => {
     e.preventDefault()
@@ -421,12 +421,12 @@ useEffect(() => {
         maxWidth={"lg"}
         fullWidth
         TransitionComponent={Transition}
-        open={openAnswersForPreventive}
-        onClose={() => setOpenAnswersForPreventive(false)}
+        open={openSurveyForPreventive}
+        onClose={() => setOpenSurveyForPreventive(false)}
       >
         <div style={{ minHeight: "80vh", overflowX: "hidden" }}>
-          <AnswersForPreventive
-            setOpenDialog={setOpenAnswersForPreventive}
+          <SurveyForPreventive
+            setOpenDialog={setOpenSurveyForPreventive}
             dataOfEntry={dataOfEntry}
           />
         </div>

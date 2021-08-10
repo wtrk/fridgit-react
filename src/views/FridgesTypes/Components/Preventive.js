@@ -45,7 +45,6 @@ const Preventive = (props) => {
               return i
             }
           }).filter(e=>e!=undefined))
-          console.log("response.data",response.data)
           setItems(response.data.filter(e=>e.answers.length))
           return setIsLoading(false)
         })
