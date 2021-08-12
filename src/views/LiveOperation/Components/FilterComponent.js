@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import {
   TextField,DialogContent, DialogActions} from "@material-ui/core";
-import { Button, Grid } from "@material-ui/core";
+import { Button, Grid, FormControlLabel, Checkbox } from "@material-ui/core";
 import {Autocomplete} from '@material-ui/lab';
 import axios from 'axios';
 import { Close, Save } from "@material-ui/icons";
 import { getCookie } from '../../../components/auth/Helpers';
-
 import "react-dropzone-uploader/dist/styles.css";
 
 
@@ -24,7 +23,8 @@ const FilterComponent = (props) => {
     operationType: "",
     status:"",
     fromDate:"",
-    toDate:""
+    toDate:"",
+    preventive:true
   });
 
 
@@ -54,7 +54,10 @@ const FilterComponent = (props) => {
     const {name,value} = e.target
     if(value) setFormValues({ ...formValues, [name]: value });
   }
-
+  const handleChangeCheckbox = (e) => {
+    const {name,checked} = e.target
+    setFormValues({ ...formValues, [name]: checked });
+  }
 
   const handleOnSubmit = async () => {
     let filterArray= []
@@ -64,8 +67,9 @@ const FilterComponent = (props) => {
     if(formValues.status) filterArray.push(`status=${formValues.status}`)
     if(formValues.fromDate) filterArray.push(`fromDate=${formValues.fromDate}`)
     if(formValues.toDate) filterArray.push(`toDate=${formValues.toDate}`)
+    if(formValues.preventive) filterArray.push(`exceededPreventive=true`)
     await axios(
-      `${process.env.REACT_APP_BASE_URL}/cabinets?${filterArray.join('&')}`,{responseType: "json", headers: {Authorization: `Bearer ${token}`}}
+      `${process.env.REACT_APP_BASE_URL}/liveOperations?${filterArray.join('&')}`,{responseType: "json", headers: {Authorization: `Bearer ${token}`}}
       ).then(function (response) {
         props.setPagingInfo({...props.pagingInfo,count:response.data.count});
         props.setItems(response.data.data)
@@ -169,6 +173,12 @@ return <>
                   shrink: true,
                 }}
                 onChange={(handleSearchDate)}
+              />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+              <FormControlLabel
+                control={<Checkbox checked={formValues.preventive} onChange={handleChangeCheckbox} name="preventive" />}
+                label="Exceeded preventive Day"
               />
               </Grid>
             </Grid>

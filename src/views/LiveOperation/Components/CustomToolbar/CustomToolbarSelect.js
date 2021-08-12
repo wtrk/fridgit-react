@@ -144,14 +144,14 @@ useEffect(()=>{
       )
       .then((response) => {
         props.setItems(props.items.filter(e=>!idsToDelete.includes(e._id)))
-        props.setSelectedRows([]);
+
       });
   };
 
 
   const handleClickDownloadPdf = async (e) => {
     e.preventDefault()
-    let operationNumber=props.items[props.selectedRows.data[0].index].operation_number
+    let operationNumber=props.items[props.selectedRows.data[0].index]?props.items[props.selectedRows.data[0].index].operation_number:null;
     
     const financial = await axios(`${process.env.REACT_APP_BASE_URL}/financial/byOperationNumber/${operationNumber}`, {
       responseType: "json", headers: {Authorization: `Bearer ${token}`},
@@ -218,7 +218,7 @@ useEffect(()=>{
       }).filter(e=>e))
 
       setCorrectiveReportDb(response.data)
-      if(props.items[props.selectedRows.data[0].dataIndex].operation_type !== "Preventive Maintenance"){
+      if(props.items[props.selectedRows.data[0].dataIndex]&&props.items[props.selectedRows.data[0].dataIndex].operation_type !== "Preventive Maintenance"){
         setOpenPdf(true)
       }
     })
@@ -238,7 +238,7 @@ useEffect(()=>{
 
 const preventiveActionsFirstRun = useRef(true);
 useEffect(() => {
-  if (preventiveActionsFirstRun.current || props.items[props.selectedRows.data[0].dataIndex].operation_type !== "Preventive Maintenance") {
+  if (preventiveActionsFirstRun.current || (props.items[props.selectedRows.data[0].dataIndex]&&props.items[props.selectedRows.data[0].dataIndex].operation_type !== "Preventive Maintenance")) {
     preventiveActionsFirstRun.current = false;
   }else{
     const fetchData = async () => {
@@ -282,7 +282,7 @@ useEffect(() => {
         <nav aria-label="breadcrumb">
           <ol className="breadcrumb mb-0">
             {props.selectedRows.data.length === 1 &&
-            props.items[props.selectedRows.data[0].dataIndex].operation_type ===
+            props.items[props.selectedRows.data[0].dataIndex] && props.items[props.selectedRows.data[0].dataIndex].operation_type ===
               "Corrective Maintenance" ? (
               <>
                 <li className="breadcrumb-item">
@@ -312,7 +312,7 @@ useEffect(() => {
                 </li>
               </>
             ) : null}
-            {props.selectedRows.data.length === 1 &&
+            {props.selectedRows.data.length === 1 && props.items[props.selectedRows.data[0].dataIndex] &&
             props.items[props.selectedRows.data[0].dataIndex].operation_type ===
               "Preventive Maintenance" ? (
               <>
@@ -451,7 +451,7 @@ useEffect(() => {
             correctiveActionsTotalPrice={correctiveActionsTotalPrice}
             preventiveActions={preventiveActions}
             totalAllForPdf={totalAllForPdf}
-            operationType={props.items[props.selectedRows.data[0].dataIndex].operation_type}
+            operationType={props.items[props.selectedRows.data[0].dataIndex]?props.items[props.selectedRows.data[0].dataIndex].operation_type:null}
           />
         </div>
       </Dialog>

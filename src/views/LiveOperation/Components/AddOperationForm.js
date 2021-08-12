@@ -1,5 +1,6 @@
 import React, { useState, Fragment,useEffect,useRef } from "react";
 import Moment from "react-moment";
+import moment from "moment";
 import CustomToolbar from "../../../CustomToolbar";
 import FilterComponent from "./FilterCabinetComponent.js";
 import {
@@ -506,7 +507,9 @@ const handleSaveForm = async () => {
           supplier_id: allocationRules2 ? allocationRules2.supplier_id : "",
           status: allocationRules2 ? "Assigned" : "Unassigned",
           last_status_user: "-",
-          last_status_update: currentDate
+          last_status_update: currentDate,
+          promise_date: moment().add(priceRules2.promise_day,'days')
+          
         }])
         setPricesForFinance(pricesForFinance => [...pricesForFinance,{
           validPrice: priceRules2,

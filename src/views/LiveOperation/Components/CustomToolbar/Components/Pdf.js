@@ -547,9 +547,7 @@ return isLoading === true ? (
             <View style={{ ...styles.col20Child, borderRight: 0 }}>
               <View style={styles.colText}>
                 <Text>
-                  {props.totalAllForPdf -
-                    props.correctiveActionsTotalPrice -
-                    props.sparePartsTotalPrice}
+                  {props.totalAllForPdf}
                 </Text>
               </View>
             </View>
@@ -564,11 +562,12 @@ return isLoading === true ? (
             </View>
             <View style={{ ...styles.col20Child, borderRight: 0 }}>
               <View style={styles.colText}>
-                <Text>{props.totalAllForPdf}</Text>
+                <Text>{props.totalAllForPdf + props.correctiveActionsTotalPrice + props.sparePartsTotalPrice}</Text>
               </View>
             </View>
           </View>
         </View>
+        {props.preventiveActions.length?
         <View style={styles.tableCont} wrap={false}>
           <View style={styles.headerCont}>
             <Text style={styles.title}>Preventive Action</Text>
@@ -616,7 +615,7 @@ return isLoading === true ? (
                     </View>
                   </View>
               })}
-        </View>
+        </View>:null}
       </Page>
     </Document>
   </PDFViewer>

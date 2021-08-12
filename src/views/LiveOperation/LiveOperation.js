@@ -106,11 +106,11 @@ useEffect(() => {
   const columns = [
     {
       name: "_id",
-      options: {display: false},
+      options: { display: false },
     },
     {
       name: "sn",
-      options: {display: false},
+      options: { display: false },
     },
     {
       name: "job_number",
@@ -126,11 +126,7 @@ useEffect(() => {
           }
           return (
             <div>
-              <a
-                onClick={() =>
-                  handleOpenJobDialog(value, supplierName)
-                }
-              >
+              <a onClick={() => handleOpenJobDialog(value, supplierName)}>
                 {value}
               </a>
             </div>
@@ -141,6 +137,15 @@ useEffect(() => {
     {
       name: "createdAt",
       label: "Creation Date",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          return <Moment format="DD MMM YYYY - HH:mm">{value}</Moment>;
+        },
+      },
+    },
+    {
+      name: "promise_date",
+      label: "Promise Date",
       options: {
         customBodyRender: (value, tableMeta, updateValue) => {
           return <Moment format="DD MMM YYYY - HH:mm">{value}</Moment>;
@@ -174,19 +179,23 @@ useEffect(() => {
       },
     },
     { name: "operation_type", label: "Operation Type" },
-    { name: "sn",
-    options: {
-      customBodyRender: (value, tableMeta, updateValue) => {
-        if (value) {
-          let snValue = cabinetsList.filter((e) => e._id == value);
-          return (
-            <div>
-              <a onClick={() => handleOpenSnDialog(value)}>{snValue.length ? snValue[0].sn : "-"}</a>
-            </div>
-          );
-        }
+    {
+      name: "sn",
+      options: {
+        customBodyRender: (value, tableMeta, updateValue) => {
+          if (value) {
+            let snValue = cabinetsList.filter((e) => e._id == value);
+            return (
+              <div>
+                <a onClick={() => handleOpenSnDialog(value)}>
+                  {snValue.length ? snValue[0].sn : "-"}
+                </a>
+              </div>
+            );
+          }
+        },
       },
-    },},
+    },
     {
       name: "brand",
       options: {
@@ -329,7 +338,6 @@ useEffect(() => {
         },
       },
     },
-    { name: "promise_date", label: "Promise Date" },
   ];
   const options = {
     filter: false,
@@ -343,8 +351,8 @@ useEffect(() => {
       );
     },
     customToolbarSelect: (selectedRows, displayData, setSelectedRows) => {
-      const snSelected=displayData[selectedRows.data[0].dataIndex].data[1]
-      const fridgeType=cabinetsList.find(e=>e._id===snSelected).type
+      const snSelected=displayData[selectedRows.data[0].dataIndex]?displayData[selectedRows.data[0].dataIndex].data[1]:null;
+      const fridgeType=cabinetsList.find(e=>e._id===snSelected)?cabinetsList.find(e=>e._id===snSelected).type:null;
      return  <CustomToolbarSelect fridgeType={fridgeType} setStatusUpdated={setStatusUpdated} selectedRows={selectedRows} displayData={displayData} setSelectedRows={setSelectedRows} setItems={setItems} items={items} cabinetsList={cabinetsList}  />
     },
     onDownload: (buildHead, buildBody, columns, data) => {
